@@ -1,0 +1,201 @@
+{
+  "termos": {
+    "cbs": {
+      "sigla": "CBS",
+      "nome_completo": "Contribuição sobre Bens e Serviços",
+      "resumo": "Novo imposto federal que substitui o PIS e o COFINS a partir de 2027.",
+      "analogia": "Pense como o PIS+COFINS que você paga hoje, porém unificado e com alíquota diferente. A grande diferença é que agora você pode descontar os impostos que seus fornecedores já pagaram nas compras que você fez.",
+      "impacto": "Empresas no Lucro Presumido pagam hoje 3,65% (PIS+COFINS). Com a CBS, a alíquota de referência é ~9,3% — mas descontando os créditos das compras, o impacto real pode ser menor ou maior dependendo do seu negócio.",
+      "vigencia": "Em 2026 é simbólica (0,9%). A partir de 2027 vige em alíquota plena.",
+      "aviso": "A alíquota de referência de ~9,3% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
+    },
+    "ibs": {
+      "sigla": "IBS",
+      "nome_completo": "Imposto sobre Bens e Serviços",
+      "resumo": "Novo imposto criado para substituir o ICMS (estadual) e o ISS (municipal) gradualmente entre 2029 e 2033.",
+      "analogia": "É a fusão do imposto que você paga para o estado (ICMS) e para o município (ISS) em um único imposto. Funciona de forma parecida, mas simplificada e com regras uniformes em todo o Brasil.",
+      "impacto": "A transição é gradual: só começa em 2029. Até lá, você ainda paga ICMS e ISS normalmente. A alíquota de referência final é ~18,7%.",
+      "vigencia": "Começa em 2029, atinge 100% apenas em 2033.",
+      "aviso": "A alíquota de referência de ~18,7% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
+    },
+    "is": {
+      "sigla": "IS",
+      "nome_completo": "Imposto Seletivo",
+      "resumo": "Imposto extra criado para desestimular o consumo de produtos prejudiciais à saúde e ao meio ambiente.",
+      "analogia": "Parecido com os impostos elevados que já existem sobre cigarros. Agora vai incidir também sobre bebidas alcoólicas, combustíveis fósseis e carros muito poluentes.",
+      "impacto": "Se sua empresa vende ou usa esses produtos, há um imposto adicional que incide sobre o preço de venda. As alíquotas mostradas neste simulador são ESTIMATIVAS de mercado — ainda não foram fixadas em lei.",
+      "vigencia": "Vigência a partir de 2027, com alíquotas a serem definidas por decreto regulamentador.",
+      "aviso": "⚠️ ATENÇÃO: as alíquotas do IS (ex: tabaco 150%, bebidas 28%) são estimativas do mercado financeiro e de estudos técnicos. A LC 214/2025 prevê o imposto mas NÃO fixou alíquotas — isso será feito por decreto regulamentador ainda não publicado. Os valores reais podem ser muito diferentes."
+    },
+    "iva_dual": {
+      "sigla": "IVA Dual",
+      "nome_completo": "Imposto sobre Valor Agregado Dual",
+      "resumo": "O novo sistema tributário brasileiro, formado pela soma do CBS (federal) + IBS (estadual/municipal).",
+      "analogia": "A maioria dos países europeus tem um IVA único. O Brasil criou dois (daí o nome 'Dual'): um federal (CBS) e um para estados e municípios (IBS). Juntos, formam o novo sistema.",
+      "impacto": "Alíquota total estimada: ~28%, mas com créditos de compras e exceções por setor. Para muitas empresas, o impacto real é menor que esse número bruto.",
+      "vigencia": "Sistema pleno apenas em 2033."
+    },
+    "pis": {
+      "sigla": "PIS",
+      "nome_completo": "Programa de Integração Social",
+      "resumo": "Contribuição federal que as empresas pagam hoje sobre seu faturamento. Será extinto em 2027, substituído pela CBS.",
+      "analogia": "É um imposto que vai para o governo federal, calculado sobre tudo que sua empresa vende. Hoje é de 0,65% (Lucro Presumido) ou 1,65% (Lucro Real).",
+      "impacto": "Será completamente substituído pela CBS em 2027.",
+      "vigencia": "Vigente até 2026. Extinto em 2027."
+    },
+    "cofins": {
+      "sigla": "COFINS",
+      "nome_completo": "Contribuição para o Financiamento da Seguridade Social",
+      "resumo": "Contribuição federal calculada sobre o faturamento, junto com o PIS. Também será extinta em 2027.",
+      "analogia": "Funciona junto com o PIS: são dois impostos federais cobrados sobre sua receita. A COFINS é maior (3% no Lucro Presumido, 7,6% no Lucro Real).",
+      "impacto": "Assim como o PIS, será substituída pela CBS em 2027.",
+      "vigencia": "Vigente até 2026. Extinto em 2027."
+    },
+    "icms": {
+      "sigla": "ICMS",
+      "nome_completo": "Imposto sobre Circulação de Mercadorias e Serviços",
+      "resumo": "Imposto estadual cobrado sobre a venda de produtos e alguns serviços. Será substituído gradualmente pelo IBS entre 2029 e 2033.",
+      "analogia": "É o imposto do estado. Quando você compra uma mercadoria, parte do preço vai para o estado como ICMS. A alíquota varia por estado (SP: 18%, RJ: 20%, por exemplo).",
+      "impacto": "Ainda vigente até 2033. Vai sendo reduzido proporcionalmente conforme o IBS aumenta. Em 2029: redução de 10%. Em 2033: extinto.",
+      "vigencia": "Ainda vigente. Extinção gradual de 2029 a 2033."
+    },
+    "iss": {
+      "sigla": "ISS",
+      "nome_completo": "Imposto sobre Serviços",
+      "resumo": "Imposto municipal cobrado sobre a prestação de serviços. Também será substituído gradualmente pelo IBS.",
+      "analogia": "É o imposto da prefeitura, cobrado quando você presta serviços. Um advogado, médico ou contador paga ISS para a cidade onde trabalha. A alíquota varia de 2% a 5%.",
+      "impacto": "Segue o mesmo cronograma do ICMS: extinção gradual de 2029 a 2033.",
+      "vigencia": "Ainda vigente. Extinção gradual de 2029 a 2033."
+    },
+    "split_payment": {
+      "sigla": null,
+      "nome_completo": "Split Payment (Pagamento Dividido)",
+      "resumo": "Sistema onde o banco separa automaticamente o valor do imposto no momento em que o cliente paga sua empresa.",
+      "analogia": "Imagine que um cliente te paga R$ 10.000 por uma venda. Antes de o dinheiro entrar na sua conta, o banco já separa R$ 930 automaticamente para o governo (referente à CBS de 9,3%). Você recebe R$ 9.070. Você não precisa fazer nada — o banco faz por você.",
+      "impacto": "Seu fluxo de caixa muda: você sempre recebe menos do que o valor da nota. Precisa planejar seu capital de giro levando isso em conta, especialmente se costuma usar o dinheiro das vendas para pagar fornecedores.",
+      "vigencia": "Previsto para entrar em vigor junto com o IBS/CBS plenos.",
+      "base_legal": "LC 214/2025, Arts. 31 a 35 – regulamentam o mecanismo de Split Payment para o novo sistema tributário."
+    },
+    "credito_entrada": {
+      "sigla": null,
+      "nome_completo": "Crédito de Entrada (Não-cumulatividade)",
+      "resumo": "Direito de abater do imposto que você deve os impostos que você já pagou nas suas compras de insumos e mercadorias.",
+      "analogia": "Quando você compra produtos de um fornecedor, ele cobra IBS/CBS no preço. O governo permite que você desconte esses impostos que já foram pagos pelo seu fornecedor. Assim, você não paga imposto duas vezes sobre o mesmo produto.",
+      "impacto": "Para empresas do Lucro Real e Presumido, isso reduz significativamente o imposto efetivo. Se 40% do seu custo veio de compras com imposto, você pode reduzir seu IBS/CBS em até 40%. No Simples Nacional, não há crédito.",
+      "vigencia": "Aplicável ao CBS e IBS a partir de suas vigências."
+    },
+    "aliquota": {
+      "sigla": null,
+      "nome_completo": "Alíquota",
+      "resumo": "O percentual do imposto calculado sobre o preço de venda ou faturamento.",
+      "analogia": "Se a alíquota é 10% e você vende um produto por R$ 100, o imposto é R$ 10. É o 'tamanho' do imposto em porcentagem.",
+      "impacto": "Cada imposto tem uma alíquota. Alguns setores têm alíquotas reduzidas (farmácias, escolas, saúde: -60%). Cesta básica tem alíquota zero (não paga). Tabaco tem alíquota muito alta (+IS).",
+      "vigencia": "Aplicável em todos os tributos."
+    },
+    "lucro_presumido": {
+      "sigla": null,
+      "nome_completo": "Lucro Presumido",
+      "resumo": "Regime tributário simplificado para empresas com faturamento até R$ 78 milhões por ano.",
+      "analogia": "O governo 'presume' qual foi o seu lucro com base no faturamento (ex: para comércio, presume que 8% é lucro; para serviços, 32%). Você paga imposto sobre esse lucro presumido, sem precisar comprovar o lucro real.",
+      "impacto": "Mais simples de administrar que o Lucro Real. Pode ser vantajoso se seu lucro real for maior que o presumido (paga menos). Não tem crédito de PIS/COFINS nas compras, mas a alíquota é menor (3,65%).",
+      "vigencia": "Regime atual. Transição com CBS/IBS a partir de 2027."
+    },
+    "lucro_real": {
+      "sigla": null,
+      "nome_completo": "Lucro Real",
+      "resumo": "Regime tributário onde o imposto de renda é calculado sobre o lucro efetivamente apurado pela empresa.",
+      "analogia": "Você comprova todas as receitas e despesas e paga imposto sobre o que sobrou de verdade. É mais trabalhoso contabilmente, mas permite abater as despesas reais.",
+      "impacto": "Empresas com margem baixa ou muitas despesas se beneficiam. PIS+COFINS são maiores (1,65%+7,6%) mas você tem crédito das compras — o que pode ser vantajoso no novo sistema com CBS/IBS.",
+      "vigencia": "Obrigatório para empresas acima de R$ 78 mi/ano ou de certos setores."
+    },
+    "simples_nacional": {
+      "sigla": null,
+      "nome_completo": "Simples Nacional",
+      "resumo": "Regime tributário simplificado para pequenas empresas (faturamento até R$ 4,8 milhões/ano), onde todos os impostos são pagos em uma única guia (DAS).",
+      "analogia": "Em vez de pagar vários impostos separados (PIS, COFINS, ICMS, ISS, IRPJ...), você paga tudo junto numa única boleto chamada DAS. A alíquota varia de 4% a 33% dependendo do faturamento e do ramo de atividade.",
+      "impacto": "Mais simples e geralmente mais barato para pequenas empresas. Porém, sem direito a créditos de IBS/CBS — o que pode ser desvantagem no novo sistema se seus fornecedores pagarem os novos impostos.",
+      "vigencia": "O Simples Nacional continua existindo após a reforma. Em 2026, optantes estão dispensados de IBS/CBS. A partir de 2027, o DAS passará a incluir os novos tributos com regras adaptadas. Existe também a opção de regime híbrido (apurar IBS/CBS pelo regime regular para aproveitar créditos).",
+      "aviso": "Os cálculos do Simples Nacional para 2027 em diante neste simulador são ESTIMATIVAS, pois a regulamentação específica do DAS adaptado à reforma ainda não foi publicada."
+    },
+    "mei": {
+      "sigla": "MEI",
+      "nome_completo": "Microempreendedor Individual",
+      "resumo": "Categoria simplificada para autônomos que faturam até R$ 81 mil por ano, com pagamento fixo mensal.",
+      "analogia": "O MEI paga uma mensalidade fixa (em torno de R$ 70 a R$ 80/mês) para ter CNPJ, nota fiscal e contribuição previdenciária. Muito mais simples que qualquer outro regime.",
+      "impacto": "MEI não paga IBS/CBS diretamente. Segue regras mais simples. Porém, se você superar o limite de faturamento, precisa migrar para o Simples Nacional.",
+      "vigencia": "Dispensado do IBS/CBS durante a fase de testes (2026). Regras para 2027+ ainda a definir."
+    },
+    "cesta_basica": {
+      "sigla": null,
+      "nome_completo": "Cesta Básica Nacional de Alimentos",
+      "resumo": "Lista de alimentos essenciais (arroz, feijão, leite, carnes, pão etc.) que terão alíquota ZERO de IBS e CBS — ou seja, não pagarão esses impostos.",
+      "analogia": "É como uma isenção total. Quem vende arroz, feijão ou leite não vai precisar embutir o IBS/CBS no preço. Isso ajuda a manter o custo de vida mais baixo para famílias de baixa renda.",
+      "impacto": "Se seu negócio vende alimentos da cesta básica, sua carga tributária com IBS/CBS será zero. É uma grande vantagem no novo sistema.",
+      "vigencia": "Vigente a partir de 2027 (quando CBS entra em plena vigência)."
+    },
+    "regime_hibrido": {
+      "sigla": null,
+      "nome_completo": "Regime Híbrido (Simples Nacional + IBS/CBS regular)",
+      "resumo": "Opção para empresas do Simples Nacional apurarem o IBS e a CBS pelo regime regular (com créditos), em vez de dentro do DAS.",
+      "analogia": "Imagine que você está no Simples mas quer aproveitar os créditos de IBS/CBS das suas compras (que no Simples normal não existem). Você pode optar, a cada 6 meses, por calcular apenas o IBS e CBS pelo método completo — e continuar no Simples para os outros impostos.",
+      "impacto": "Pode ser vantajoso para empresas do Simples que compram muito de fornecedores que pagam IBS/CBS. Permite abater créditos que normalmente não existiriam no Simples.",
+      "vigencia": "Disponível a partir de 2027, podendo ser feita semestralmente."
+    },
+    "markup": {
+      "sigla": null,
+      "nome_completo": "Markup (Formação de Preço)",
+      "resumo": "O multiplicador que você aplica sobre o custo para chegar ao preço de venda, cobrindo impostos, despesas e lucro.",
+      "analogia": "Se seu produto custa R$ 10 e você vende por R$ 15, seu markup é 1,5× (ou 50%). É o 'quanto você precisa cobrar a mais' para pagar impostos, despesas e ainda sobrar lucro.",
+      "impacto": "Com a reforma tributária, o markup muda porque a alíquota de imposto muda. Se os impostos diminuem, você pode cobrar menos e ainda ter o mesmo lucro (ou o mesmo preço e ter mais lucro). Se aumentam, precisa revisar o preço.",
+      "vigencia": "Sempre aplicável. Revisão necessária conforme mudam os impostos."
+    },
+    "capital_de_giro": {
+      "sigla": null,
+      "nome_completo": "Capital de Giro",
+      "resumo": "O dinheiro que a empresa precisa ter disponível para pagar suas contas do dia a dia enquanto espera receber dos clientes.",
+      "analogia": "É o 'fôlego' financeiro da empresa. Se você paga seus fornecedores hoje mas só recebe dos clientes em 30 dias, precisa de capital de giro para cobrir esse período.",
+      "impacto": "Com o Split Payment, seu capital de giro diminui porque uma parte do dinheiro vai direto para o governo. Se você tem prazo de pagamento com fornecedores mas recebe à vista dos clientes, esse impacto é menor.",
+      "vigencia": "Sempre relevante. Impacto aumenta com o Split Payment a partir de 2027."
+    },
+    "carga_tributaria": {
+      "sigla": null,
+      "nome_completo": "Carga Tributária",
+      "resumo": "O total de impostos que sua empresa paga em relação ao seu faturamento, expresso em porcentagem.",
+      "analogia": "Se você fatura R$ 100.000 por ano e paga R$ 20.000 em impostos (de todas as naturezas), sua carga tributária é 20%.",
+      "impacto": "A reforma tributária pode aumentar ou reduzir sua carga dependendo do seu setor e regime. Use o simulador para ver exatamente qual é o impacto.",
+      "vigencia": "Sempre aplicável."
+    },
+    "aliquota_efetiva": {
+      "sigla": null,
+      "nome_completo": "Alíquota Efetiva",
+      "resumo": "O percentual real de imposto que sua empresa paga, depois de aplicar créditos de entradas e reduções setoriais.",
+      "analogia": "Se o imposto nominal é 28% mas você tem 50% de crédito de entradas e 30% de redução setorial, sua alíquota efetiva é bem menor que 28%. É o que você paga de verdade, não o que está na lei.",
+      "impacto": "Empresas com muitas compras de fornecedores (alto crédito de entrada) têm alíquota efetiva muito menor que a nominal. Empresas de serviços com poucos insumos tendem a ter alíquota efetiva mais próxima da nominal.",
+      "vigencia": "Aplica-se ao CBS e IBS a partir de suas vigências."
+    },
+    "reducao_aliquota": {
+      "sigla": null,
+      "nome_completo": "Redução de Alíquota (Benefício Setorial)",
+      "resumo": "Desconto no percentual do imposto concedido a setores específicos pela Lei Complementar 214/2025.",
+      "analogia": "É como um cupom de desconto permanente no imposto para determinados setores. Saúde, educação, farmácias e agronegócio têm desconto de 60%. Profissões como contador, advogado e engenheiro têm 30% de desconto.",
+      "impacto": "Se seu setor tem redução de 60%, em vez de pagar 28%, você paga 11,2% de IVA Dual. Isso pode ser muito mais vantajoso que o sistema atual.",
+      "vigencia": "Vigente a partir das datas de entrada do CBS e IBS."
+    },
+    "irpj": {
+      "sigla": "IRPJ",
+      "nome_completo": "Imposto de Renda Pessoa Jurídica",
+      "resumo": "Imposto federal cobrado sobre o lucro da empresa. A Reforma Tributária NÃO o extingue — ele continua existindo normalmente.",
+      "analogia": "Os novos impostos (IBS e CBS) são cobrados nas vendas, como o ICMS hoje. O IRPJ é diferente: ele só aparece quando sua empresa tem lucro — quanto maior o lucro, mais você paga.",
+      "impacto": "No Lucro Presumido, a base de cálculo é estimada: 32% da receita para serviços ou 8% para comércio, sobre a qual incide 15% (+ adicional de 10% se lucro > R$ 20.000/mês). No Simples Nacional e MEI, já está incluído no DAS. Este simulador NÃO inclui IRPJ nos cálculos — consulte seu contador para a carga tributária completa.",
+      "vigencia": "Sempre existiu e continua após a Reforma Tributária."
+    },
+    "csll": {
+      "sigla": "CSLL",
+      "nome_completo": "Contribuição Social sobre o Lucro Líquido",
+      "resumo": "Contribuição federal calculada sobre o lucro da empresa, semelhante ao IRPJ. Alíquota de 9% para a maioria das empresas.",
+      "analogia": "Pense na CSLL como um 'imposto irmão' do IRPJ — ambos incidem sobre o lucro, ambos são apurados juntos, ambos continuam existindo após a Reforma Tributária.",
+      "impacto": "No Lucro Presumido: 9% sobre base presumida (32% da receita para serviços, 12% para comércio). No Simples Nacional e MEI, já está incluído no DAS. Este simulador NÃO inclui CSLL nos cálculos.",
+      "vigencia": "Sempre existiu e continua após a Reforma Tributária."
+    }
+  }
+}

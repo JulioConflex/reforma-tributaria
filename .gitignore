@@ -1,0 +1,34 @@
+# Node / Next.js
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+frontend/api/.venv/
+
+# Backend antigo: mantido no disco só como fallback local.
+# O backend que vai para a Vercel é frontend/api/ (fonte única no repositório).
+/backend/
+
+# Ambiente / segredos
+.env
+.env*.local
+.env.local
+
+# Vercel
+.vercel/
+
+# Ferramentas locais / backups (não vão para o repositório)
+.claude/
+_backup-pre-redesign/
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db

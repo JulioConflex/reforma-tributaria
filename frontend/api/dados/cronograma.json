@@ -1,0 +1,91 @@
+{
+  "anos": {
+    "2026": {
+      "descricao": "Fase de testes simbólicos",
+      "cbs_percentual": 0.009,
+      "ibs_percentual": 0.001,
+      "pis_cofins_ativo": true,
+      "icms_fator": 1.0,
+      "iss_fator": 1.0,
+      "obs": "Alíquotas-teste: CBS 0,9% e IBS 0,1%. Optantes do Simples Nacional dispensados. CBS/IBS podem ser compensados com PIS/COFINS.",
+      "fonte": "LC 214/2025, Arts. 343 (IBS) e 346 (CBS)"
+    },
+    "2027": {
+      "descricao": "CBS plena – extinção de PIS e COFINS",
+      "cbs_percentual": 0.092,
+      "ibs_percentual": 0.001,
+      "pis_cofins_ativo": false,
+      "icms_fator": 1.0,
+      "iss_fator": 1.0,
+      "aliquotas_provisorias": true,
+      "obs": "PIS e COFINS extintos (31/12/2026). CBS à alíquota de referência provisória reduzida em 0,1 p.p. (~9,2%). IBS mantém alíquota-teste de 0,1% (0,05% estadual + 0,05% municipal). ICMS e ISS ainda vigentes integralmente.",
+      "fonte": "LC 214/2025, Arts. 344 (IBS) e 347 (CBS)"
+    },
+    "2028": {
+      "descricao": "CBS plena – IBS em alíquota-teste",
+      "cbs_percentual": 0.092,
+      "ibs_percentual": 0.001,
+      "pis_cofins_ativo": false,
+      "icms_fator": 1.0,
+      "iss_fator": 1.0,
+      "aliquotas_provisorias": true,
+      "obs": "Ano de adaptação. ICMS e ISS em plena vigência. IBS em alíquota-teste de 0,1% (0,05% estadual + 0,05% municipal); CBS reduzida em 0,1 p.p.",
+      "fonte": "LC 214/2025, Arts. 344 (IBS) e 347 (CBS)"
+    },
+    "2029": {
+      "descricao": "IBS 10% – ICMS/ISS reduzidos em 10%",
+      "cbs_percentual": 0.093,
+      "ibs_percentual": 0.0187,
+      "pis_cofins_ativo": false,
+      "icms_fator": 0.9,
+      "iss_fator": 0.9,
+      "aliquotas_provisorias": true,
+      "obs": "IBS começa a substituir ICMS e ISS. ICMS/ISS reduzidos em 10% (mantidos em 90%); IBS a 10% da alíquota de referência. Alíquotas de referência provisórias.",
+      "fonte": "LC 214/2025, Arts. 361-365 (referência do IBS); redução de ICMS/ISS: Arts. 501 e 508"
+    },
+    "2030": {
+      "descricao": "IBS 20% – ICMS/ISS reduzidos em 20%",
+      "cbs_percentual": 0.093,
+      "ibs_percentual": 0.0374,
+      "pis_cofins_ativo": false,
+      "icms_fator": 0.8,
+      "iss_fator": 0.8,
+      "aliquotas_provisorias": true,
+      "obs": "ICMS/ISS reduzidos em 20% (mantidos em 80%); IBS a 20% da alíquota de referência. Alíquotas de referência provisórias.",
+      "fonte": "LC 214/2025, Arts. 361-365 (referência do IBS); redução de ICMS/ISS: Arts. 501 e 508"
+    },
+    "2031": {
+      "descricao": "IBS 30% – ICMS/ISS reduzidos em 30%",
+      "cbs_percentual": 0.093,
+      "ibs_percentual": 0.0561,
+      "pis_cofins_ativo": false,
+      "icms_fator": 0.7,
+      "iss_fator": 0.7,
+      "aliquotas_provisorias": true,
+      "obs": "ICMS/ISS reduzidos em 30% (mantidos em 70%); IBS a 30% da alíquota de referência. Alíquotas de referência provisórias.",
+      "fonte": "LC 214/2025, Arts. 361-365 (referência do IBS); redução de ICMS/ISS: Arts. 501 e 508"
+    },
+    "2032": {
+      "descricao": "IBS 40% – ICMS/ISS reduzidos em 40%",
+      "cbs_percentual": 0.093,
+      "ibs_percentual": 0.0748,
+      "pis_cofins_ativo": false,
+      "icms_fator": 0.6,
+      "iss_fator": 0.6,
+      "aliquotas_provisorias": true,
+      "obs": "Último ano de coexistência. ICMS/ISS reduzidos em 40% (mantidos em 60%); IBS a 40% da alíquota de referência. Alíquotas de referência provisórias.",
+      "fonte": "LC 214/2025, Arts. 361-365 (referência do IBS); redução de ICMS/ISS: Arts. 501 e 508"
+    },
+    "2033": {
+      "descricao": "Sistema pleno – IVA Dual em vigor",
+      "cbs_percentual": 0.093,
+      "ibs_percentual": 0.187,
+      "pis_cofins_ativo": false,
+      "icms_fator": 0.0,
+      "iss_fator": 0.0,
+      "aliquotas_provisorias": true,
+      "obs": "ICMS e ISS extintos. Apenas IBS + CBS + IS em vigor. Alíquotas de referência provisórias (sujeitas a Resolução do Senado).",
+      "fonte": "LC 214/2025, Arts. 361-365; EC 132/2023 (extinção de ICMS e ISS)"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "icms_interno": {
+    "AC": 0.17, "AL": 0.17, "AM": 0.18, "AP": 0.18,
+    "BA": 0.19, "CE": 0.18, "DF": 0.18, "ES": 0.17,
+    "GO": 0.17, "MA": 0.18, "MG": 0.18, "MS": 0.17,
+    "MT": 0.17, "PA": 0.17, "PB": 0.18, "PE": 0.205,
+    "PI": 0.21, "PR": 0.18, "RJ": 0.20, "RN": 0.18,
+    "RO": 0.175, "RR": 0.17, "RS": 0.17, "SC": 0.17,
+    "SE": 0.19, "SP": 0.18, "TO": 0.18
+  },
+  "nomes": {
+    "AC": "Acre", "AL": "Alagoas", "AM": "Amazonas", "AP": "Amapá",
+    "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+    "GO": "Goiás", "MA": "Maranhão", "MG": "Minas Gerais", "MS": "Mato Grosso do Sul",
+    "MT": "Mato Grosso", "PA": "Pará", "PB": "Paraíba", "PE": "Pernambuco",
+    "PI": "Piauí", "PR": "Paraná", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte",
+    "RO": "Rondônia", "RR": "Roraima", "RS": "Rio Grande do Sul", "SC": "Santa Catarina",
+    "SE": "Sergipe", "SP": "São Paulo", "TO": "Tocantins"
+  }
+}

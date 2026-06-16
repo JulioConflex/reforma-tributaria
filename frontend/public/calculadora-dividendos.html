@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Dividendos — Lei 15.270/2025</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Paleta pareada com o sistema Conflex (navy #01162F + cyan #01D1FF) */
+    :root {
+      --navy-900: #01162F;  /* brand-800 — superfícies escuras (site/cards header) */
+      --navy-800: #021935;  /* navy do mesh do sistema */
+      --navy-700: #017B9A;  /* brand-700 — texto/links de destaque */
+      --navy-600: #019AC0;  /* brand-600 */
+      --navy-500: #01B8E0;  /* brand-500 — foco/realce */
+      --navy-400: #01D1FF;  /* brand-400 — primário (cyan) */
+      --navy-300: #56DEFF;  /* brand-300 — ícones sobre navy */
+      --navy-200: #ABEEFF;  /* brand-200 */
+      --navy-100: #D6F8FF;  /* brand-100 */
+      --navy-50:  #F0FDFF;  /* brand-50 */
+      --white: #ffffff;
+      --gray-50: #F7F9FC;   /* ink-50 */
+      --gray-100: #EEF2F8;  /* ink-100 */
+      --gray-200: #DEE5F0;  /* ink-200 */
+      --gray-400: #8C9AAE;  /* ink-400 */
+      --gray-600: #5F6E84;  /* ink-500 */
+      --gray-800: #172033;  /* ink-800 */
+      --success-bg: #ECFDF5;
+      --success-text: #047857;
+      --warn-bg: #FFFBEB;
+      --warn-text: #B45309;
+      --danger-bg: #FEF2F2;
+      --danger-text: #B91C1C;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --shadow-sm: 0 1px 4px rgba(1,22,47,0.06);
+      --shadow-md: 0 4px 16px rgba(1,22,47,0.08);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-100);
+      -webkit-font-smoothing: antialiased;
+      color: var(--gray-800);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--navy-900);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      gap: 1rem;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--white);
+    }
+
+    .header-logo i { font-size: 22px; color: var(--navy-300); }
+    .header-logo span { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
+
+    .header-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--navy-700);
+      color: var(--navy-200);
+      border: 0.5px solid var(--navy-600);
+      white-space: nowrap;
+    }
+
+    /* ── HERO BAND ── */
+    .hero {
+      background: var(--white);
+      padding: 2.5rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .hero h1 {
+      font-family: 'Inter Tight', 'Inter', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--navy-900);
+      margin-bottom: 6px;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: 1.25rem;
+    }
+
+    .law-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy-50);
+      border: 1px solid var(--navy-100);
+      border-radius: var(--radius-lg);
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--navy-700);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .law-strip i { font-size: 16px; color: var(--navy-500); }
+
+    .law-strip-divider {
+      width: 1px;
+      height: 14px;
+      background: var(--navy-200);
+    }
+
+    .btn-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      padding: 5px 11px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: 1px solid var(--navy-200);
+      background: transparent;
+      color: var(--navy-700);
+      font-family: inherit;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-hero:hover { background: var(--navy-100); }
+
+    .btn-hero.filled {
+      background: var(--navy-800);
+      color: var(--white);
+      border-color: transparent;
+    }
+
+    .btn-hero.filled:hover { background: var(--navy-700); }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .main-full { grid-column: 1 / -1; }
+
+    @media (max-width: 760px) {
+      .main { grid-template-columns: 1fr; }
+      .main-full { grid-column: 1; }
+    }
+
+    /* ── RESUMO PANEL (full width) ── */
+    .resumo-panel {
+      display: none;
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .resumo-panel.open { display: block; }
+
+    .resumo-header {
+      background: var(--navy-50);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--navy-100);
+    }
+
+    .resumo-header h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy-800);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .resumo-body { padding: 1.25rem 1.5rem; }
+
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    @media (max-width: 600px) { .resumo-grid { grid-template-columns: 1fr; } }
+
+    .resumo-item {
+      display: flex;
+      gap: 12px;
+      padding: 0.75rem 0;
+      border-bottom: 0.5px solid var(--gray-100);
+      align-items: flex-start;
+    }
+
+    .resumo-item:nth-child(odd) { padding-right: 1.5rem; }
+    .resumo-item:nth-child(even) { padding-left: 1.5rem; border-left: 0.5px solid var(--gray-100); }
+
+    @media (max-width: 600px) {
+      .resumo-item:nth-child(odd) { padding-right: 0; }
+      .resumo-item:nth-child(even) { padding-left: 0; border-left: none; }
+    }
+
+    .resumo-icon { font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+    .resumo-text { font-size: 13px; line-height: 1.55; color: var(--gray-600); }
+    .resumo-text strong { color: var(--gray-800); font-weight: 500; }
+
+    .resumo-footer {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--navy-800);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .card-header i { font-size: 18px; color: var(--navy-300); }
+    .card-header h2 { font-size: 14px; font-weight: 500; color: var(--white); }
+    .card-header p { font-size: 11px; color: var(--navy-300); margin-top: 1px; }
+
+    .card-body { padding: 1.25rem 1.25rem 1rem; }
+
+    /* ── INPUTS ── */
+    .field { margin-bottom: 0.85rem; }
+
+    label {
+      font-size: 12px;
+      color: var(--gray-600);
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    label small { font-size: 10px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+      color: var(--gray-800);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--navy-500);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(1,209,255,0.20);
+    }
+
+    /* ── METRICS ── */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 1rem 0; }
+
+    .metric {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .metric-lbl { font-size: 11px; color: var(--gray-400); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-val { font-size: 18px; font-weight: 500; color: var(--gray-800); }
+
+    .metric.highlight-danger {
+      background: var(--danger-bg);
+      border-color: #f5c0c0;
+    }
+
+    .metric.highlight-danger .metric-lbl { color: #a83030; }
+    .metric.highlight-danger .metric-val { color: var(--danger-text); }
+
+    .metric.highlight-success {
+      background: var(--success-bg);
+      border-color: #b3d9c0;
+    }
+
+    .metric.highlight-success .metric-lbl { color: #1a6e3f; }
+    .metric.highlight-success .metric-val { color: var(--success-text); }
+
+    /* ── MESSAGE BOX ── */
+    .msg {
+      border-radius: var(--radius-md);
+      padding: 9px 13px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      display: flex;
+      gap: 7px;
+      align-items: flex-start;
+      margin-bottom: 0.85rem;
+    }
+
+    .msg i { flex-shrink: 0; margin-top: 1px; }
+    .msg.ok { background: var(--success-bg); color: var(--success-text); }
+    .msg.warn { background: var(--warn-bg); color: var(--warn-text); }
+    .msg.info { background: var(--navy-50); color: var(--navy-700); }
+
+    /* ── TIP ── */
+    .tip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--navy-50);
+      border: 1px solid var(--navy-100);
+      border-left: 3px solid var(--navy-500);
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      font-size: 12.5px;
+      color: var(--navy-700);
+      margin-bottom: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .tip i { color: var(--navy-500); flex-shrink: 0; }
+
+    .pill {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .pill-ok { background: var(--success-bg); color: var(--success-text); }
+    .pill-navy { background: var(--navy-100); color: var(--navy-700); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--gray-100);
+      margin: 1rem 0;
+    }
+
+    /* ── CHART ── */
+    .chart-wrap { position: relative; }
+
+    /* ── FOOTER NOTE ── */
+    .card-footer {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      padding: 10px 16px;
+      font-size: 11px;
+      color: var(--gray-400);
+      line-height: 1.5;
+    }
+
+    /* ── PAGE FOOTER ── */
+    .site-footer {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2rem;
+      font-size: 11px;
+      color: var(--navy-300);
+      text-align: center;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      padding: 5px 11px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: var(--navy-100);
+      font-family: inherit;
+      transition: background 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: rgba(255,255,255,0.1); }
+
+    .btn.outlined {
+      border-color: var(--navy-200);
+      color: var(--gray-600);
+      background: var(--white);
+    }
+
+    .btn.outlined:hover { background: var(--gray-50); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-logo">
+    <i class="ti ti-calculator"></i>
+    <span>Calculadora de Dividendos</span>
+  </div>
+  <span class="header-badge">Lei 15.270/2025 · Vigência jan/2026</span>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Simule o imposto sobre distribuição de lucros</h1>
+  <p>Calcule o IRRF retido na fonte e o IRPF mínimo anual com base na nova legislação</p>
+  <div class="law-strip">
+    <i class="ti ti-gavel"></i>
+    <span>Lei nº 15.270, de 26 de novembro de 2025</span>
+    <span class="law-strip-divider"></span>
+    <button class="btn-hero" onclick="toggleResumo();" id="btn-resumo">
+      <i class="ti ti-book-2"></i>Ver resumo
+    </button>
+    <a class="btn-hero filled" href="https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15270.htm" target="_blank" rel="noopener">
+      <i class="ti ti-external-link"></i>Texto oficial
+    </a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- RESUMO (full width) -->
+  <div class="main-full resumo-panel" id="resumo-panel">
+    <div class="resumo-header">
+      <h3><i class="ti ti-book-2"></i>Resumo da Lei 15.270/2025</h3>
+      <button class="btn outlined" onclick="toggleResumo()">
+        <i class="ti ti-x"></i>Fechar
+      </button>
+    </div>
+    <div class="resumo-body">
+      <div class="resumo-grid">
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:#b45309;"><i class="ti ti-coin"></i></span>
+          <p class="resumo-text"><strong>Fim da isenção sobre dividendos.</strong> A partir de jan/2026, distribuições por pessoa jurídica a pessoa física são tributadas na fonte quando superam <strong>R$&nbsp;50.000/mês por empresa pagadora</strong>.</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:#b91c1c;"><i class="ti ti-percentage"></i></span>
+          <p class="resumo-text"><strong>Alíquota de 10% sobre o total.</strong> Superado o limite, o IRRF incide sobre o <strong>valor inteiro</strong> — não sobre o excedente. Distribuir R$&nbsp;51.000 gera retenção de R$&nbsp;5.100.</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:var(--navy-600);"><i class="ti ti-building"></i></span>
+          <p class="resumo-text"><strong>Limite por CNPJ, não por CPF.</strong> Cada empresa tem seu próprio limite de R$&nbsp;50.000/mês. Sócios com participação em múltiplas empresas têm limites independentes por pagador.</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:#166534;"><i class="ti ti-calendar-check"></i></span>
+          <p class="resumo-text"><strong>Regra de transição.</strong> Lucros apurados até 31/12/2025 e aprovados para distribuição até essa data mantêm isenção total, desde que pagos conforme o ato original (até 31/12/2028).</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:#b45309;"><i class="ti ti-chart-bar"></i></span>
+          <p class="resumo-text"><strong>IRPF mínimo para altas rendas.</strong> Renda total anual acima de <strong>R$&nbsp;600.000</strong> gera alíquota mínima progressiva de 0% a 10%. Acima de <strong>R$&nbsp;1,2 milhão</strong>, o mínimo é 10% fixo.</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:var(--navy-600);"><i class="ti ti-receipt"></i></span>
+          <p class="resumo-text"><strong>IRRF é dedutível do mínimo.</strong> O imposto retido na fonte sobre dividendos abate o complemento eventualmente devido no IRPF mínimo apurado na declaração anual (DIRPF).</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:var(--navy-600);"><i class="ti ti-user-check"></i></span>
+          <p class="resumo-text"><strong>Nova faixa de isenção do IRPF.</strong> Rendimentos tributáveis mensais até <strong>R$&nbsp;5.000</strong> passam a ter isenção total. Entre R$&nbsp;5.001 e R$&nbsp;7.350, há redução progressiva.</p>
+        </div>
+
+        <div class="resumo-item">
+          <span class="resumo-icon" style="color:#6b7280;"><i class="ti ti-info-circle"></i></span>
+          <p class="resumo-text"><strong>Simples Nacional incluído.</strong> As regras se aplicam a todos os regimes tributários — Lucro Real, Lucro Presumido e Simples Nacional. Não há exceção para empresas do Simples.</p>
+        </div>
+
+      </div>
+    </div>
+    <div class="resumo-footer">
+      <i class="ti ti-shield-check"></i>
+      Resumo informativo. Para decisões tributárias, consulte um contador ou advogado tributarista.
+      <a class="btn outlined" href="https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15270.htm" target="_blank" rel="noopener" style="margin-left:auto;">
+        <i class="ti ti-external-link"></i>Ler lei completa
+      </a>
+    </div>
+  </div>
+
+  <!-- CARD 1: IRRF -->
+  <div class="card">
+    <div class="card-header">
+      <i class="ti ti-building-bank"></i>
+      <div>
+        <h2>Retenção na fonte — IRRF</h2>
+        <p>Mensal · por empresa pagadora</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="field">
+        <label for="totalDistrib">Valor total a distribuir no mês (R$)</label>
+        <input type="number" id="totalDistrib" value="100000" min="0" step="1000">
+      </div>
+
+      <div class="field">
+        <label for="numEmpresas">Número de empresas pagadoras</label>
+        <input type="number" id="numEmpresas" value="1" min="1" max="20" step="1">
+      </div>
+
+      <div class="metrics">
+        <div class="metric" id="card-porempresa">
+          <p class="metric-lbl">Por empresa (média)</p>
+          <p class="metric-val" id="val-porempresa">—</p>
+        </div>
+        <div class="metric" id="card-irrf">
+          <p class="metric-lbl">IRRF retido total</p>
+          <p class="metric-val" id="val-irrf">—</p>
+        </div>
+        <div class="metric" id="card-aliqef">
+          <p class="metric-lbl">Alíquota efetiva</p>
+          <p class="metric-val" id="val-aliqef">—</p>
+        </div>
+        <div class="metric" id="card-liq">
+          <p class="metric-lbl">Valor líquido</p>
+          <p class="metric-val" id="val-liq">—</p>
+        </div>
+      </div>
+
+      <div class="msg info" id="irrf-msg"></div>
+      <div id="tip-otimizacao"></div>
+
+      <div class="chart-wrap" style="height:100px;">
+        <canvas id="irrfChart"></canvas>
+      </div>
+
+    </div>
+    <div class="card-footer">
+      Limite de isenção: R$&nbsp;50.000/mês por CNPJ. IRRF incide sobre o valor total quando excedido.
+    </div>
+  </div>
+
+  <!-- CARD 2: IRPF MÍNIMO -->
+  <div class="card">
+    <div class="card-header">
+      <i class="ti ti-report-money"></i>
+      <div>
+        <h2>IRPF mínimo — apuração anual</h2>
+        <p>Para rendimentos totais acima de R$&nbsp;600.000/ano</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="field">
+        <label for="rendaAnual">Renda total anual estimada (R$)</label>
+        <input type="number" id="rendaAnual" value="1200000" min="0" step="10000">
+      </div>
+
+      <div class="field">
+        <label for="irJaPago">IR já retido / pago no ano (R$) <small>(inclui IRRF s/ dividendos)</small></label>
+        <input type="number" id="irJaPago" value="0" min="0" step="1000">
+      </div>
+
+      <div class="metrics">
+        <div class="metric" id="card-irpfm">
+          <p class="metric-lbl">IRPF mínimo calculado</p>
+          <p class="metric-val" id="irpfm-total">—</p>
+        </div>
+        <div class="metric" id="card-aliqmin">
+          <p class="metric-lbl">Alíquota mínima efetiva</p>
+          <p class="metric-val" id="irpfm-aliq">—</p>
+        </div>
+        <div class="metric">
+          <p class="metric-lbl">IR já pago / retido</p>
+          <p class="metric-val" id="irpfm-pago">—</p>
+        </div>
+        <div class="metric" id="card-compl">
+          <p class="metric-lbl">Complemento na declaração</p>
+          <p class="metric-val" id="irpfm-compl">—</p>
+        </div>
+      </div>
+
+      <div class="msg info" id="irpfm-msg"></div>
+
+      <div class="chart-wrap" style="height:160px;">
+        <canvas id="irpfmChart"></canvas>
+      </div>
+
+    </div>
+    <div class="card-footer">
+      Fórmula: alíquota mínima = 10% × (renda − 600k) ÷ 600k para a faixa intermediária. Diferença paga na DIRPF.
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="site-footer">
+  Simulação informativa baseada na Lei nº 15.270, de 26 de novembro de 2025. Consulte um profissional contábil para decisões tributárias.
+</div>
+
+<script>
+  const R = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:0,maximumFractionDigits:0});
+  const P = v => (v*100).toFixed(1).replace('.',',') + '%';
+  const LIMITE = 50000;
+  let chartIRRF, chartIRPFM;
+
+  function toggleResumo() {
+    const panel = document.getElementById('resumo-panel');
+    const btn   = document.getElementById('btn-resumo');
+    const open  = panel.classList.toggle('open');
+    btn.innerHTML = open
+      ? '<i class="ti ti-x"></i>Fechar resumo'
+      : '<i class="ti ti-book-2"></i>Ver resumo';
+  }
+
+  function setCard(id, state) {
+    const el  = document.getElementById(id);
+    el.className = 'metric' + (state === 'danger' ? ' highlight-danger' : state === 'success' ? ' highlight-success' : '');
+  }
+
+  function calcIRRF() {
+    const total = parseFloat(document.getElementById('totalDistrib').value) || 0;
+    const n     = Math.max(1, parseInt(document.getElementById('numEmpresas').value) || 1);
+    const por   = total / n;
+    let irrf = 0, trib = 0;
+    for (let i = 0; i < n; i++) { if (por > LIMITE) { irrf += por * 0.10; trib++; } }
+    const liq   = total - irrf;
+    const aliq  = total > 0 ? irrf / total : 0;
+
+    document.getElementById('val-porempresa').textContent = R(Math.round(por));
+    document.getElementById('val-irrf').textContent       = R(Math.round(irrf));
+    document.getElementById('val-aliqef').textContent     = P(aliq);
+    document.getElementById('val-liq').textContent        = R(Math.round(liq));
+
+    setCard('card-irrf', irrf > 0 ? 'danger' : 'success');
+    setCard('card-liq',  'success');
+
+    const msg = document.getElementById('irrf-msg');
+    if (irrf === 0) {
+      msg.className = 'msg ok';
+      msg.innerHTML = '<i class="ti ti-circle-check"></i><span>Sem retenção na fonte. Cada empresa distribui <strong>' + R(Math.round(por)) + '</strong> — abaixo do limite de R$&nbsp;50.000/mês.</span>';
+    } else {
+      msg.className = 'msg warn';
+      msg.innerHTML = '<i class="ti ti-alert-triangle"></i><span>' + trib + ' empresa(s) acima de R$&nbsp;50.000/mês. O IRRF de 10% incide sobre o <strong>valor total</strong> de cada uma — não apenas o excedente.</span>';
+    }
+
+    const min  = total > 0 ? Math.ceil(total / LIMITE) : 1;
+    const tip  = document.getElementById('tip-otimizacao');
+    if (total > LIMITE) {
+      const vlr = (total / min).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+      tip.innerHTML = '<div class="tip"><i class="ti ti-bulb"></i><span>Para isenção total: mínimo de <strong>' + min + '</strong> empresa(s) pagadora(s) — R$&nbsp;' + vlr + ' cada.</span><span class="pill pill-navy">Planejamento</span></div>';
+    } else { tip.innerHTML = ''; }
+
+    if (chartIRRF) chartIRRF.destroy();
+    chartIRRF = new Chart(document.getElementById('irrfChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Valor bruto','IRRF retido','Valor líquido'],
+        datasets: [{ data: [Math.round(total),Math.round(irrf),Math.round(liq)], backgroundColor:['#019AC0','#E5484D','#10B981'], borderRadius:4 }]
+      },
+      options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>' '+R(ctx.raw) } } },
+        scales:{
+          x:{ ticks:{ callback:v=>'R$ '+(v/1000).toFixed(0)+'k', font:{size:10}, color:'#8fa3be' }, grid:{color:'rgba(23,32,51,0.06)'} },
+          y:{ grid:{display:false}, ticks:{font:{size:11}, color:'#4d6480'} }
+        }
+      }
+    });
+  }
+
+  function calcIRPFM() {
+    const renda  = parseFloat(document.getElementById('rendaAnual').value) || 0;
+    const pago   = parseFloat(document.getElementById('irJaPago').value)   || 0;
+    let aliq = 0, irpfm = 0;
+    if (renda > 1200000)      { aliq = 0.10; irpfm = renda * 0.10; }
+    else if (renda > 600000)  { aliq = 0.10*(renda-600000)/600000; irpfm = renda*aliq; }
+    const compl = Math.max(0, irpfm - pago);
+
+    document.getElementById('irpfm-total').textContent = R(Math.round(irpfm));
+    document.getElementById('irpfm-aliq').textContent  = P(aliq);
+    document.getElementById('irpfm-pago').textContent  = R(Math.round(pago));
+    document.getElementById('irpfm-compl').textContent = R(Math.round(compl));
+
+    setCard('card-compl', compl > 0 ? 'danger' : 'success');
+
+    const msg = document.getElementById('irpfm-msg');
+    if (renda <= 600000) {
+      msg.className='msg ok'; msg.innerHTML='<i class="ti ti-circle-check"></i><span>Renda abaixo de R$&nbsp;600.000/ano — sem incidência do IRPF mínimo.</span>';
+    } else if (compl === 0) {
+      msg.className='msg ok'; msg.innerHTML='<i class="ti ti-circle-check"></i><span>IR já pago é suficiente — sem complemento na declaração anual.</span>';
+    } else {
+      msg.className='msg warn'; msg.innerHTML='<i class="ti ti-alert-triangle"></i><span>Complemento de <strong>'+R(Math.round(compl))+'</strong> a recolher na DIRPF (abril/2027 para o ano-base 2026). IRRF s/ dividendos é dedutível.</span>';
+    }
+
+    const labels=[], data=[];
+    for (let r=0; r<=2000000; r+=50000) {
+      labels.push(r===0?'0':'R$'+(r/1000).toFixed(0)+'k');
+      let a=0;
+      if (r>1200000) a=10;
+      else if (r>600000) a=parseFloat((10*(r-600000)/600000).toFixed(2));
+      data.push(a);
+    }
+    const idx   = Math.min(Math.round(renda/50000), data.length-1);
+    const ptRad = data.map((_,i)=>i===idx?7:0);
+    const ptCol = data.map((_,i)=>i===idx?'#01162F':'transparent');
+
+    if (chartIRPFM) chartIRPFM.destroy();
+    chartIRPFM = new Chart(document.getElementById('irpfmChart'),{
+      type:'line',
+      data:{ labels, datasets:[{ label:'Alíquota mínima (%)', data, borderColor:'#01B8E0', backgroundColor:'rgba(1,209,255,0.10)', fill:true, tension:0.1, pointRadius:ptRad, pointBackgroundColor:ptCol, pointBorderColor:ptCol, pointHoverRadius:5 }] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>' '+ctx.raw.toFixed(1)+'%' } } },
+        scales:{
+          x:{ ticks:{autoSkip:true,maxTicksLimit:9,maxRotation:0,font:{size:10},color:'#8fa3be'}, grid:{color:'rgba(23,32,51,0.06)'} },
+          y:{ min:0,max:12, ticks:{callback:v=>v+'%',font:{size:10},color:'#8fa3be'}, grid:{color:'rgba(23,32,51,0.06)'} }
+        }
+      }
+    });
+  }
+
+  document.getElementById('totalDistrib').addEventListener('input', calcIRRF);
+  document.getElementById('numEmpresas').addEventListener('input', calcIRRF);
+  document.getElementById('rendaAnual').addEventListener('input', calcIRPFM);
+  document.getElementById('irJaPago').addEventListener('input', calcIRPFM);
+
+  calcIRRF();
+  calcIRPFM();
+</script>
+</body>
+</html>

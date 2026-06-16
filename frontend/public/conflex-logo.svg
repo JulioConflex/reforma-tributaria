@@ -1,0 +1,13 @@
+<svg viewBox="0 0 170 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer C: center(26,26), radius=18, ~260° sweep, opening on the right -->
+  <path
+    d="M36 11 A18 18 0 1 0 36 41"
+    stroke="#01D1FF" stroke-width="6" stroke-linecap="round"/>
+  <!-- Inner C: center(26,26), radius=9, same opening -->
+  <path
+    d="M31 19 A9 9 0 1 0 31 33"
+    stroke="#01D1FF" stroke-width="4" stroke-linecap="round"/>
+  <!-- conflex wordmark — Inter semibold, white -->
+  <text x="60" y="35" font-family="Inter, system-ui, sans-serif" font-size="24"
+        font-weight="600" fill="#ffffff" letter-spacing="-0.3">conflex</text>
+</svg>

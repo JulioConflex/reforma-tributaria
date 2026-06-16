@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reforma Tributária — Guia Completo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #1a2744;
+  --navy-mid:   #243156;
+  --navy-light: #2e3e6b;
+  --blue:       #2563eb;
+  --blue-light: #3b82f6;
+  --blue-pale:  #eff6ff;
+  --blue-pale2: #dbeafe;
+  --bg:         #f4f7fc;
+  --bg2:        #ffffff;
+  --bg3:        #f1f5fb;
+  --border:     #e2e8f4;
+  --border2:    #c7d4ec;
+  --text:       #1a2744;
+  --text2:      #3d4f73;
+  --muted:      #6b7da8;
+  --green:      #059669;
+  --green-bg:   #ecfdf5;
+  --green-brd:  #a7f3d0;
+  --amber:      #b45309;
+  --amber-bg:   #fffbeb;
+  --amber-brd:  #fcd34d;
+  --red:        #b91c1c;
+  --red-bg:     #fef2f2;
+  --red-brd:    #fca5a5;
+  --info-bg:    #eff6ff;
+  --info-brd:   #bfdbfe;
+  --info-text:  #1d4ed8;
+  --font-head:  'Manrope', sans-serif;
+  --font-body:  'Inter', sans-serif;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --shadow:     0 1px 3px rgba(26,39,68,0.08);
+  --shadow-md:  0 4px 12px rgba(26,39,68,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+/* HEADER */
+.header { background: var(--navy); padding: 0 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(26,39,68,0.25); }
+.header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; min-height: 56px; padding: 8px 0; }
+.logo { font-family: var(--font-head); font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: #fff; white-space: nowrap; flex-shrink: 0; line-height: 1.3; }
+.logo span { color: #93c5fd; font-weight: 500; }
+.nav-tabs { display: flex; flex-wrap: wrap; gap: 4px 2px; flex: 1; }
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab { padding: 5px 12px; border-radius: 6px; font-size: 12.5px; font-family: var(--font-body); font-weight: 500; color: #93a8d4; cursor: pointer; border: none; background: transparent; white-space: nowrap; transition: all 0.15s; letter-spacing: 0.01em; }
+.nav-tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.nav-tab.active { color: var(--navy); background: #fff; font-weight: 600; }
+
+/* LAYOUT */
+.main { max-width: 1200px; margin: 0 auto; padding: 32px 40px 80px; }
+.section { display: none; }
+.section.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* HERO */
+.hero { background: var(--navy); border-radius: var(--radius-lg); padding: 36px 44px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.hero::after { content: ''; position: absolute; right: -40px; top: -40px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+.hero-tag { font-size: 11px; font-family: var(--font-body); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #93c5fd; margin-bottom: 10px; }
+.hero h1 { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 10px; letter-spacing: -0.01em; }
+.hero p { color: #a8bcd8; font-size: 14px; max-width: 560px; font-weight: 400; line-height: 1.6; }
+.bases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 22px; }
+.base-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius); padding: 14px 16px; }
+.base-card .lei { font-size: 11px; font-family: var(--font-body); font-weight: 700; letter-spacing: 0.06em; color: #93c5fd; margin-bottom: 5px; text-transform: uppercase; }
+.base-card .desc { font-size: 13px; color: #a8bcd8; line-height: 1.5; font-weight: 400; }
+
+/* SECTION TITLE */
+.sec-title { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.01em; }
+.sec-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; font-weight: 400; }
+
+/* CARD */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.card-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; letter-spacing: -0.01em; }
+.lei-tag { font-size: 11px; font-weight: 600; font-family: var(--font-body); background: var(--blue-pale2); color: var(--info-text); padding: 2px 8px; border-radius: 4px; white-space: nowrap; margin-top: 2px; }
+.card p { color: var(--text2); font-size: 14px; line-height: 1.75; margin-bottom: 12px; font-weight: 400; }
+.card p:last-child { margin-bottom: 0; }
+.card strong { color: var(--navy); font-weight: 600; }
+
+/* ACCORDION */
+.accordion { margin-bottom: 8px; }
+.acc-header { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s; user-select: none; box-shadow: var(--shadow); }
+.acc-header:hover { border-color: var(--border2); background: var(--bg3); }
+.acc-header.open { border-color: var(--blue); background: var(--blue-pale); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.acc-left .acc-title { font-family: var(--font-head); font-weight: 700; font-size: 14px; color: var(--navy); letter-spacing: -0.01em; }
+.acc-left .acc-sub { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+.acc-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 300; color: var(--muted); flex-shrink: 0; transition: all 0.2s; line-height: 1; }
+.acc-header.open .acc-icon { transform: rotate(45deg); background: var(--blue); color: #fff; border-color: var(--blue); }
+.acc-body { background: var(--bg2); border: 1px solid var(--blue); border-top: none; border-radius: 0 0 var(--radius) var(--radius); max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.2s; }
+.acc-body.open { max-height: 4000px; padding: 20px 24px; }
+.acc-body p { font-size: 14px; color: var(--text2); line-height: 1.75; margin-bottom: 14px; font-weight: 400; }
+.acc-body p:last-child { margin-bottom: 0; }
+.acc-body strong { color: var(--navy); font-weight: 600; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--navy); }
+th { text-align: left; padding: 10px 14px; font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #93c5fd; }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; font-size: 13px; font-weight: 400; }
+td strong { color: var(--navy); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 2px; font-weight: 500; }
+
+/* BADGE */
+.badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; font-family: var(--font-body); }
+.badge.green  { background: var(--green-bg);  color: var(--green);      border: 1px solid var(--green-brd); }
+.badge.red    { background: var(--red-bg);     color: var(--red);        border: 1px solid var(--red-brd); }
+.badge.amber  { background: var(--amber-bg);   color: var(--amber);      border: 1px solid var(--amber-brd); }
+.badge.blue   { background: var(--blue-pale2); color: var(--info-text);  border: 1px solid var(--info-brd); }
+.badge.navy   { background: var(--navy);       color: #fff; }
+
+/* TIMELINE */
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ''; position: absolute; left: 9px; top: 10px; bottom: 10px; width: 2px; background: var(--border2); border-radius: 1px; }
+.tl-item { position: relative; margin-bottom: 22px; }
+.tl-item:last-child { margin-bottom: 0; }
+.tl-dot { position: absolute; left: -23px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: var(--shadow); }
+.tl-dot.green  { background: var(--green); }
+.tl-dot.amber  { background: #f59e0b; }
+.tl-dot.red    { background: var(--red); }
+.tl-dot.blue   { background: var(--blue); }
+.tl-year { font-family: var(--font-head); font-weight: 700; font-size: 13px; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.01em; }
+.tl-text { font-size: 13px; color: var(--text2); line-height: 1.65; font-weight: 400; }
+.tl-text strong { color: var(--navy); font-weight: 600; }
+
+/* GRIDS */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+.mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.mini-card .label { font-size: 11px; font-family: var(--font-body); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.mini-card .value { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.02em; }
+.mini-card .sub { font-size: 12px; color: var(--muted); line-height: 1.45; font-weight: 400; }
+
+/* SEGMENT CARDS */
+.seg-card { background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.seg-card.green-border  { border-left-color: var(--green); }
+.seg-card.amber-border  { border-left-color: #f59e0b; }
+.seg-card.purple-border { border-left-color: #7c3aed; }
+.seg-card.red-border    { border-left-color: var(--red); }
+.seg-card.teal-border   { border-left-color: #0891b2; }
+.seg-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.seg-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 3px; letter-spacing: -0.01em; }
+.seg-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+.seg-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg-list { list-style: none; }
+.seg-list li { font-size: 13.5px; color: var(--text2); padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; line-height: 1.55; font-weight: 400; }
+.seg-list li:last-child { border-bottom: none; }
+.seg-list li .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 7px; }
+.seg-list li .dot.green  { background: var(--green); }
+.seg-list li .dot.amber  { background: #f59e0b; }
+.seg-list li .dot.red    { background: var(--red); }
+.seg-list strong { color: var(--navy); font-weight: 600; }
+
+/* ALERTS */
+.alert { border-radius: var(--radius); padding: 13px 16px; margin: 12px 0; font-size: 13px; line-height: 1.65; display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
+.alert-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.alert.warning { background: var(--amber-bg); border: 1px solid var(--amber-brd); color: var(--amber); }
+.alert.danger  { background: var(--red-bg);   border: 1px solid var(--red-brd);   color: var(--red); }
+.alert.success { background: var(--green-bg); border: 1px solid var(--green-brd); color: var(--green); }
+.alert.info    { background: var(--info-bg);  border: 1px solid var(--info-brd);  color: var(--info-text); }
+.alert strong  { font-weight: 600; }
+
+/* HIGHLIGHTS */
+.hl       { color: var(--blue);  font-weight: 600; }
+.hl-green { color: var(--green); font-weight: 600; }
+.hl-amber { color: var(--amber); font-weight: 600; }
+.hl-red   { color: var(--red);   font-weight: 600; }
+
+/* FOOTNOTE */
+.footnote { font-size: 12px; color: var(--muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-weight: 400; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .main { padding: 20px 16px 60px; }
+  .header { padding: 0 16px; }
+  .hero { padding: 24px 20px; }
+  .bases-grid, .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+  .card { padding: 18px; }
+  .hero h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">Reforma Tributária<br><span>EC 132/2023 · LC 214/2025 · LC 227/2026</span></div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active"  onclick="show('visao',this)">Visão Geral</button>
+      <button class="nav-tab"         onclick="show('tributos',this)">IBS · CBS · IS</button>
+      <button class="nav-tab"         onclick="show('comercio',this)">Comércio</button>
+      <button class="nav-tab"         onclick="show('servicos',this)">Serviços</button>
+      <button class="nav-tab"         onclick="show('industria',this)">Indústria</button>
+      <button class="nav-tab"         onclick="show('saude',this)">Saúde</button>
+      <button class="nav-tab"         onclick="show('holdings',this)">Holdings</button>
+      <button class="nav-tab"         onclick="show('simples',this)">Simples Nacional</button>
+      <button class="nav-tab"         onclick="show('split',this)">Split Payment</button>
+      <button class="nav-tab"         onclick="show('transicao',this)">Transição</button>
+      <button class="nav-tab"         onclick="show('cgibs',this)">CGIBS</button>
+      <button class="nav-tab"         onclick="show('itcmd',this)">ITCMD</button>
+      <button class="nav-tab"         onclick="show('penalidades',this)">Penalidades</button>
+    </nav>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- ═══════════════════════════════ VISÃO GERAL -->
+<section id="visao" class="section active">
+  <div class="hero">
+    <div class="hero-tag">Guia Teórico Completo · Conflex Assessoria Contábil · 2026</div>
+    <h1>Reforma Tributária<br>Todos os segmentos e regimes</h1>
+    <p>Material de estudo baseado diretamente nos textos legais. Todas as afirmações citam a base legal correspondente.</p>
+    <div class="bases-grid">
+      <div class="base-card"><div class="lei">EC 132/2023</div><div class="desc">Base constitucional da reforma. Extingue cinco tributos, cria IBS, CBS e IS, define o princípio do destino e a transição até 2033.</div></div>
+      <div class="base-card"><div class="lei">LC 214/2025</div><div class="desc">Regulamenta IBS, CBS e IS em detalhe: fato gerador, base de cálculo, alíquotas, regimes específicos e split payment.</div></div>
+      <div class="base-card"><div class="lei">LC 227/2026</div><div class="desc">Institui o CGIBS, o processo administrativo do IBS, distribuição da arrecadação, normas gerais do ITCMD e penalidades.</div></div>
+    </div>
+  </div>
+
+  <div class="sec-title">Mapa geral das mudanças</div>
+  <div class="sec-sub">Cinco tributos extintos, três criados, sistema redesenhado do zero</div>
+
+  <div class="card">
+    <div class="card-title">Tributos extintos e seus substitutos <span class="lei-tag">EC 132/2023, art. 1º</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tributo extinto</th><th>Competência</th><th>Extinção</th><th>Substituído por</th></tr></thead>
+      <tbody>
+        <tr><td><strong>PIS</strong></td><td>Federal</td><td>31/12/2026</td><td>CBS</td></tr>
+        <tr><td><strong>COFINS</strong></td><td>Federal</td><td>31/12/2026</td><td>CBS</td></tr>
+        <tr><td><strong>IPI</strong></td><td>Federal</td><td>31/12/2032 (exceto ZFM)</td><td>IS (parcial)</td></tr>
+        <tr><td><strong>ICMS</strong></td><td>Estadual</td><td>31/12/2032</td><td>IBS — parcela estadual</td></tr>
+        <tr><td><strong>ISS</strong></td><td>Municipal</td><td>31/12/2032</td><td>IBS — parcela municipal</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="grid3">
+    <div class="mini-card"><div class="label">IBS estimado</div><div class="value">~18,7%</div><div class="sub">Estados e municípios. Substitui ICMS e ISS. Alíquota de referência a ser fixada pelo Senado.</div></div>
+    <div class="mini-card"><div class="label">CBS estimada</div><div class="value">~9,3%</div><div class="sub">Federal. Substitui PIS e COFINS. Valor exato fixado com base na arrecadação de 2027.</div></div>
+    <div class="mini-card"><div class="label">Carga combinada</div><div class="value">~28%</div><div class="sub">Incide sobre valor agregado com não cumulatividade plena — crédito de todas as aquisições tributadas.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Os três pilares da reforma</div>
+    <p><strong class="hl">1. Princípio do destino (EC 132/2023):</strong> hoje o ICMS fica no estado de origem (onde produz). Com a reforma, IBS e CBS vão para onde o consumidor está. Redistribuição massiva entre estados produtores e consumidores.</p>
+    <p><strong class="hl">2. Não cumulatividade plena (LC 214/2025, arts. 47–57):</strong> crédito de absolutamente tudo que for adquirido para a atividade — inclusive serviços, locações e energia, o que hoje é vedado no ISS. Fim da tributação em cascata.</p>
+    <p><strong class="hl">3. Uniformidade nacional (LC 227/2026, art. 2º):</strong> um regulamento único do CGIBS para todo o Brasil, em vez de 27 legislações de ICMS e 5.570+ legislações de ISS.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Linha do tempo</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">CBS a <strong>0,9%</strong> e IBS a <strong>0,1%</strong>. Fase de testes. Impacto quase nulo — momento ideal para preparação.</div></div>
+      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena. Split payment começa. IBS ainda reduzido. PIS e COFINS extintos em 31/12/2026.</div></div>
+      <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2029–2032 — Transição gradual</div><div class="tl-text">ICMS e ISS reduzidos em <strong>10% ao ano</strong>, IBS cresce proporcionalmente. Dois sistemas simultâneos.</div></div>
+      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS, ISS e IPI extintos.</strong> Somente IBS e CBS. Split payment integral. Saldos de ICMS compensados em 240 parcelas.</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Impacto por segmento — resumo rápido</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Segmento</th><th>Principal mudança</th><th>Carga estimada</th><th>Atenção</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Comércio / Varejo</strong></td><td>IBS substitui ICMS; crédito pleno nas compras</td><td>Alíquota plena ~28%</td><td>Split payment no caixa</td></tr>
+        <tr><td><strong>Serviços gerais</strong></td><td>IBS substitui ISS; crédito de serviços pela primeira vez</td><td>Alíquota plena ~28%</td><td>Aumento de carga para muitos</td></tr>
+        <tr><td><strong>Serviços de saúde</strong></td><td>Redução de 60% na alíquota</td><td>~11,2%</td><td>Regime específico de planos</td></tr>
+        <tr><td><strong>Educação</strong></td><td>Redução de 60% na alíquota</td><td>~11,2%</td><td>Vigilância nas atividades-meio</td></tr>
+        <tr><td><strong>Profissões regulamentadas</strong></td><td>Redução de 30% na alíquota</td><td>~19,6%</td><td>Contadores, advogados, engenheiros PJ</td></tr>
+        <tr><td><strong>Indústria geral</strong></td><td>IPI extinto; CBS + IBS substituem PIS/COFINS + ICMS</td><td>Alíquota plena ~28%</td><td>Crédito pleno; ZFM mantida</td></tr>
+        <tr><td><strong>Agronegócio</strong></td><td>Regime específico; crédito presumido</td><td>Redução 60% ou zero</td><td>Produtor rural PF tem opção</td></tr>
+        <tr><td><strong>Imóveis</strong></td><td>Regime específico; redutor de ajuste</td><td>Alíquota plena com redutores</td><td>Mercado secondary tax</td></tr>
+        <tr><td><strong>Holdings</strong></td><td>ITCMD progressivo obrigatório</td><td>Depende da lei estadual</td><td>Urgência no planejamento sucessório</td></tr>
+        <tr><td><strong>Simples Nacional</strong></td><td>Continua; IBS entra nas tabelas</td><td>Mesma carga, composição diferente</td><td>Opção pelo regime regular</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ IBS CBS IS -->
+<section id="tributos" class="section">
+  <div class="sec-title">IBS, CBS e Imposto Seletivo</div>
+  <div class="sec-sub">Estrutura, fato gerador, base de cálculo e alíquotas</div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">IBS — Imposto sobre Bens e Serviços</div><div class="acc-sub">EC 132/2023, art. 1º · LC 214/2025 · LC 227/2026</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Competência <strong>compartilhada entre estados e municípios</strong>, administrado de forma unificada pelo CGIBS. Substitui integralmente ICMS e ISS.</p>
+      <p><strong>Fato gerador:</strong> operação onerosa com bens (materiais e imateriais) e serviços por contribuinte no exercício de atividade econômica. Também incide sobre importações. LC 214/2025, arts. 3º a 10.</p>
+      <p><strong>Base de cálculo:</strong> valor da operação excluídos o próprio IBS e a CBS. Regras específicas para permuta, operações com partes relacionadas e fornecimentos não onerosos. LC 214/2025, art. 12 (redação LC 227/2026).</p>
+      <p><strong>Não cumulatividade plena:</strong> crédito integral de todo IBS pago nas aquisições sem restrições — inclusive serviços, locações e energia. LC 214/2025, arts. 47 a 57.</p>
+      <p><strong>Alíquota de referência:</strong> fixada pelo Senado com base nas receitas projetadas de 2027/2028 para manter a arrecadação equivalente ao ICMS e ISS históricos. Cada ente federativo pode fixar alíquota diferente da referência. Arts. 344 e 361–365 da LC 214/2025 (redação LC 227/2026).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">CBS — Contribuição sobre Bens e Serviços</div><div class="acc-sub">EC 132/2023 · LC 214/2025</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Competência <strong>federal</strong>, administrada pela RFB. Substitui PIS e COFINS. Mesmas regras de incidência do IBS — fato gerador, base de cálculo e não cumulatividade plena idênticos. Entrada em vigor: 1º de janeiro de 2027 (alíquota-teste de 0,1% em 2026).</p>
+      <p><strong>Harmonização com IBS:</strong> CGIBS e RFB atuam conjuntamente para uniformizar interpretação, soluções de consulta, contencioso e sistemas tecnológicos. LC 227/2026, arts. 321 a 323-M e art. 493-A.</p>
+      <p><strong>Alíquota estimada:</strong> ~9,3%, fixada para substituir PIS/COFINS sem perda de receita federal. Valor exato em ato conjunto RFB e CGIBS com base nos dados de 2027.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">IS — Imposto Seletivo</div><div class="acc-sub">EC 132/2023 · LC 214/2025, arts. 409–437 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Federal, incide sobre bens e serviços <strong>prejudiciais à saúde ou ao meio ambiente</strong>. Não é recuperável como crédito — é custo definitivo.</p>
+      <p><strong>Produtos sujeitos:</strong> cigarros e fumígenos; bebidas alcoólicas; bebidas açucaradas; veículos (carros, motos, aviões, embarcações); bens minerais extraídos; armas e munições.</p>
+      <p><strong>Alíquotas:</strong> escalonadas. Para fumígenos e bebidas, incorporam progressivamente de 2029 a 2033 o diferencial entre o ICMS histórico e as alíquotas modais do novo sistema. Bens minerais: máximo 0,25% sobre valor de mercado. Art. 422, §§2º e 5º (redação LC 227/2026).</p>
+      <p><strong>Não gera crédito:</strong> é tributo-custo, diferente do IBS e CBS.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Tabela de alíquotas diferenciadas <span class="lei-tag">LC 214/2025 · LC 227/2026</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tratamento</th><th>Setores / produtos</th><th>Base legal</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge green">Alíquota zero</span></td><td><strong>Cesta básica:</strong> carnes, ovos, frutas, verduras, legumes, peixe, queijo, óleo de soja</td><td><span class="lei-mini">LC 214/2025</span></td></tr>
+        <tr><td><span class="badge green">Alíquota zero</span></td><td><strong>Medicamentos:</strong> oncologia, HIV/AIDS, doenças raras, diabetes, cardiovasculares, Farmácia Popular, soros e vacinas</td><td><span class="lei-mini">LC 214/2025, art. 146</span></td></tr>
+        <tr><td><span class="badge blue">Redução 60%</span></td><td>Serviços de saúde; educação; dispositivos médicos; medicamentos; alimentos para consumo humano; higiene/limpeza (baixa renda); produtos agropecuários e insumos; produções artísticas; atividades desportivas</td><td><span class="lei-mini">LC 214/2025, arts. 128–138</span></td></tr>
+        <tr><td><span class="badge amber">Redução 30%</span></td><td>Profissões do Art. 127 (advogados, contadores, administradores, economistas, engenheiros/arquitetos, veterinários, educação física). Saúde — médicos, dentistas, psicólogos, nutricionistas — fica na redução de 60%.</td><td><span class="lei-mini">LC 214/2025, art. 127</span></td></tr>
+        <tr><td><span class="badge navy">Regime específico</span></td><td>Planos de saúde; serviços financeiros; combustíveis; bens imóveis; agronegócio; cooperativas; ZFM; Simples Nacional</td><td><span class="lei-mini">LC 214/2025, Título V · LC 227/2026</span></td></tr>
+        <tr><td><span class="badge green">Imunidade</span></td><td>Templos religiosos; partidos políticos; entidades sindicais; instituições s/fins lucrativos; exportações</td><td><span class="lei-mini">EC 132/2023 · LC 214/2025</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ COMÉRCIO -->
+<section id="comercio" class="section">
+  <div class="sec-title">Comércio e varejo</div>
+  <div class="sec-sub">Empresas que compram e revendem produtos · Atacado · Varejo · Distribuidoras</div>
+
+  <div class="card">
+    <div class="card-title">O que muda estruturalmente para o comércio <span class="lei-tag">LC 214/2025 · LC 227/2026</span></div>
+    <p>O comércio é o segmento onde a troca ICMS → IBS é mais direta. A lógica de tributar a circulação de mercadorias se mantém, mas o mecanismo muda completamente: de 27 regimes estaduais diferentes para um único nacional, com alíquota pelo destino e não pela origem.</p>
+    <p><strong>Benefício principal:</strong> a não cumulatividade plena permite crédito de absolutamente tudo — frete, embalagem, serviços contratados, aluguel do galpão, energia elétrica. Hoje muitos desses itens não geram crédito de ICMS dependendo do estado.</p>
+    <p><strong>Desafio principal:</strong> o split payment retém o tributo no momento do recebimento. Uma loja que recebia R$ 1.000 + ICMS via boleto e recolhia o tributo só no mês seguinte, agora recebe apenas o valor líquido. Isso elimina o "float tributário" que muitas empresas usavam como capital de giro.</p>
+  </div>
+
+  <div class="seg-card">
+    <div class="seg-header">
+      <div><div class="seg-title">Substituição tributária do ICMS — o que acontece</div><div class="seg-sub">LC 227/2026, arts. 142–145</div></div>
+    </div>
+    <ul class="seg-list">
+      <li><span class="dot"></span><div><strong>Fim da substituição tributária como conhecemos:</strong> o IBS é cobrado operação a operação com crédito pleno em toda a cadeia. A lógica da ST — antecipar o imposto de toda a cadeia no fabricante — não se aplica ao IBS/CBS não cumulativos.</div></li>
+      <li><span class="dot amber"></span><div><strong>Estoque em 31/12/2032 com ICMS-ST:</strong> o comerciante que tiver mercadorias com ICMS-ST em estoque pode se creditar desse valor para compensar IBS nos meses seguintes, em 12 parcelas mensais. LC 227/2026, art. 144.</div></li>
+      <li><span class="dot green"></span><div><strong>Saldo credor de ICMS acumulado:</strong> empresas exportadoras ou com saldos credores de ICMS históricos podem compensar esses valores com o IBS em 240 parcelas mensais a partir de 2033, corrigidas pelo IPCA. LC 227/2026, arts. 132–141.</div></li>
+    </ul>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Tributação pelo destino — impacto nas vendas interestaduais</div><div class="acc-sub">EC 132/2023 · LC 214/2025, art. 11</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Hoje o ICMS nas vendas interestaduais entre contribuintes é dividido entre estado de origem (alíquota interestadual: 7% ou 12%) e estado de destino (diferencial de alíquota — DIFAL). Nas vendas para consumidores finais, há o DIFAL da EC 87/2015.</p>
+      <p><strong>Com a reforma:</strong> o IBS vai inteiramente para o estado e município de destino — onde o consumidor está. Não há mais DIFAL, não há alíquota interestadual. O IBS da operação toda flui para o destino e é distribuído pelo CGIBS.</p>
+      <p><strong>Impacto para o comércio eletrônico:</strong> o e-commerce que vende para todo o Brasil continuará recolhendo um tributo único (IBS + CBS), mas o CGIBS distribuirá automaticamente para cada estado/município de destino com base no endereço do comprador. O comerciante não precisa se preocupar com inscrição estadual em cada UF — o CGIBS faz a distribuição.</p>
+      <p><strong>Impacto para a precificação:</strong> empresas instaladas em estados com alíquota de ICMS mais alta (como SP com 18%) e que vendem para estados com alíquota menor terão uma mudança de referência. A partir de 2033, a alíquota é uniforme pelo CGIBS independentemente do estado de origem.</div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Crédito nas compras — o que muda na prática</div><div class="acc-sub">LC 214/2025, arts. 47–57 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Hoje o ICMS não cumulativo tem restrições significativas: crédito de ativo permanente é aproveitado em 1/48 por mês; energia elétrica só gera crédito em alguns casos; serviços contratados geralmente não geram crédito.</p>
+      <p><strong>Com o IBS/CBS:</strong> não cumulatividade plena. Geram crédito: mercadorias para revenda, insumos, energia elétrica, serviços contratados (frete, TI, contabilidade, jurídico), locações, manutenção de equipamentos, embalagens. O único limite é que o bem ou serviço não esteja na lista de vedações do art. 57 (uso pessoal, etc.).</p>
+      <p><strong>Ativo permanente:</strong> o crédito de IBS/CBS sobre bens do ativo permanente é apropriado integralmente no período de aquisição, não em 1/48 como hoje. Isso melhora significativamente o caixa de empresas que investem em equipamentos e instalações.</p>
+      <p><strong>Operação com não contribuintes:</strong> quando o comerciante compra de pessoa física (produtor rural PF, transportador autônomo, catador de recicláveis, pessoa física vendendo bem usado), há crédito presumido equivalente ao IBS/CBS que incidiria se o vendedor fosse contribuinte. LC 214/2025, arts. 164–171.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Simples Nacional no comércio — novas opções</div><div class="acc-sub">LC 227/2026, art. 168 · LC 214/2025, art. 13, §§9º e 10</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>O comércio no Simples Nacional continua apurando pelo regime unificado. O ISS some das tabelas do comércio (Anexo I) e o IBS entra progressivamente de 2027 a 2032. A carga total não muda — só a composição.</p>
+      <p><strong>Opção pelo regime regular de IBS/CBS:</strong> uma loja do Simples que vende principalmente para outras empresas (B2B — exemplo: distribuidora para restaurantes) pode optar por recolher IBS/CBS pelo regime regular, gerando crédito integral para seus clientes. Continua no Simples para IRPJ, CSLL e CPP. A opção é por semestre e irretratável.</p>
+      <p><strong>Quando essa opção vale a pena para o comércio:</strong> quando os clientes são contribuintes do regime regular e precisam de crédito; quando a empresa tem muitos insumos tributados que geram crédito; quando a alíquota efetiva do regime regular (descontados os créditos) é menor que a do Simples para aquela faixa.</p>
+    </div>
+  </div>
+
+  <div class="alert warning">
+    <span class="alert-icon">⚠</span>
+    <div><strong>Ponto crítico para varejistas e distribuidoras:</strong> o split payment elimina o "float" tributário. Empresas que hoje recebem o tributo embutido no preço e usam esse valor como capital de giro por 30–45 dias precisarão rever sua estrutura de capital de giro a partir de 2027 (CBS) e 2029 em diante (IBS crescente).</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SERVIÇOS -->
+<section id="servicos" class="section">
+  <div class="sec-title">Serviços — todos os segmentos</div>
+  <div class="sec-sub">Serviços gerais · Tecnologia · Educação · Financeiros · Turismo · Corretoras</div>
+
+  <div class="card">
+    <div class="card-title">O que muda estruturalmente para o setor de serviços <span class="lei-tag">LC 214/2025 · LC 227/2026</span></div>
+    <p>O setor de serviços é o mais impactado da reforma — para bem e para mal. O ISS atual, com alíquota de 2% a 5% e calculado apenas sobre a receita da empresa sem crédito algum, é substituído pelo IBS/CBS com alíquota muito mais alta (até ~28% na alíquota plena), mas com não cumulatividade plena.</p>
+    <p><strong>Resultado líquido:</strong> depende completamente da estrutura de custos da empresa. Prestadores de serviços com muitos insumos tributados (TI, agências, consultorias com alto custo de terceiros) podem ter carga equivalente ou até menor. Prestadores com poucos insumos (mão de obra intensiva, como serviços de limpeza) terão aumento de carga — a base continua alta e os créditos são baixos.</p>
+  </div>
+
+  <div class="seg-card">
+    <div class="seg-header"><div><div class="seg-title">Tecnologia da informação (TI, software, SaaS)</div><div class="seg-sub">LC 214/2025, art. 142 (redação LC 227/2026)</div></div><span class="badge blue">Regime regular</span></div>
+    <ul class="seg-list">
+      <li><span class="dot"></span><div><strong>IBS + CBS com alíquota plena</strong> (~28%) sobre receita de software, desenvolvimento, suporte e licenciamento, salvo benefício específico.</div></li>
+      <li><span class="dot green"></span><div><strong>Segurança da informação e cibersegurança:</strong> redução especial para empresas com sócio brasileiro com no mínimo 20% do capital social. LC 214/2025, art. 142, inciso II (redação LC 227/2026).</div></li>
+      <li><span class="dot green"></span><div><strong>Crédito de toda a cadeia:</strong> infraestrutura cloud, licenças, serviços de terceiros, energia dos data centers — tudo gera crédito.</div></li>
+      <li><span class="dot amber"></span><div><strong>SaaS e serviços digitais para pessoa física:</strong> o local da operação é o domicílio do adquirente. IBS distribuído para o município e estado onde o cliente mora. LC 214/2025, art. 11, inciso X.</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card amber-border">
+    <div class="seg-header"><div><div class="seg-title">Educação — escolas, cursos e faculdades</div><div class="seg-sub">LC 214/2025, art. 129</div></div><span class="badge blue">Redução 60%</span></div>
+    <ul class="seg-list">
+      <li><span class="dot green"></span><div><strong>Alíquota reduzida em 60%</strong> sobre serviços de educação — alíquota efetiva ~11,2%. Aplica-se a ensino em todos os níveis, cursos livres, EAD e atividades de suporte educacional.</div></li>
+      <li><span class="dot amber"></span><div><strong>Atividades-meio não têm redução:</strong> serviços administrativos, cantina, estacionamento, eventos prestados pela escola são tributados pela alíquota plena se não forem parte integrante do serviço educacional.</div></li>
+      <li><span class="dot green"></span><div><strong>Entidades educacionais sem fins lucrativos:</strong> imunes ao IBS/CBS nas operações relacionadas às suas finalidades essenciais. EC 132/2023 + LC 214/2025, art. 6º.</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card teal-border">
+    <div class="seg-header"><div><div class="seg-title">Serviços financeiros — bancos, seguradoras, financeiras</div><div class="seg-sub">LC 214/2025, arts. 182–233 (redação LC 227/2026) · LC 227/2026, art. 113, II</div></div><span class="badge navy">Regime específico</span></div>
+    <ul class="seg-list">
+      <li><span class="dot"></span><div><strong>Regime específico completo</strong> com alíquotas nacionalmente uniformes. Não segue as regras gerais do IBS/CBS — tem seu próprio sistema de apuração.</div></li>
+      <li><span class="dot"></span><div><strong>Alíquotas de transição (2027–2033):</strong> soma IBS + CBS começa em <strong>10,85%</strong> em 2027/2028 e vai a <strong>12,5%</strong> em 2033. LC 214/2025, art. 233 (redação LC 227/2026).</div></li>
+      <li><span class="dot amber"></span><div><strong>Distribuição do IBS pelo domicílio do tomador:</strong> diferente do regime geral, nas operações financeiras o IBS vai para o município e estado do cliente. LC 227/2026, art. 113, II.</div></li>
+      <li><span class="dot green"></span><div><strong>Importação de serviços financeiros de partes relacionadas:</strong> alíquota zero, mas somente até o valor praticado em condições de mercado. Art. 231, §3º (redação LC 227/2026).</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card purple-border">
+    <div class="seg-header"><div><div class="seg-title">Corretoras de seguros e planos de saúde</div><div class="seg-sub">LC 214/2025 · Profissões regulamentadas</div></div><span class="badge amber">Redução 30%</span></div>
+    <ul class="seg-list">
+      <li><span class="dot green"></span><div><strong>Corretores de seguros e planos como profissão regulamentada</strong> têm redução de 30% na alíquota. Alíquota efetiva ~19,6% sobre as comissões recebidas.</div></li>
+      <li><span class="dot"></span><div><strong>Intermediação de planos de saúde:</strong> os serviços de intermediação vinculados a planos de assistência à saúde têm regime específico de distribuição do IBS pelo domicílio do titular do plano. LC 227/2026, art. 113, III.</div></li>
+      <li><span class="dot green"></span><div><strong>Crédito de todas as aquisições:</strong> software de gestão, telefonia, material de escritório, serviços contratados — tudo gera crédito, sem as restrições do ISS atual.</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card green-border">
+    <div class="seg-header"><div><div class="seg-title">Turismo, hotéis, bares e restaurantes</div><div class="seg-sub">LC 214/2025, arts. 277–285</div></div><span class="badge navy">Regime específico</span></div>
+    <ul class="seg-list">
+      <li><span class="dot"></span><div><strong>Bares e restaurantes</strong> têm regime específico próprio. O fornecimento de alimentação e bebidas nesses estabelecimentos segue regras diferenciadas de base de cálculo.</div></li>
+      <li><span class="dot"></span><div><strong>Hotelaria, parques de diversão e temáticos</strong> têm regime específico com <strong>redução de 40%</strong> nas alíquotas (LC 214/2025, art. 281). Diferente de bares/restaurantes, o prestador mantém o direito a crédito das aquisições (art. 282).</div></li>
+      <li><span class="dot green"></span><div><strong>Agências de turismo:</strong> distribuição do IBS pelo domicílio do adquirente do serviço. Regime específico de LC 227/2026, art. 113, V.</div></li>
+      <li><span class="dot amber"></span><div><strong>Transporte coletivo de passageiros:</strong> intermunicipal e interestadual (rodoviário, ferroviário, hidroviário) tem regime específico. Transporte aéreo regional também. LC 227/2026, art. 106.</div></li>
+    </ul>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Profissões regulamentadas em PJ — redução de 30%</div><div class="acc-sub">LC 214/2025</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>A redução de 30% nas alíquotas de IBS e CBS aplica-se às atividades intelectuais de natureza científica, literária ou artística fiscalizadas por conselho, em <strong>lista taxativa</strong> (LC 214/2025, art. 127): administradores, advogados, arquitetos e urbanistas, assistentes sociais, bibliotecários, biólogos, contabilistas, economistas, profissionais de educação física, engenheiros e agrônomos, estatísticos, médicos veterinários, museólogos, químicos, relações públicas, técnicos industriais e agrícolas. <strong>Atenção:</strong> médicos, dentistas, psicólogos, fisioterapeutas, fonoaudiólogos, nutricionistas e farmacêuticos NÃO estão nessa lista — seus serviços são serviços de saúde, com redução de <strong>60%</strong> (art. 130).</p>
+      <p><strong>Alíquota efetiva aproximada:</strong> ~19,6% (28% × 70%). Isso ainda é significativamente maior que o ISS atual de 2% a 5% sobre a receita bruta sem crédito. O impacto depende: se a empresa tem muitos insumos tributados (aluguel, serviços, equipamentos), o crédito pode compensar boa parte da diferença.</p>
+      <p><strong>Atenção para escritórios contábeis:</strong> a contabilidade é profissão regulamentada (CFC). Isso significa redução de 30% para serviços contábeis prestados via PJ. Importante comunicar isso aos clientes contadores e administradores.</p>
+      <p><strong>Sociedades uniprofissionais:</strong> ainda há discussão sobre o tratamento tributário das sociedades uniprofissionais que hoje pagam ISS por quota fixa. A LC 214/2025 e LC 227/2026 não mantêm esse regime especial — essas empresas passarão ao regime geral do IBS/CBS com redução de 30%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ INDÚSTRIA -->
+<section id="industria" class="section">
+  <div class="sec-title">Indústria e produção</div>
+  <div class="sec-sub">Indústria geral · Agronegócio · Combustíveis · Zona Franca de Manaus · Mineração</div>
+
+  <div class="card">
+    <div class="card-title">O que muda para a indústria <span class="lei-tag">EC 132/2023 · LC 214/2025 · LC 227/2026</span></div>
+    <p>Para a indústria, a reforma traz a extinção do IPI (exceto para ZFM) e a substituição do trinômio PIS/COFINS + IPI + ICMS pelo par CBS + IBS. O impacto varia muito por segmento: indústrias com cadeias longas de produção se beneficiam da não cumulatividade plena; indústrias de bens sujeitos ao IS têm tributação adicional permanente.</p>
+    <p><strong>Principal benefício:</strong> crédito pleno de todos os insumos — inclusive energia elétrica, serviços contratados, fretes e embalagens — sem as restrições atuais do ICMS e PIS/COFINS.</p>
+    <p><strong>Principal desafio:</strong> o split payment na cobrança das vendas e o período de transição com dois sistemas simultâneos exigem adaptação dos sistemas ERP e da gestão de caixa.</p>
+  </div>
+
+  <div class="seg-card green-border">
+    <div class="seg-header"><div><div class="seg-title">Agronegócio — produtor rural e agroindústria</div><div class="seg-sub">LC 214/2025, arts. 160–168 (redação LC 227/2026)</div></div><span class="badge blue">Regime específico</span></div>
+    <ul class="seg-list">
+      <li><span class="dot green"></span><div><strong>Produtos agropecuários básicos:</strong> redução de 60% nas alíquotas. Insumos agropecuários: redução de 60%. Isso inclui sementes, fertilizantes, defensivos, máquinas agrícolas, rações e outros.</div></li>
+      <li><span class="dot green"></span><div><strong>Cesta básica ampliada com alíquota zero:</strong> carnes, ovos, frutas, verduras, legumes, peixe, leite e outros produtos essenciais têm alíquota zero de IBS e CBS.</div></li>
+      <li><span class="dot"></span><div><strong>Produtor rural pessoa física — opção:</strong> pode optar por ser contribuinte do IBS/CBS (gera crédito para quem compra dele) ou não. Se não for contribuinte, o adquirente tem crédito presumido equivalente ao tributo que incidiria. LC 214/2025, arts. 164 e 168 (redação LC 227/2026).</div></li>
+      <li><span class="dot amber"></span><div><strong>Produtor rural pessoa jurídica:</strong> é contribuinte obrigatório do IBS/CBS no regime regular, salvo opção pelo Simples Nacional se atender os requisitos.</div></li>
+      <li><span class="dot green"></span><div><strong>Integração agroindustrial:</strong> o produtor rural integrado (ex.: fumicultor integrado à fumageira) tem percentuais de crédito presumido diferenciados conforme o bem/serviço fornecido. LC 214/2025, art. 168, §6º (redação LC 227/2026).</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card amber-border">
+    <div class="seg-header"><div><div class="seg-title">Combustíveis — regime específico de incidência única</div><div class="seg-sub">LC 214/2025, arts. 172–181 (redação LC 227/2026) · LC 192/2022 (redação LC 227/2026)</div></div><span class="badge navy">Regime específico</span></div>
+    <ul class="seg-list">
+      <li><span class="dot"></span><div><strong>Incidência única (monofásica):</strong> o IBS e CBS incidem uma única vez sobre os combustíveis — gasolina, diesel, GLP, querosene, etanol. Não há tributação nas etapas seguintes da cadeia (distribuição, revenda). LC 214/2025, arts. 172 e ss.</div></li>
+      <li><span class="dot"></span><div><strong>Contribuinte:</strong> refinaria, importador, distribuidor ou produtor nacional — conforme o caso. O posto de combustível não recolhe IBS/CBS diretamente.</div></li>
+      <li><span class="dot amber"></span><div><strong>Distribuição do IBS pelo destino:</strong> o CGIBS distribui o IBS de combustíveis para os estados e municípios de destino das operações. LC 227/2026, art. 113, I.</div></li>
+      <li><span class="dot green"></span><div><strong>Suspensão para petroquímica:</strong> ato conjunto CGIBS e RFB pode prever suspensão do IBS/CBS sobre hidrocarbonetos não combustíveis adquiridos por centrais petroquímicas autorizadas pela ANP. Art. 172, §2º (redação LC 227/2026).</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card red-border">
+    <div class="seg-header"><div><div class="seg-title">Mineração — Imposto Seletivo específico</div><div class="seg-sub">LC 214/2025, art. 409 · art. 422, §2º (redação LC 227/2026)</div></div><span class="badge red">IS incide</span></div>
+    <ul class="seg-list">
+      <li><span class="dot red"></span><div><strong>Imposto Seletivo sobre bens minerais extraídos:</strong> alíquota máxima de <strong>0,25%</strong> sobre o valor de mercado. É um custo adicional permanente, não recuperável como crédito.</div></li>
+      <li><span class="dot"></span><div><strong>Contribuinte do IS:</strong> o fabricante/extrator, no primeiro fornecimento do bem mineral. LC 214/2025, art. 424, inciso I (redação LC 227/2026).</div></li>
+      <li><span class="dot green"></span><div><strong>IBS e CBS no regime regular:</strong> para as operações com minerais que não sejam o fato gerador do IS, incidem IBS e CBS normalmente com crédito pleno.</div></li>
+    </ul>
+  </div>
+
+  <div class="seg-card">
+    <div class="seg-header"><div><div class="seg-title">Zona Franca de Manaus — proteção constitucional mantida</div><div class="seg-sub">EC 132/2023 · LC 214/2025, arts. 440–470 (redação LC 227/2026)</div></div><span class="badge green">Benefício mantido</span></div>
+    <ul class="seg-list">
+      <li><span class="dot green"></span><div><strong>Proteção constitucional expressa:</strong> a EC 132/2023 garante que os benefícios da ZFM não serão afetados pela reforma. O IPI não é extinto para produtos que competem com os fabricados na ZFM.</div></li>
+      <li><span class="dot green"></span><div><strong>Créditos presumidos de IBS e CBS:</strong> a indústria incentivada na ZFM tem créditos presumidos para operações que destinem ao território nacional bens materiais produzidos na área. LC 214/2025, art. 450 (redação LC 227/2026).</div></li>
+      <li><span class="dot"></span><div><strong>Habilitação:</strong> exige inscrição na Suframa e, para atividade industrial, aprovação de projeto técnico-econômico pelo Conselho de Administração da Suframa com base no processo produtivo básico. LC 214/2025, art. 442 (redação LC 227/2026).</div></li>
+    </ul>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Bens imóveis — regime específico completo</div><div class="acc-sub">LC 214/2025, arts. 248–270 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Operações com bens imóveis têm um regime específico complexo, com o conceito de "redutor de ajuste" que evita a tributação sobre o valor integral de revenda.</p>
+      <p><strong>Redutor de ajuste:</strong> nas vendas de imóveis, a base de cálculo do IBS e CBS não é o preço total de venda — é o preço menos o "redutor de ajuste", que corresponde ao custo de aquisição do terreno e construção. Isso faz com que o IBS/CBS incida apenas sobre o ganho de capital/valor agregado, e não sobre o valor total da transação. LC 214/2025, art. 257.</p>
+      <p><strong>Incorporação imobiliária (regime opcional até 2029):</strong> incorporadoras com patrimônio de afetação constituído antes de 01/01/2029 podem optar por recolher IBS + CBS à alíquota de 2,08% ou 0,53% sobre a receita mensal (dependendo do regime especial da Lei 10.931/2004). LC 214/2025, art. 485 (redação LC 227/2026).</p>
+      <p><strong>Parcelamento de solo e construções contratadas (arts. 486 e 487):</strong> com pedido de registro anterior a 01/01/2029, o contribuinte pode optar por alíquota de 3,65% sobre a receita bruta recebida, de forma definitiva.</p>
+      <p><strong>Locação residencial — redutor social:</strong> locação, cessão onerosa ou arrendamento de imóvel para uso residencial pode deduzir R$ 600,00 por mês por imóvel da base de cálculo do IBS e CBS. LC 214/2025, art. 260 (redação LC 227/2026).</p>
+      <p><strong>Permuta entre imóveis:</strong> não gera IBS/CBS entre as partes, exceto sobre a torna (diferença em dinheiro). Regras específicas para permutas entre contribuintes e não contribuintes do regime regular. Arts. 252 e ss. (redação LC 227/2026).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SAÚDE -->
+<section id="saude" class="section">
+  <div class="sec-title">Setor de saúde</div>
+  <div class="sec-sub">Planos de saúde · Operadoras · Cooperativas médicas e odontológicas · Clínicas · LC 214/2025, art. 113, III + arts. 271–272</div>
+
+  <div class="card">
+    <div class="card-title">Redução de 60% na alíquota para serviços de saúde <span class="lei-tag">LC 214/2025, art. 128, II e art. 130</span></div>
+    <p>Serviços de saúde têm alíquotas de IBS e CBS reduzidas em <strong class="hl">60%</strong> sobre a alíquota padrão. Alíquota efetiva ~11,2%. Aplica-se a consultas, exames, internações, cirurgias, fisioterapia, psicologia, odontologia, fonoaudiologia, diagnóstico por imagem, hemoterapia, nefrologia, anestesiologia e demais serviços médicos.</p>
+    <p>A redução é sobre a <em>alíquota</em>, não sobre a base de cálculo. O crédito das aquisições continua normal.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Regime específico dos planos de assistência à saúde</div><div class="acc-sub">LC 214/2025, art. 113, inciso III · LC 227/2026</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Os planos de saúde não seguem as regras gerais. O IBS é apurado sobre a <strong>diferença líquida</strong> entre o que a operadora arrecada em mensalidades/prêmios e os créditos dos prestadores contribuintes do regime regular.</p>
+      <p><strong>Distribuição pelo domicílio do titular:</strong> o IBS é distribuído aos estados e municípios do domicílio principal do titular do plano — não onde a operadora está sediada. Uma operadora em Jaraguá do Sul com beneficiários em todo SC distribui o IBS de cada mensalidade para o município onde cada beneficiário mora. Cadastro atualizado de domicílio de beneficiários é obrigação crítica. LC 227/2026, art. 113, III, alínea b.</p>
+      <p><strong>Exceção — autogestão (SINTIMMMEB Saúde, por exemplo):</strong> planos de autogestão ficam fora do regime de distribuição pelo domicílio. A receita do IBS é distribuída proporcionalmente entre todos os entes. LC 227/2026, art. 113, §2º, II.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Cooperativas médicas e odontológicas — regime especial</div><div class="acc-sub">LC 214/2025, arts. 271 e 272</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Crédito presumido (art. 272):</strong> nas aquisições de serviços de cooperados PF não contribuintes do IBS, a cooperativa se credita de valor presumido equivalente ao IBS/CBS que incidiria se o cooperado fosse contribuinte do regime regular. Evita sobretributação em relação a empresas convencionais.</p>
+      <p><strong>Opção pelo regime especial (art. 271):</strong> as cooperativas podem optar por tratar as operações com cooperados como operações internas com alíquota reduzida. Opção irrevogável para o período, comunicada ao CGIBS. Associados tomadores de crédito da cooperativa não têm direito a crédito de IBS (art. 197, I, redação LC 227/2026).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Medicamentos — alíquota zero e listas dinâmicas</div><div class="acc-sub">LC 214/2025, art. 146 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Alíquota zero para:</strong> medicamentos registrados na ANVISA destinados a doenças raras, negligenciadas, oncologia, diabetes, HIV/AIDS, cardiovasculares, Farmácia Popular, soros e vacinas.</p>
+      <p><strong>Alíquota zero adicional quando adquiridos por:</strong> administração pública direta, autarquias, fundações públicas; entidades de saúde com CEBAS comprovando prestação ao SUS (arts. 9º–11 da LC 187/2021).</p>
+      <p><strong>Lista atualizada a cada 120 dias</strong> por ato conjunto Ministério da Fazenda e CGIBS. Em emergências de saúde pública reconhecidas pelo Legislativo, lista pode ser ampliada a qualquer momento.</p>
+    </div>
+  </div>
+
+  <div class="alert warning" style="margin-top:16px;">
+    <span class="alert-icon">⚠</span>
+    <div><strong>Split payment nas mensalidades:</strong> a partir de 2027 (CBS), o banco retém os tributos no momento do pagamento pelo beneficiário. A operadora recebe apenas o valor líquido. Exige revisão do planejamento de caixa, contratos com prestadores e provisionamento de capital de giro.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ HOLDINGS -->
+<section id="holdings" class="section">
+  <div class="sec-title">Holdings e participações societárias</div>
+  <div class="sec-sub">ITCMD progressivo · Planejamento sucessório · Doações · Trust · LC 227/2026, arts. 146–164</div>
+
+  <div class="card">
+    <div class="card-title">Holdings puras — quando o IBS incide e quando não incide <span class="lei-tag">LC 214/2025, arts. 4º e 6º (redação LC 227/2026)</span></div>
+    <p>Holding que apenas detém participações e recebe dividendos, sem prestar serviços e sem vender bens, pode não ser contribuinte do IBS/CBS. Mas: o §4º do art. 4º (redação LC 227/2026) determina que o IBS incide sobre <em>qualquer</em> operação com bem ou serviço, incluindo ativo não circulante e atividade econômica não habitual.</p>
+    <p><strong>O que é tributado na holding:</strong> venda de participação com ágio; prestação de serviços administrativos às controladas; venda de imóveis; transferência de marcas e patentes. <strong>O que não é tributado:</strong> dividendos recebidos; MEP contábil; mera detenção de participações.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">ITCMD — progressividade obrigatória em todos os estados</div><div class="acc-sub">LC 227/2026, art. 156</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>O art. 156 torna obrigatória a <strong>progressividade</strong> do ITCMD em todos os estados, dentro da alíquota máxima do Senado (atualmente 8%). Antes, cada estado escolhia se adotava alíquota fixa ou progressiva — muitos usavam flat de 4% a 6%.</p>
+      <p><strong>Mecanismo (§2º):</strong> aplica-se cada faixa sobre o que a preenche e, no excedente, a faixa seguinte — mesmo princípio do IRPF. Não é alíquota máxima sobre tudo.</p>
+      <p><strong>Impacto prático:</strong> doações de quotas de holding para filhos (planejamento sucessório clássico) pagarão mais ITCMD do que antes. A base inclui valor de mercado + fundo de comércio, não o valor contábil.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Base de cálculo do ITCMD sobre quotas societárias</div><div class="acc-sub">LC 227/2026, art. 154</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Regra geral (inciso II — a maioria das holdings):</strong> metodologia tecnicamente idônea, incluindo <em>"método que contemple eventual perspectiva de geração de caixa"</em>, correspondendo no mínimo ao <strong>patrimônio líquido ajustado a valor de mercado, acrescido do valor de mercado do fundo de comércio</strong>.</p>
+      <p>Isso significa que a base mínima passou a incluir: imóveis pelo valor de mercado (não custo histórico); marcas; carteira de clientes; contratos futuros; goodwill. Para grupos estabelecidos, isso pode elevar substancialmente a base de cálculo nas doações e heranças.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Doações sucessivas — fim do planejamento em fatias</div><div class="acc-sub">LC 227/2026, art. 155</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Doações parceladas entre os mesmos doador e donatário dentro do prazo definido em lei estadual serão <strong>somadas</strong> e o ITCMD recalculado sobre o total acumulado, deduzindo o já recolhido. Elimina o planejamento de aproveitar faixas iniciais em cada doação separada.</p>
+      <p><strong>Prazo de acumulação:</strong> cada estado definirá em sua legislação. Urgência em concluir doações planejadas antes de a lei estadual entrar em vigor para quem tem patrimônio relevante em holdings.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Trust no exterior — incidência regulamentada</div><div class="acc-sub">LC 227/2026, arts. 147, VIII · 148, §1º · 150, V e VI · 151, §§1º e 2º</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Reversão ao beneficiário é fato gerador:</strong> por falecimento do instituidor (causa mortis) ou durante a vida dele (doação). O fato gerador ocorre no momento da mudança de titularidade ou no falecimento, o que acontecer primeiro.</p>
+      <p><strong>Sem incidência quando:</strong> beneficiário é o próprio instituidor, ou quando a instituição do trust decorreu de negócio oneroso entre instituidor e beneficiário (art. 150, VI).</p>
+      <p><strong>Risco de antecipação (art. 151, §2º):</strong> se o instituidor abdicar irrevogavelmente de direito sobre parte do patrimônio do trust, o ITCMD pode ser exigido nesse momento — impede diferimento indefinido via trust revogável.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SIMPLES -->
+<section id="simples" class="section">
+  <div class="sec-title">Simples Nacional</div>
+  <div class="sec-sub">Continuidade · Novas opções · Tabelas de transição · MEI · LC 227/2026, arts. 168–169</div>
+
+  <div class="card">
+    <div class="card-title">O Simples Nacional continua <span class="lei-tag">EC 132/2023 · LC 227/2026</span></div>
+    <p>A reforma não extingue o Simples. A LC 123/2006 continua válida, com as tabelas atualizadas para incluir IBS e CBS em substituição progressiva ao ICMS e ISS de 2027 a 2032. A carga total não muda — apenas a composição entre os tributos.</p>
+    <p>A novidade principal é a <strong class="hl">opção de recolher IBS/CBS pelo regime regular sem sair do Simples</strong> — para gerar crédito integral para clientes B2B. A opção é por semestre (janeiro/julho) e irretratável para o período. LC 214/2025, art. 13, §§9º e 10 (redação LC 227/2026).</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Tabelas — ISS sai, IBS entra (2027–2033)</div><div class="acc-sub">LC 227/2026, art. 169 — Anexos XX e XXI</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Ano</th><th>ISS máx. (5ª faixa)</th><th>IBS aprox. (1ª faixa)</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td><strong>2026</strong></td><td>5,00%</td><td>— (teste)</td><td>Regime atual ainda vigente</td></tr>
+          <tr><td><strong>2027–2028</strong></td><td>5,00%</td><td>0,17%</td><td>CBS plena; IBS inicial</td></tr>
+          <tr><td><strong>2029</strong></td><td>4,50%</td><td>3,35%</td><td>IBS cresce, ISS reduz</td></tr>
+          <tr><td><strong>2030</strong></td><td>4,00%</td><td>6,70%</td><td>Transição acelerada</td></tr>
+          <tr><td><strong>2031</strong></td><td>3,50%</td><td>10,05%</td><td>IBS relevante</td></tr>
+          <tr><td><strong>2032</strong></td><td>3,00%</td><td>13,40%</td><td>Último ano duplo</td></tr>
+          <tr><td><strong>2033+</strong></td><td>0%</td><td>~16,75%</td><td>ISS extinto; IBS pleno</td></tr>
+        </tbody>
+      </table></div>
+      <p class="footnote">Dados da 1ª faixa do Anexo III para referência. Valores exatos nos Anexos XX e XXI da LC 227/2026.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Quando optar pelo regime regular de IBS/CBS?</div><div class="acc-sub">LC 214/2025, art. 13, §9º · art. 23, §1º-A (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Vantajoso quando:</strong> clientes são contribuintes do regime regular e precisam de crédito; empresa tem muitos insumos tributados; alíquota efetiva líquida do regime regular é menor que a do Simples para aquela faixa.</p>
+      <p><strong>Não vantajoso quando:</strong> empresa vende principalmente para consumidores finais (B2C); tem poucos insumos tributados; está nas faixas mais baixas do Simples com alíquota efetiva muito baixa.</p>
+      <p><strong>Crédito garantido mesmo sem opção (art. 23, §1º-A):</strong> empresas fora do Simples têm direito a crédito de IBS/CBS nas compras de empresas do Simples, calculado sobre a alíquota efetiva do Simples. A opção pelo regime regular apenas aumenta esse crédito para a alíquota plena.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">MEI — tratamento especial na distribuição do IBS</div><div class="acc-sub">LC 227/2026, art. 168 · LC 123/2006, art. 22, V e VI</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>O IBS recolhido pelo MEI é distribuído diretamente: <strong>50% para o município</strong> e <strong>50% para o estado</strong> do estabelecimento — sem passar pelo princípio do destino do CGIBS. Exceção expressa que reconhece a impossibilidade prática do controle por destino para esse porte.</p>
+      <p>Para o prestador de serviço de transporte privado individual de passageiros ou entrega de bens (apps de motoboy, Uber, etc.), a receita bruta para fins de enquadramento como nanoempreendedor considera apenas <strong>25%</strong> do valor bruto recebido. LC 214/2025, art. 26, §10 (redação LC 227/2026).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SPLIT -->
+<section id="split" class="section">
+  <div class="sec-title">Split Payment</div>
+  <div class="sec-sub">Tributação na liquidação financeira · LC 214/2025, arts. 27–34 e 471-D–471-F (redação LC 227/2026)</div>
+
+  <div class="card">
+    <div class="card-title">O que é e por que muda tudo <span class="lei-tag">LC 214/2025, art. 31</span></div>
+    <p>Quando o comprador paga pelo bem ou serviço, o sistema financeiro <strong>segrega automaticamente os tributos (IBS e CBS)</strong> e os repassa ao CGIBS e à RFB — sem que esse dinheiro passe pela conta da empresa vendedora.</p>
+    <p><strong>Por que existe:</strong> eliminar a inadimplência tributária estrutural — hoje empresas recebem o tributo embutido e o recolhem só no mês seguinte (ou nunca). O split elimina essa janela.</p>
+    <p><strong>O impacto real não é de aumento de carga</strong> — é de timing. O mesmo tributo é pago, mas antes. Empresas que usavam o "float" tributário como capital de giro por 30–45 dias precisarão rever sua estrutura financeira.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Procedimento padrão</div><div class="acc-sub">LC 214/2025, art. 32 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Quem origina a transação (fornecedor, plataforma digital ou adquirente) transmite ao prestador de pagamento as informações que vinculam a operação e identificam os valores de IBS e CBS. Com esses dados, o banco retém os tributos e os repassa ao governo. O fornecedor recebe apenas o valor líquido.</p>
+      <p><strong>Transações iniciadas pelo recebedor (ex.: boleto emitido pela empresa):</strong> o recebedor pode não transmitir a vinculação ao prestador de pagamento — nesse caso, o fornecedor inclui no documento fiscal as informações necessárias para a vinculação. Art. 32, §2º-A.</p>
+      <p><strong>Plataformas digitais:</strong> não são responsáveis por diferenças de IBS/CBS quando apresentaram corretamente as informações e o split padrão estava disponível. Art. 22, §7º (redação LC 227/2026).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Procedimento simplificado</div><div class="acc-sub">LC 214/2025, art. 33 (redação LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Retém percentual estimado sem vinculação específica a cada operação. Mais fácil tecnicamente, mas pode gerar diferença entre o valor retido e o tributo real.</p>
+      <p><strong>Uso dos valores retidos (§3º):</strong> aplicados em ordem cronológica para pagar débitos do contribuinte — primeiro de operações para consumidores finais, depois os demais. Saldo não utilizado devolvido em até 3 dias úteis.</p>
+      <p><strong>Importante — sem crédito pelo adquirente (§7º, II):</strong> o recolhimento via simplificado não gera direito a crédito para o adquirente contribuinte do regime regular. Crédito só pelo procedimento padrão.</p>
+      <p><strong>Quando pode ser imposto pelo CGIBS/RFB (§6º):</strong> enquanto o padrão não estiver em nível adequado, pode ser imposto para operações com consumidores finais — relevante para mensalidades de planos de saúde pagas por PF.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Penalidades para bancos e operadoras de pagamento <span class="lei-tag">LC 214/2025, arts. 471-D e 471-E (inseridos pela LC 227/2026)</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Infração</th><th>Penalidade</th></tr></thead>
+      <tbody>
+        <tr><td>Não segregar ou segregar incorretamente os valores</td><td>0,1 UPF (R$ 20) por transação</td></tr>
+        <tr><td>Não recolher ou recolher a menor</td><td>3% ao mês sobre o valor + juros Selic</td></tr>
+        <tr><td>Comunicar com atraso ou incorretamente</td><td>0,001 UPF por transação por dia de atraso</td></tr>
+      </tbody>
+    </table></div>
+    <p>Prática reiterada (>10% de transações irregulares em 2 meses dentro de 12 meses): suspensão ou cassação da autorização de funcionamento. CGIBS e RFB podem declarar CNPJ inapto ou suspenso.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ TRANSIÇÃO -->
+<section id="transicao" class="section">
+  <div class="sec-title">Período de transição 2026–2033</div>
+  <div class="sec-sub">Cronograma detalhado · Saldos credores de ICMS · LC 227/2026, arts. 132–145 e 361–365</div>
+
+  <div class="card">
+    <div class="card-title">Cronograma completo <span class="lei-tag">EC 132/2023 · LC 214/2025 · LC 227/2026</span></div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">CBS a <strong>0,9%</strong> e IBS a <strong>0,1%</strong>. CGIBS em instalação (financiado pela União em até R$ 3,8 bilhões, art. 484 LC 214/2025). Impacto quase nulo. Momento de mapear prestadores, atualizar cadastros e preparar sistemas.</div></div>
+      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena. Split payment começa para CBS. IBS ainda reduzido. PIS e COFINS extintos. Alíquotas do IBS para 2029 calculadas com base nos dados de 2027 (art. 361).</div></div>
+      <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2029 — ICMS/ISS reduzem 10%; IBS começa a crescer</div><div class="tl-text">Primeiro ano de coexistência real. ICMS e ISS reduzidos em 10%; IBS cresce equivalentemente. Três apurações simultâneas: IBS + ICMS/ISS residual + CBS. Saldos de ICMS começam a ser compensáveis.</div></div>
+      <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2030–2032 — Redução progressiva: 20%, 30%, 40%</div><div class="tl-text">ICMS e ISS perdem mais 10 pontos percentuais por ano. Em 2032 representam apenas 60% do original. Complexidade contábil elevada. Saldos credores de ICMS acumulados até 31/12/2032.</div></div>
+      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS, ISS e IPI extintos em 31/12/2032.</strong> A partir de 01/01/2033 somente IBS e CBS. Split payment integral. Distribuição pelo princípio do destino. Saldos credores de ICMS compensados em 240 parcelas.</div></div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Saldos credores de ICMS — aproveitamento pós-2033</div><div class="acc-sub">LC 227/2026, arts. 132–141</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>1. Reconhecimento (art. 132):</strong> saldo regularmente apurado, decorrente de operações até 31/12/2032, não utilizado anteriormente.</p>
+      <p><strong>2. Pedido de homologação (art. 134):</strong> protocolado ao estado em até 5 anos a partir de 01/01/2033. Estado tem 24 meses para responder. Sem resposta → homologação tácita.</p>
+      <p><strong>3. Compensação com IBS (art. 137):</strong> créditos de ativo permanente: pelo prazo remanescente da Lei Kandir. Demais créditos: <strong>240 parcelas mensais iguais</strong> (20 anos), a partir do mês seguinte ao do recebimento da informação pelo CGIBS.</p>
+      <p><strong>4. Correção monetária (art. 133):</strong> IPCA mensal a partir de fevereiro de 2033.</p>
+      <p><strong>5. Transferência a terceiros (art. 138):</strong> possível para empresas do mesmo grupo ou terceiros, via documento fiscal eletrônico específico.</p>
+      <p><strong>6. Ressarcimento em espécie (art. 139):</strong> se impossível compensar, CGIBS ressarce em 240 parcelas. Atraso corrigido pela Selic a partir do 91º dia.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Estoque em 31/12/2032 com ICMS por substituição tributária</div><div class="acc-sub">LC 227/2026, arts. 142–145</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Mercadorias em estoque em 31/12/2032 com ICMS-ST retido geram crédito especial. O contribuinte inventaria o estoque, apura o ICMS-ST correspondente e encaminha demonstrativo ao estado e ao CGIBS. O estado informa o valor a compensar em <strong>12 parcelas mensais</strong> com o IBS. Se o estado não responder em 60 dias, o CGIBS usa o valor do demonstrativo.</p>
+      <p>Simples Nacional: solicita restituição diretamente ao estado. Não usa esse mecanismo de compensação com IBS.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CGIBS -->
+<section id="cgibs" class="section">
+  <div class="sec-title">CGIBS — Comitê Gestor do IBS</div>
+  <div class="sec-sub">Estrutura · Competências · Contencioso · Consulta tributária · LC 227/2026, arts. 1º–102</div>
+
+  <div class="card">
+    <div class="card-title">O que é o CGIBS <span class="lei-tag">LC 227/2026, art. 1º</span></div>
+    <p>Entidade pública de caráter técnico sob regime especial, com independência total. Gerencia o IBS de forma unificada para 26 estados, DF e 5.570+ municípios. Primeira vez na história que tantos entes federativos compartilham a administração de um tributo em um único órgão.</p>
+    <p><strong>Competência exclusiva (art. 2º):</strong> regulamento único nacional; arrecadação e distribuição do IBS; contencioso administrativo; criação de obrigações acessórias. Nenhum ente pode mais agir individualmente nessas matérias.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Conselho Superior — composição e deliberações</div><div class="acc-sub">LC 227/2026, arts. 8º–17</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>54 membros:</strong> 27 representantes dos estados/DF (Secretários de Fazenda indicados pelos governadores) + 27 dos municípios/DF (14 eleitos por voto igualitário + 13 por voto ponderado pela população).</p>
+      <p><strong>Deliberação (art. 10):</strong> exige simultaneamente maioria absoluta dos estados/DF representando mais de 50% da população + maioria absoluta dos municípios/DF. Critério de dupla maioria.</p>
+      <p><strong>Presidência rotativa (art. 17):</strong> alterna a cada 2 anos entre estados/DF e municípios/DF. O presidente inicial é representante dos estados (art. 53).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Contencioso administrativo — três instâncias</div><div class="acc-sub">LC 227/2026, arts. 88–102</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>1ª instância:</strong> 27 Câmaras de Julgamento (uma por estado + DF). Apenas servidores de carreira. Prazo de impugnação: 20 dias úteis.</p>
+      <p><strong>2ª instância:</strong> 27 Câmaras Recursais. Paridade entre servidores (4) e representantes dos contribuintes (4). Julgam recursos voluntários e de ofício.</p>
+      <p><strong>Câmara Superior do IBS:</strong> uniformiza jurisprudência sobre legislação específica do IBS. 8 servidores + 8 representantes dos contribuintes.</p>
+      <p><strong>Câmara Nacional de Integração IBS + CBS:</strong> uniformiza jurisprudência sobre matérias comuns ao IBS e CBS. Composta por membros do CGIBS e do CARF. Decisões vinculam todos os órgãos julgadores. Art. 323-G da LC 214/2025 (inserido pela LC 227/2026).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Consulta tributária unificada</div><div class="acc-sub">LC 227/2026, arts. 323-A a 323-F (inseridos na LC 214/2025)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Contribuinte pode consultar sobre IBS e CBS. O CGIBS e a RFB respondem conjuntamente quando a matéria é comum aos dois tributos. Prazo para o outro órgão se manifestar: 30 dias. Sem manifestação → aceite tácito.</p>
+      <p><strong>Efeitos:</strong> nenhuma fiscalização pode ser iniciada sobre a matéria durante o período da consulta (se protocolada antes do vencimento). A resposta vincula Fisco e contribuinte. Quem age conforme a resposta não pode ser autuado — mesmo se a resposta for reformada, os fatos geradores anteriores ficam protegidos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ITCMD -->
+<section id="itcmd" class="section">
+  <div class="sec-title">ITCMD — normas gerais nacionais</div>
+  <div class="sec-sub">Primeira regulamentação nacional · Progressividade · Trust · Base de cálculo · LC 227/2026, arts. 146–164</div>
+
+  <div class="card">
+    <div class="card-title">Por que o ITCMD mudou <span class="lei-tag">CF, art. 155, I · LC 227/2026, art. 146</span></div>
+    <p>O ITCMD é estadual, mas a CF exige lei complementar nacional para normas gerais — que nunca existiu antes da LC 227/2026. Cada estado regulamentava do zero: alíquotas de 2% a 8%, bases de cálculo díspares, tratamentos diferentes para heranças no exterior. A LC 227/2026 uniformiza as balizas nacionais.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Fato gerador e momento de ocorrência</div><div class="acc-sub">LC 227/2026, arts. 147, 148 e 151</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Fato gerador:</strong> transmissão de bens ou direitos com valor econômico por: (i) sucessão causa mortis; (ii) doação. Definição de doação é ampla — inclui remissão de dívidas entre vinculados, excessos de meação, transferências abaixo do mercado, reversão de trust.</p>
+      <p><strong>Causa mortis:</strong> data do óbito (real ou presumido). Para fideicomisso: data do óbito do instituidor.</p>
+      <p><strong>Doação:</strong> data da celebração do contrato; escritura pública de imóvel; instituição de usufruto; renúncia à herança em favor de pessoa determinada; homologação da partilha (para excesso de meação); registro na junta comercial (para quotas).</p>
+      <p><strong>Contribuinte:</strong> na causa mortis, o sucessor; na doação, o donatário. Paga quem recebe.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Imunidades e não incidências</div><div class="acc-sub">LC 227/2026, arts. 149 e 150</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Imunidades:</strong> transmissões para União, estados, DF, municípios, autarquias, fundações públicas, empresa pública postal, entidades religiosas, partidos políticos, entidades sindicais de trabalhadores e instituições sem fins lucrativos de relevância pública e social (inclui institutos científicos e tecnológicos).</p>
+      <p><strong>Imunidade para doações a projetos socioambientais federais (art. 149, III):</strong> doações ao Poder Executivo federal destinadas a projetos socioambientais, mitigação de mudanças climáticas e instituições federais de ensino.</p>
+      <p><strong>Não incidências (art. 150):</strong> renúncia à herança sem ressalva em benefício do monte; extinção de usufruto com consolidação ao instituidor; benefícios de previdência privada e seguro de vida mesmo com terceiro beneficiário; extinção de fideicomisso; transmissão ao trustee (presunção de onerosidade); transmissão do trust ao beneficiário quando este é o próprio instituidor ou quando decorreu de negócio oneroso.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Regras de competência — qual estado cobra?</div><div class="acc-sub">LC 227/2026, arts. 158 e 159</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Bens imóveis:</strong> estado onde o imóvel está situado. Se em dois estados: proporcionalmente. Se no exterior: estado do domicílio do de cujus/doador (se brasileiro) ou do sucessor/donatário (se transmitente era do exterior).</p>
+      <p><strong>Bens móveis, títulos e bens imateriais:</strong> causa mortis: estado do domicílio do de cujus (se brasileiro) ou do sucessor (se de cujus era do exterior). Doação: estado do domicílio do doador (se brasileiro) ou do donatário (se doador era do exterior). Ambos no exterior: estado onde os bens estão no Brasil.</p>
+      <p><strong>Presunção de domicílio:</strong> em caso de múltiplos domicílios, presume-se o informado na declaração de IR.</p>
+    </div>
+  </div>
+
+  <div class="alert warning" style="margin-top:16px;">
+    <span class="alert-icon">⚠</span>
+    <div><strong>Urgência para holdings:</strong> as leis estaduais precisam ser adaptadas às novas normas. Enquanto não forem, aplicam-se as regras nacionais diretamente. O período entre a publicação da LC 227/2026 (jan/2026) e a regulamentação estadual é crítico para concluir doações e reorganizações societárias sob as regras atuais de cada estado.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ PENALIDADES -->
+<section id="penalidades" class="section">
+  <div class="sec-title">Penalidades e conformidade</div>
+  <div class="sec-sub">Multas unificadas · UPF · Reduções · Programa Nacional de Conformidade · LC 214/2025, arts. 341-A–341-H e 471-A–471-C</div>
+
+  <div class="card">
+    <div class="card-title">UPF — Unidade Padrão Fiscal <span class="lei-tag">LC 214/2025, art. 341-C (inserido pela LC 227/2026)</span></div>
+    <p>Unidade de medida das multas acessórias. Valor inicial: <strong class="hl">R$ 200,00</strong>, corrigido anualmente pelo IPCA. Publicada em ato conjunto do CGIBS e da RFB. Garante que as multas mantenham poder dissuasório sem precisar de nova lei.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Multas por lançamento de ofício — obrigação principal</div><div class="acc-sub">LC 214/2025, art. 341-F (inserido pela LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Multa padrão: 75%</strong> sobre tributo não declarado/não pago ou crédito utilizado indevidamente.</p>
+      <p><strong>Declaração correta, cálculo errado: 50%</strong> — quando a declaração descreve corretamente o bem, serviço, quantidades e valor da operação, mas há erro no cálculo ou na alíquota (§3º).</p>
+      <p><strong>Agravamentos:</strong> sonegação, fraude ou simulação → <strong>100%</strong>. Reincidência nos últimos 3 anos → <strong>150%</strong>.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Multas por obrigações acessórias</div><div class="acc-sub">LC 214/2025, art. 341-G (inserido pela LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Infração</th><th>Multa</th></tr></thead>
+        <tbody>
+          <tr><td>Não se inscrever no cadastro no prazo</td><td>10 UPF — R$ 2.000</td></tr>
+          <tr><td>Entrega em atraso de arquivos e declarações</td><td>20 UPF por período + 30 UPF por intimação</td></tr>
+          <tr><td>Instalar software que suprime tributo em NF</td><td>100 UPF por equipamento — R$ 20.000</td></tr>
+          <tr><td>Desenvolver/fornecer esse software a terceiros</td><td>150 UPF por equipamento — R$ 30.000</td></tr>
+          <tr><td>Bens ou serviços sem documento fiscal</td><td>100% do tributo de referência</td></tr>
+          <tr><td>Documento fiscal não idôneo</td><td>66% do tributo de referência</td></tr>
+          <tr><td>Falsificar ou adulterar documento fiscal</td><td>100% do tributo de referência</td></tr>
+          <tr><td>Cancelar NF após o fato gerador</td><td>66% do tributo de referência</td></tr>
+          <tr><td>Embaraço ou resistência à fiscalização</td><td>50 UPF por evento — R$ 10.000</td></tr>
+        </tbody>
+      </table></div>
+      <p class="footnote">Reincidência específica na mesma infração dentro de 3 anos: multa majorada em 50% (§1º).</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Reduções de multa</div><div class="acc-sub">LC 214/2025, art. 341-H (inserido pela LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Momento da regularização</th><th>Redução padrão</th><th>Com PNCT / bom histórico</th></tr></thead>
+        <tbody>
+          <tr><td>Pagamento integral até o prazo de impugnação</td><td><strong>50%</strong></td><td><strong>60%</strong></td></tr>
+          <tr><td>Parcelamento até o prazo de impugnação</td><td><strong>40%</strong></td><td><strong>50%</strong></td></tr>
+          <tr><td>Pagamento integral antes da inscrição em dívida ativa</td><td><strong>30%</strong></td><td><strong>40%</strong></td></tr>
+          <tr><td>Parcelamento antes da inscrição em dívida ativa</td><td><strong>20%</strong></td><td><strong>30%</strong></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Programa Nacional de Conformidade Tributária — PNCT</div><div class="acc-sub">LC 214/2025, arts. 471-A a 471-C (inseridos pela LC 227/2026)</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Programa voluntário com benefícios para empresas com bom histórico fiscal. Critérios de adesão a serem definidos em regulamento conjunto CGIBS + RFB.</p>
+      <p><strong>Benefícios:</strong> prazo ampliado para obrigações acessórias; prioridade em ressarcimentos; redução de penalidades 10 p.p. maior; análise prioritária de consultas tributárias; redução de exigências documentais; flexibilização do valor de mercado em operações entre partes relacionadas.</p>
+      <p>Modelo inspirado no ATO australiano (Justified Trust) e IRS americano (Compliance Assurance Process): conformidade voluntária recompensada com tratamento diferenciado.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function toggleAcc(header) {
+  const body = header.nextElementSibling;
+  const isOpen = header.classList.contains('open');
+  document.querySelectorAll('.acc-header.open').forEach(h => {
+    h.classList.remove('open');
+    h.nextElementSibling.classList.remove('open');
+  });
+  if (!isOpen) {
+    header.classList.add('open');
+    body.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>

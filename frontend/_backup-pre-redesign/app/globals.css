@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* ── Conflex Brand Palette ─────────────────────────────────────── */
+  --color-brand-50:  #F0FDFF;  /* ultra light tint                  */
+  --color-brand-100: #D6F8FF;  /* light tint                        */
+  --color-brand-200: #ABEEFF;  /* lighter                           */
+  --color-brand-300: #56DEFF;  /* medium light                      */
+  --color-brand-400: #01D1FF;  /* Primary — logo C icon / buttons   */
+  --color-brand-500: #01B8E0;  /* hover                             */
+  --color-brand-600: #019AC0;  /* darker accent                     */
+  --color-brand-700: #017B9A;  /* dark accent                       */
+  --color-brand-800: #01162F;  /* Dark navy — header / backgrounds  */
+  --color-brand-900: #000C1A;  /* darkest                           */
+}
+
+:root {
+  --background: #F4F7FC;
+  --foreground: #01162F;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Smooth focus rings */
+*:focus-visible {
+  outline: 2px solid #01D1FF;
+  outline-offset: 2px;
+}
