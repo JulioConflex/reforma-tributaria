@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     email: emailLimpo,
     password: String(senha),
     email_confirm: true, // já entra sem precisar confirmar e-mail
-    user_metadata: { nome: nome ?? "" },
+    user_metadata: { nome: nome ?? "", senha_trocada: false },
   });
 
   if (error || !criado?.user) {

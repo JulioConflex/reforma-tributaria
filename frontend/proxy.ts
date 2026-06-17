@@ -38,11 +38,19 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isLogin = path === "/login";
+  const isTrocarSenha = path === "/trocar-senha";
 
   // Sem usuário e fora da tela de login → manda para o login.
   if (!user && !isLogin) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Logado, mas ainda não trocou a senha inicial → obriga a trocar antes de usar.
+  if (user && user.user_metadata?.senha_trocada === false && !isTrocarSenha) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/trocar-senha";
     return NextResponse.redirect(url);
   }
 
