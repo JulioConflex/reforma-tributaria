@@ -3,6 +3,13 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+/** Gera uma senha temporária legível (sem caracteres ambíguos como 0/O/1/l). */
+function gerarSenhaTemporaria(tamanho = 10): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(tamanho));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
 /**
  * Garante que quem chama está logado E é "master".
  * Retorna a resposta de erro pronta, ou o usuário autenticado.
@@ -108,4 +115,28 @@ export async function PATCH(req: Request) {
   if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
+}
+
+// Reseta a senha de um usuário: gera uma senha temporária e força a troca no próximo acesso.
+export async function PUT(req: Request) {
+  const auth = await exigirMaster();
+  if (auth.erro) return auth.erro;
+
+  const { id } = await req.json();
+  if (!id) return NextResponse.json({ erro: "Usuário inválido." }, { status: 400 });
+
+  const admin = createAdminClient();
+
+  // Preserva o metadata existente (ex.: nome) e marca para trocar no próximo acesso.
+  const { data: alvo } = await admin.auth.admin.getUserById(id);
+  const meta = { ...(alvo?.user?.user_metadata ?? {}), senha_trocada: false };
+
+  const senha = gerarSenhaTemporaria();
+  const { error } = await admin.auth.admin.updateUserById(id, {
+    password: senha,
+    user_metadata: meta,
+  });
+  if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true, senha });
 }

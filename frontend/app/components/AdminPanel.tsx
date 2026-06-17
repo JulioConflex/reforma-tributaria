@@ -22,6 +22,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
   const [papel, setPapel] = useState<"normal" | "master">("normal");
   const [criando, setCriando] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [senhaTemp, setSenhaTemp] = useState<{ email: string; senha: string } | null>(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -82,6 +83,24 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
       const d = await res.json();
       if (!res.ok) throw new Error(d.erro || "Falha ao alterar papel");
       await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro desconhecido");
+    }
+  }
+
+  async function resetarSenha(u: Usuario) {
+    if (!confirm(`Gerar uma nova senha temporária para ${u.email}? A senha atual deixará de funcionar.`)) return;
+    setErro(null);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/usuarios", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: u.id }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.erro || "Falha ao resetar a senha");
+      setSenhaTemp({ email: u.email, senha: d.senha });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro desconhecido");
     }
@@ -185,6 +204,33 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
 
         {/* Lista de usuários */}
         <section className="rounded-2xl bg-white hairline-strong overflow-hidden self-start">
+          {senhaTemp && (
+            <div className="m-4 rounded-xl bg-brand-50 border border-brand-200 px-4 py-3">
+              <div className="text-[12.5px] text-ink-700">
+                Senha temporária de <span className="font-semibold">{senhaTemp.email}</span>:
+              </div>
+              <div className="mt-1.5 flex items-center gap-2">
+                <code className="text-[15px] font-bold text-brand-800 bg-white border border-brand-200 rounded px-2.5 py-1 tracking-wide select-all">
+                  {senhaTemp.senha}
+                </code>
+                <button
+                  onClick={() => navigator.clipboard?.writeText(senhaTemp.senha)}
+                  className="text-[12px] font-medium text-brand-600 hover:text-brand-700"
+                >
+                  Copiar
+                </button>
+                <button
+                  onClick={() => setSenhaTemp(null)}
+                  className="text-[12px] font-medium text-ink-400 hover:text-ink-700 ml-auto"
+                >
+                  Fechar
+                </button>
+              </div>
+              <p className="text-[11.5px] text-ink-500 mt-2 leading-snug">
+                Envie esta senha ao usuário. No próximo acesso ele será levado a definir a senha própria.
+              </p>
+            </div>
+          )}
           <div className="px-6 py-4 border-b border-ink-100 flex items-center justify-between">
             <h2 className="font-display text-[17px] font-bold text-ink-900">
               Usuários{" "}
@@ -238,6 +284,14 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
                         className="text-[12px] font-medium text-brand-600 hover:text-brand-700 disabled:text-ink-300 disabled:cursor-not-allowed whitespace-nowrap"
                       >
                         {u.papel === "master" ? "Tornar normal" : "Tornar master"}
+                      </button>
+                      <button
+                        onClick={() => resetarSenha(u)}
+                        disabled={souEu}
+                        title={souEu ? "Use 'Trocar senha' no topo para a sua própria conta" : ""}
+                        className="text-[12px] font-medium text-ink-500 hover:text-brand-700 disabled:text-ink-300 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        Resetar senha
                       </button>
                     </div>
                   </li>
