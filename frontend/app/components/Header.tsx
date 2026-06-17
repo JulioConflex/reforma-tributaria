@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useAuth } from "./AuthProvider";
 
 export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl";
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
+  const { papel, sair } = useAuth();
   return (
     <header className="mesh-navy">
       <div className="max-w-[1320px] mx-auto px-4 lg:px-6">
@@ -89,6 +91,28 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
                 <path d="M5 12h14M13 5l7 7-7 7" />
               </svg>
             </a>
+            {papel === "master" && (
+              <a
+                href="/admin"
+                className="hidden sm:inline-flex items-center gap-1.5 text-[12px] font-medium text-brand-300 hover:text-white border border-white/10 hover:border-brand-400/60 rounded-lg px-3 py-1.5 transition"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Admin
+              </a>
+            )}
+            <button
+              onClick={sair}
+              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-brand-200 hover:text-white border border-white/10 hover:border-brand-400/60 rounded-lg px-3 py-1.5 transition"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+              Sair
+            </button>
           </div>
         </div>
 
