@@ -20,7 +20,16 @@ export default function LoginPage() {
       password: senha,
     });
     if (error) {
-      setErro("E-mail ou senha incorretos.");
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("not confirm")) {
+        setErro("Acesso ainda não confirmado. Peça ao administrador para confirmar seu usuário no Supabase.");
+      } else if (m.includes("invalid login") || m.includes("invalid credentials")) {
+        setErro("E-mail ou senha incorretos.");
+      } else if (m.includes("api key") || m.includes("invalid api") || m.includes("project")) {
+        setErro("Configuração do servidor incorreta (chave do Supabase). Avise o administrador.");
+      } else {
+        setErro("Não foi possível entrar: " + error.message);
+      }
       setCarregando(false);
       return;
     }
