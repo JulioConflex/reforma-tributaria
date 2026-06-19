@@ -8,6 +8,13 @@ export const brl = (v: number) =>
 export const brlInt = (v: number) =>
   (v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
+/* Converte texto no formato BR ("10.000,00") para número (10000). */
+export function parseBRL(s: string): number {
+  if (!s) return 0;
+  const n = parseFloat(s.replace(/\./g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+
 /* ── Conflex C mark (inline SVG for small uses) ────────────────── */
 export function ConflexMark({ size = 28, color = "#01D1FF", className = "" }: { size?: number; color?: string; className?: string; }) {
   return (
@@ -53,6 +60,41 @@ export function TextField({ value, onChange, prefix, suffix, type = "text", ...r
       {suffix && (
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm font-medium pointer-events-none">{suffix}</span>
       )}
+    </div>
+  );
+}
+
+/* ── Currency input — exibe e edita no formato 10.000,00 ────────── */
+export function CurrencyField({
+  value, onChange, placeholder = "0,00",
+}: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  function aoDigitar(raw: string) {
+    let s = raw.replace(/[^\d,]/g, "");
+    const i = s.indexOf(",");
+    if (i >= 0) s = s.slice(0, i + 1) + s.slice(i + 1).replace(/,/g, "").slice(0, 2);
+    const [intRaw, decRaw] = s.split(",");
+    const intClean = (intRaw || "").replace(/^0+(?=\d)/, "");
+    const intFmt = intClean ? Number(intClean).toLocaleString("pt-BR") : (s.startsWith(",") ? "0" : "");
+    onChange(decRaw !== undefined ? `${intFmt || "0"},${decRaw}` : intFmt);
+  }
+  function aoSair() {
+    if (!value) return;
+    onChange(parseBRL(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  }
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm font-medium pointer-events-none">R$</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={(e) => aoDigitar(e.target.value)}
+        onBlur={aoSair}
+        placeholder={placeholder}
+        className="w-full rounded-lg bg-white text-ink-900 text-[15px] font-medium tab-num
+                   py-2.5 pl-9 pr-3.5 hairline-strong focus:outline-none focus:ring-2 focus:ring-brand-400/40
+                   focus:shadow-[0_0_0_1px_rgba(1,209,255,.6)_inset] transition"
+      />
     </div>
   );
 }

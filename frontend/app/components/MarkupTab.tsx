@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, MarkupResult } from "./types";
 import { REGIMES, UFS, API } from "./types";
-import { FieldLabel, TextField, SelectField, NumberTicker, brl } from "./ui";
+import { FieldLabel, TextField, SelectField, NumberTicker, brl, CurrencyField, parseBRL } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import TransitionTimeline from "./Timeline";
 
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedUf, sharedRegime }: Props) {
-  const [custo, setCusto] = useState("5000");
+  const [custo, setCusto] = useState("5.000,00");
   const [margem, setMargem] = useState("30");
   const [despesas, setDespesas] = useState("10");
   const [regime, setRegime] = useState(sharedRegime || "lucro_presumido");
@@ -54,7 +54,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          custo: parseFloat(custo),
+          custo: parseBRL(custo),
           margem_desejada: parseFloat(margem) / 100,
           despesas_fixas_percentual: parseFloat(despesas) / 100,
           regime,
@@ -92,7 +92,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
 
         <div className="mb-4">
           <FieldLabel>Custo do produto / serviço</FieldLabel>
-          <TextField type="number" prefix="R$" value={custo} onChange={setCusto} />
+          <CurrencyField value={custo} onChange={setCusto} />
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -191,7 +191,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                   </div>
                   <div className="mt-3 text-[13px] text-ink-500">
                     Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>{" "}
-                    sobre o custo de <strong className="tab-num text-ink-700">{brl(parseFloat(custo) || 0)}</strong>
+                    sobre o custo de <strong className="tab-num text-ink-700">{brl(parseBRL(custo))}</strong>
                   </div>
 
                   <div className="mt-6 rounded-xl bg-ink-50/70 hairline px-4 py-3.5 flex items-center justify-between gap-4">

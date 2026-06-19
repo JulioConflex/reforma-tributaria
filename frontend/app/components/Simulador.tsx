@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, SimulacaoResult } from "./types";
 import { REGIMES, UFS, API } from "./types";
-import { FieldLabel, TextField, SelectField } from "./ui";
+import { FieldLabel, SelectField, CurrencyField, parseBRL } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import Header, { type Aba } from "./Header";
 import ResultadoSimulacao from "./ResultadoSimulacao";
@@ -28,14 +28,14 @@ export default function Simulador() {
   const [onboardingAberto, setOnboardingAberto] = useState(false);
 
   // Simulador inputs
-  const [valor, setValor] = useState("10000");
+  const [valor, setValor] = useState("");
   const [regime, setRegime] = useState("lucro_presumido");
   const [setorId, setSetorId] = useState("comercio_geral");
   const [uf, setUf] = useState("SP");
   const [ano, setAno] = useState(2029);
   const [creditoAvancado, setCreditoAvancado] = useState(false);
   const [credito, setCredito] = useState(30);
-  const [faturamento, setFaturamento] = useState("360000");
+  const [faturamento, setFaturamento] = useState("360.000,00");
   const [folhaPagamento, setFolhaPagamento] = useState("");
   const [faturamentoMensal, setFaturamentoMensal] = useState("");
   const [despesasMensais, setDespesasMensais] = useState("");
@@ -68,9 +68,15 @@ export default function Simulador() {
     regime === "simples_nacional" && setor?.anexo_simples === "FATOR_R";
   const mostrarLucroReal = regime === "lucro_real";
 
-  // Recalcula automaticamente ao mudar inputs (debounced)
+  // Recalcula automaticamente ao mudar inputs (debounced).
+  // Só calcula quando há valor preenchido — assim o site abre "zerado", sem puxar resultado.
   useEffect(() => {
     if (aba !== "simulador" || setores.length === 0 || meiBloqueado) return;
+    const precisaFaturamento = regime === "simples_nacional" || regime === "mei";
+    if (parseBRL(valor) <= 0 || (precisaFaturamento && parseBRL(faturamento) <= 0)) {
+      setResultado(null);
+      return;
+    }
     const handler = setTimeout(() => {
       simular();
     }, 280);
@@ -84,7 +90,7 @@ export default function Simulador() {
     setErro(null);
     try {
       const body: Record<string, unknown> = {
-        valor: parseFloat(valor),
+        valor: parseBRL(valor),
         regime,
         setor_id: setorId,
         uf,
@@ -92,14 +98,14 @@ export default function Simulador() {
         percentual_credito_entrada: credito / 100,
       };
       if (regime === "simples_nacional" || regime === "mei") {
-        body.faturamento_anual = parseFloat(faturamento);
+        body.faturamento_anual = parseBRL(faturamento);
       }
       if (mostrarFatorR && folhaPagamento) {
-        body.folha_pagamento_mensal = parseFloat(folhaPagamento);
+        body.folha_pagamento_mensal = parseBRL(folhaPagamento);
       }
       if (mostrarLucroReal) {
-        if (faturamentoMensal) body.faturamento_mensal = parseFloat(faturamentoMensal);
-        if (despesasMensais) body.despesas_mensais = parseFloat(despesasMensais);
+        if (faturamentoMensal) body.faturamento_mensal = parseBRL(faturamentoMensal);
+        if (despesasMensais) body.despesas_mensais = parseBRL(despesasMensais);
       }
       const res = await fetch(`${API}/simular`, {
         method: "POST",
@@ -156,7 +162,7 @@ export default function Simulador() {
               )}
               {!resultado && !erro && (
                 <div className="rounded-2xl bg-white hairline px-7 py-16 text-center text-ink-400">
-                  Carregando simulação…
+                  Preencha o <span className="font-semibold text-ink-600">valor da operação</span> ao lado para ver a simulação.
                 </div>
               )}
             </section>
@@ -256,7 +262,7 @@ function FormPanel(p: FormPanelProps) {
 
       <div className="mb-5">
         <FieldLabel>Valor da operação</FieldLabel>
-        <TextField type="number" prefix="R$" value={p.valor} onChange={p.setValor} />
+        <CurrencyField value={p.valor} onChange={p.setValor} />
         <p className="text-[12px] text-ink-400 mt-1.5 leading-snug">O valor de uma venda ou serviço típico.</p>
       </div>
 
@@ -304,7 +310,7 @@ function FormPanel(p: FormPanelProps) {
       {showSimples && (
         <div className="mb-5 anim-in">
           <FieldLabel>Faturamento anual</FieldLabel>
-          <TextField type="number" prefix="R$" value={p.faturamento} onChange={p.setFaturamento} />
+          <CurrencyField value={p.faturamento} onChange={p.setFaturamento} />
           <p className="text-[12px] text-ink-400 mt-1.5">Define a faixa de alíquota do Simples.</p>
         </div>
       )}
@@ -315,7 +321,7 @@ function FormPanel(p: FormPanelProps) {
             Folha de pagamento mensal{" "}
             <span className="normal-case font-normal text-ink-400">(opcional)</span>
           </FieldLabel>
-          <TextField type="number" prefix="R$" value={p.folhaPagamento} onChange={p.setFolhaPagamento} />
+          <CurrencyField value={p.folhaPagamento} onChange={p.setFolhaPagamento} />
           <div className="mt-1.5 text-[11.5px] bg-amber-50 border border-amber-200 rounded px-2 py-1 text-amber-700">
             ⚖️ <strong>Fator R:</strong> define Anexo III ou V do Simples.
           </div>
@@ -364,11 +370,11 @@ function FormPanel(p: FormPanelProps) {
           </div>
           <div>
             <FieldLabel>Faturamento médio mensal</FieldLabel>
-            <TextField type="number" prefix="R$" value={p.faturamentoMensal} onChange={p.setFaturamentoMensal} />
+            <CurrencyField value={p.faturamentoMensal} onChange={p.setFaturamentoMensal} />
           </div>
           <div>
             <FieldLabel>Despesas médias mensais</FieldLabel>
-            <TextField type="number" prefix="R$" value={p.despesasMensais} onChange={p.setDespesasMensais} />
+            <CurrencyField value={p.despesasMensais} onChange={p.setDespesasMensais} />
           </div>
           <p className="text-[11.5px] text-ink-400 leading-snug">
             Estima o <strong>IRPJ/CSLL</strong> sobre o lucro real (receita − despesas). Não altera o comparativo da reforma — que incide só sobre o consumo.

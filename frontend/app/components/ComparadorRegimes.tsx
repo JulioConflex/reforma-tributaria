@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, ComparadorResult, ComparativoRegime } from "./types";
 import { UFS, API } from "./types";
-import { FieldLabel, TextField, SelectField, brl } from "./ui";
+import { FieldLabel, SelectField, brl, CurrencyField, parseBRL } from "./ui";
 import TransitionTimeline from "./Timeline";
 
 interface Props {
@@ -15,8 +15,8 @@ interface Props {
 }
 
 export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId, sharedUf }: Props) {
-  const [valor, setValor] = useState("10000");
-  const [faturamento, setFaturamento] = useState("360000");
+  const [valor, setValor] = useState("10.000,00");
+  const [faturamento, setFaturamento] = useState("360.000,00");
   const [setorId, setSetorId] = useState(sharedSetorId || "comercio_geral");
   const [uf, setUf] = useState(sharedUf || "SP");
   const [folhaPagamento, setFolhaPagamento] = useState("");
@@ -41,17 +41,17 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
     setErro(null);
     try {
       const body: Record<string, unknown> = {
-        faturamento_anual: parseFloat(faturamento),
+        faturamento_anual: parseBRL(faturamento),
         setor_id: setorId,
         uf, ano,
-        valor: parseFloat(valor),
+        valor: parseBRL(valor),
         percentual_credito_entrada: 0.4,
       };
       if (mostrarFatorR && folhaPagamento) {
-        body.folha_pagamento_mensal = parseFloat(folhaPagamento);
+        body.folha_pagamento_mensal = parseBRL(folhaPagamento);
       }
       if (despesasMensais) {
-        body.despesas_mensais = parseFloat(despesasMensais);
+        body.despesas_mensais = parseBRL(despesasMensais);
       }
       const res = await fetch(`${API}/comparar-regimes`, {
         method: "POST",
@@ -84,12 +84,12 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
 
         <div className="mb-4">
           <FieldLabel>Valor da operação típica</FieldLabel>
-          <TextField type="number" prefix="R$" value={valor} onChange={setValor} />
+          <CurrencyField value={valor} onChange={setValor} />
         </div>
 
         <div className="mb-4">
           <FieldLabel>Faturamento anual</FieldLabel>
-          <TextField type="number" prefix="R$" value={faturamento} onChange={setFaturamento} />
+          <CurrencyField value={faturamento} onChange={setFaturamento} />
           <p className="text-[11.5px] text-ink-400 mt-1.5">Determina quais regimes são elegíveis.</p>
         </div>
 
@@ -98,7 +98,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
             Despesas médias mensais{" "}
             <span className="normal-case font-normal text-ink-400">(p/ Lucro Real)</span>
           </FieldLabel>
-          <TextField type="number" prefix="R$" value={despesasMensais} onChange={setDespesasMensais} />
+          <CurrencyField value={despesasMensais} onChange={setDespesasMensais} />
           <p className="text-[11.5px] text-ink-400 mt-1.5">Inclui o IRPJ/CSLL do Lucro Real na comparação (carga total).</p>
         </div>
 
@@ -123,7 +123,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
               Folha de pagamento mensal{" "}
               <span className="normal-case font-normal text-ink-400">(opcional)</span>
             </FieldLabel>
-            <TextField type="number" prefix="R$" value={folhaPagamento} onChange={setFolhaPagamento} />
+            <CurrencyField value={folhaPagamento} onChange={setFolhaPagamento} />
             <div className="text-[11.5px] text-amber-700 mt-1.5">⚖️ Necessário p/ Fator R</div>
           </div>
         )}
@@ -132,9 +132,9 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
           <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-3">Limites de faturamento</div>
           <ul className="space-y-2 text-[12px]">
             {[
-              { reg: "MEI",             val: "R$ 81 mil", fits: parseFloat(faturamento) <= 81000 },
-              { reg: "Simples Nacional", val: "R$ 4,8 mi", fits: parseFloat(faturamento) <= 4800000 },
-              { reg: "Lucro Presumido",  val: "R$ 78 mi",  fits: parseFloat(faturamento) <= 78000000 },
+              { reg: "MEI",             val: "R$ 81 mil", fits: parseBRL(faturamento) <= 81000 },
+              { reg: "Simples Nacional", val: "R$ 4,8 mi", fits: parseBRL(faturamento) <= 4800000 },
+              { reg: "Lucro Presumido",  val: "R$ 78 mi",  fits: parseBRL(faturamento) <= 78000000 },
               { reg: "Lucro Real",       val: "Qualquer",  fits: true },
             ].map((l) => (
               <li key={l.reg} className="flex items-center justify-between">
@@ -189,8 +189,8 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                           const melhor = disponiveis.find((d) => d.regime === result.regime_mais_vantajoso);
                           if (!melhor || disponiveis.length < 2) return result.obs;
                           const pior = disponiveis.reduce((a, b) => ((a.total_novo ?? 0) >= (b.total_novo ?? 0) ? a : b));
-                          const economiaAno = ((pior.total_novo ?? 0) - (melhor.total_novo ?? 0)) / parseFloat(valor) * parseFloat(faturamento);
-                          return <>Pode economizar até <strong className="text-emerald-600 tab-num">{brl(economiaAno)}/ano</strong> em comparação com {pior.nome}, considerando seu faturamento de {brl(parseFloat(faturamento) || 0)}.</>;
+                          const economiaAno = ((pior.total_novo ?? 0) - (melhor.total_novo ?? 0)) / parseBRL(valor) * parseBRL(faturamento);
+                          return <>Pode economizar até <strong className="text-emerald-600 tab-num">{brl(economiaAno)}/ano</strong> em comparação com {pior.nome}, considerando seu faturamento de {brl(parseBRL(faturamento) || 0)}.</>;
                         })()}
                       </p>
                     </>
@@ -201,7 +201,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
 
                 <div className="lg:col-span-5 p-7 lg:p-9 mesh-bone">
                   <div className="text-[11px] uppercase tracking-[0.10em] text-ink-500 font-semibold mb-1">Ranking de carga</div>
-                  <h3 className="font-display text-[15px] font-bold text-ink-900 mb-4">Por operação de {brl(parseFloat(valor) || 0)}</h3>
+                  <h3 className="font-display text-[15px] font-bold text-ink-900 mb-4">Por operação de {brl(parseBRL(valor) || 0)}</h3>
                   <ul className="space-y-3">
                     {[...disponiveis].sort((a, b) => (a.total_novo ?? 0) - (b.total_novo ?? 0)).map((c, i) => {
                       const melhor = c.regime === result.regime_mais_vantajoso;

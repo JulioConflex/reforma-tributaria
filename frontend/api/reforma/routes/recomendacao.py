@@ -16,6 +16,12 @@ _CREDITO_POR_REGIME: dict[str, float] = {
     "lucro_real": 0.5,
 }
 
+# Limite de faturamento anual por regime — acima disso o regime fica VEDADO no comparativo.
+_LIMITE_FATURAMENTO: dict[str, tuple[float, str]] = {
+    "simples_nacional": (4_800_000.0, "Faturamento anual acima do limite do Simples Nacional (R$ 4,8 milhões/ano)."),
+    "lucro_presumido": (78_000_000.0, "Faturamento anual acima do limite do Lucro Presumido (R$ 78 milhões/ano) — obrigatório Lucro Real."),
+}
+
 
 class ComparadorInput(BaseModel):
     faturamento_anual: float = Field(..., gt=0, description="Faturamento anual em R$")
@@ -76,6 +82,26 @@ def comparar_regimes(inp: ComparadorInput):
                     "irpj_csll_estimado": None,
                 })
                 continue
+
+        # ── Vedação por limite de faturamento (Simples / Lucro Presumido) ─────
+        lim = _LIMITE_FATURAMENTO.get(regime_key)
+        if lim and inp.faturamento_anual > lim[0]:
+            resultados.append({
+                "regime": regime_key,
+                "nome": regime_nome,
+                "descricao": descricao,
+                "disponivel": False,
+                "motivo_indisponivel": lim[1],
+                "total_atual": None,
+                "percentual_atual": None,
+                "total_novo": None,
+                "percentual_novo": None,
+                "diferenca": None,
+                "diferenca_percentual": None,
+                "economia_anual_estimada": None,
+                "irpj_csll_estimado": None,
+            })
+            continue
 
         fat = inp.faturamento_anual if regime_key in ("simples_nacional", "mei") else None
         # Usa crédito automático por regime — Simples/MEI sem crédito, LP 30%, LR 50%
