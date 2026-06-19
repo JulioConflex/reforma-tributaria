@@ -5,18 +5,18 @@
       "nome_completo": "Contribuição sobre Bens e Serviços",
       "resumo": "Novo imposto federal que substitui o PIS e o COFINS a partir de 2027.",
       "analogia": "Pense como o PIS+COFINS que você paga hoje, porém unificado e com alíquota diferente. A grande diferença é que agora você pode descontar os impostos que seus fornecedores já pagaram nas compras que você fez.",
-      "impacto": "Empresas no Lucro Presumido pagam hoje 3,65% (PIS+COFINS). Com a CBS, a alíquota de referência é ~9,3% — mas descontando os créditos das compras, o impacto real pode ser menor ou maior dependendo do seu negócio.",
+      "impacto": "Empresas no Lucro Presumido pagam hoje 3,65% (PIS+COFINS). Com a CBS, a alíquota de referência é ~8,8% — mas descontando os créditos das compras, o impacto real pode ser menor ou maior dependendo do seu negócio.",
       "vigencia": "Em 2026 é simbólica (0,9%). A partir de 2027 vige em alíquota plena.",
-      "aviso": "A alíquota de referência de ~9,3% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
+      "aviso": "A alíquota de referência de ~8,8% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
     },
     "ibs": {
       "sigla": "IBS",
       "nome_completo": "Imposto sobre Bens e Serviços",
       "resumo": "Novo imposto criado para substituir o ICMS (estadual) e o ISS (municipal) gradualmente entre 2029 e 2033.",
       "analogia": "É a fusão do imposto que você paga para o estado (ICMS) e para o município (ISS) em um único imposto. Funciona de forma parecida, mas simplificada e com regras uniformes em todo o Brasil.",
-      "impacto": "A transição é gradual: só começa em 2029. Até lá, você ainda paga ICMS e ISS normalmente. A alíquota de referência final é ~18,7%.",
+      "impacto": "A transição é gradual: só começa em 2029. Até lá, você ainda paga ICMS e ISS normalmente. A alíquota de referência final é ~17,7%.",
       "vigencia": "Começa em 2029, atinge 100% apenas em 2033.",
-      "aviso": "A alíquota de referência de ~18,7% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
+      "aviso": "A alíquota de referência de ~17,7% é provisória — sujeita à aprovação pelo Senado Federal por Resolução específica. O valor final pode ser diferente."
     },
     "is": {
       "sigla": "IS",
@@ -32,7 +32,7 @@
       "nome_completo": "Imposto sobre Valor Agregado Dual",
       "resumo": "O novo sistema tributário brasileiro, formado pela soma do CBS (federal) + IBS (estadual/municipal).",
       "analogia": "A maioria dos países europeus tem um IVA único. O Brasil criou dois (daí o nome 'Dual'): um federal (CBS) e um para estados e municípios (IBS). Juntos, formam o novo sistema.",
-      "impacto": "Alíquota total estimada: ~28%, mas com créditos de compras e exceções por setor. Para muitas empresas, o impacto real é menor que esse número bruto.",
+      "impacto": "Alíquota total estimada: ~26,5%, mas com créditos de compras e exceções por setor. Para muitas empresas, o impacto real é menor que esse número bruto.",
       "vigencia": "Sistema pleno apenas em 2033."
     },
     "pis": {
@@ -71,7 +71,7 @@
       "sigla": null,
       "nome_completo": "Split Payment (Pagamento Dividido)",
       "resumo": "Sistema onde o banco separa automaticamente o valor do imposto no momento em que o cliente paga sua empresa.",
-      "analogia": "Imagine que um cliente te paga R$ 10.000 por uma venda. Antes de o dinheiro entrar na sua conta, o banco já separa R$ 930 automaticamente para o governo (referente à CBS de 9,3%). Você recebe R$ 9.070. Você não precisa fazer nada — o banco faz por você.",
+      "analogia": "Imagine que um cliente te paga R$ 10.000 por uma venda. Antes de o dinheiro entrar na sua conta, o banco já separa R$ 880 automaticamente para o governo (referente à CBS de 8,8%). Você recebe R$ 9.120. Você não precisa fazer nada — o banco faz por você.",
       "impacto": "Seu fluxo de caixa muda: você sempre recebe menos do que o valor da nota. Precisa planejar seu capital de giro levando isso em conta, especialmente se costuma usar o dinheiro das vendas para pagar fornecedores.",
       "vigencia": "Previsto para entrar em vigor junto com o IBS/CBS plenos.",
       "base_legal": "LC 214/2025, Arts. 31 a 35 – regulamentam o mecanismo de Split Payment para o novo sistema tributário."
@@ -169,7 +169,7 @@
       "sigla": null,
       "nome_completo": "Alíquota Efetiva",
       "resumo": "O percentual real de imposto que sua empresa paga, depois de aplicar créditos de entradas e reduções setoriais.",
-      "analogia": "Se o imposto nominal é 28% mas você tem 50% de crédito de entradas e 30% de redução setorial, sua alíquota efetiva é bem menor que 28%. É o que você paga de verdade, não o que está na lei.",
+      "analogia": "Se o imposto nominal é 26,5% mas você tem 50% de crédito de entradas e 30% de redução setorial, sua alíquota efetiva é bem menor que 26,5%. É o que você paga de verdade, não o que está na lei.",
       "impacto": "Empresas com muitas compras de fornecedores (alto crédito de entrada) têm alíquota efetiva muito menor que a nominal. Empresas de serviços com poucos insumos tendem a ter alíquota efetiva mais próxima da nominal.",
       "vigencia": "Aplica-se ao CBS e IBS a partir de suas vigências."
     },
@@ -178,7 +178,7 @@
       "nome_completo": "Redução de Alíquota (Benefício Setorial)",
       "resumo": "Desconto no percentual do imposto concedido a setores específicos pela Lei Complementar 214/2025.",
       "analogia": "É como um cupom de desconto permanente no imposto para determinados setores. Saúde, educação, farmácias e agronegócio têm desconto de 60%. Profissões como contador, advogado e engenheiro têm 30% de desconto.",
-      "impacto": "Se seu setor tem redução de 60%, em vez de pagar 28%, você paga 11,2% de IVA Dual. Isso pode ser muito mais vantajoso que o sistema atual.",
+      "impacto": "Se seu setor tem redução de 60%, em vez de pagar 26,5%, você paga 10,6% de IVA Dual. Isso pode ser muito mais vantajoso que o sistema atual.",
       "vigencia": "Vigente a partir das datas de entrada do CBS e IBS."
     },
     "irpj": {

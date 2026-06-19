@@ -18,6 +18,7 @@ export interface DetalheTributo {
   valor: number;
   base_legal: string;
   formula?: string | null;
+  informativo?: boolean;  // exibido mas não somado ao total (ex.: CBS/IBS simbólicos em 2026)
 }
 
 export interface ResultadoSistema {

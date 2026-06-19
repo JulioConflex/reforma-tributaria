@@ -24,7 +24,7 @@ def _br(x: float) -> str:
 
 def _detalhe(
     nome: str, aliquota: float, valor: float, base_legal: str,
-    formula: str | None = None,
+    formula: str | None = None, informativo: bool = False,
 ) -> DetalheTributo:
     return DetalheTributo(
         nome=nome,
@@ -32,6 +32,7 @@ def _detalhe(
         valor=round(valor, 2),
         base_legal=base_legal,
         formula=formula,
+        informativo=informativo,
     )
 
 
@@ -235,65 +236,80 @@ def calcular_sistema_novo(
     red_txt = f" × (1 − {setor['reducao_aliquota']*100:.0f}% red. setorial)" if setor.get("reducao_aliquota") else ""
     cred_txt = f" × (1 − {percentual_credito*100:.0f}% créd.)"
 
-    # PIS/COFINS (apenas em 2026, em fase de coexistência)
+    # 1) Tributos do sistema ATUAL que ainda coexistem neste ano. Eles SAEM da base
+    #    do IBS/CBS — cálculo "por fora" (IBS/CBS não incidem sobre outros tributos).
+    pis = cofins = icms_valor = iss_valor = 0.0
+    det_antigos: list[DetalheTributo] = []
+
     if cron["pis_cofins_ativo"]:
         pis_r, _, cof_r, _ = _get_pis_cofins(setor, regime)
         pis    = valor * pis_r * (1 - percentual_credito)
         cofins = valor * cof_r * (1 - percentual_credito)
-        detalhes.append(_detalhe("PIS (em coexistência 2026)",    pis_r, pis,    "Vigente até extinção em 2027",
+        det_antigos.append(_detalhe("PIS (em coexistência 2026)",    pis_r, pis,    "Vigente até extinção em 2027",
             formula=f"R$ {_br(valor)} × {pis_r*100:.2f}%{cred_txt} = R$ {_br(pis)}"))
-        detalhes.append(_detalhe("COFINS (em coexistência 2026)", cof_r, cofins, "Vigente até extinção em 2027",
+        det_antigos.append(_detalhe("COFINS (em coexistência 2026)", cof_r, cofins, "Vigente até extinção em 2027",
             formula=f"R$ {_br(valor)} × {cof_r*100:.2f}%{cred_txt} = R$ {_br(cofins)}"))
 
-    # CBS
-    if cron["cbs_percentual"] > 0:
-        cbs_bruto = cron["cbs_percentual"] * fator_reducao
-        cbs_efetivo = cbs_bruto * (1 - percentual_credito)
-        cbs_valor = valor * cbs_efetivo
-        detalhes.append(_detalhe(
-            f"CBS (alíquota-ref. {cbs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)",
-            cbs_efetivo, cbs_valor,
-            "LC 214/2025, Art. 9º – CBS",
-            formula=f"R$ {_br(valor)} × {cron['cbs_percentual']*100:.1f}% (CBS ref.){red_txt}{cred_txt} = R$ {_br(cbs_valor)}",
-        ))
-
-    # IBS
-    if cron["ibs_percentual"] > 0:
-        ibs_bruto = cron["ibs_percentual"] * fator_reducao
-        ibs_efetivo = ibs_bruto * (1 - percentual_credito)
-        ibs_valor = valor * ibs_efetivo
-        detalhes.append(_detalhe(
-            f"IBS (alíquota-ref. {ibs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)",
-            ibs_efetivo, ibs_valor,
-            "LC 214/2025, Art. 156-A CF – IBS",
-            formula=f"R$ {_br(valor)} × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}",
-        ))
-
-    # ICMS em transição (produtos)
     if cron["icms_fator"] > 0 and tipo == "produto":
         icms_efetivo = icms_uf * cron["icms_fator"]
         icms_valor = valor * icms_efetivo
-        detalhes.append(_detalhe(
+        det_antigos.append(_detalhe(
             f"ICMS ({uf}) – {int(cron['icms_fator']*100)}% vigente",
             icms_efetivo, icms_valor,
             f"RICMS {uf} – redução conforme cronograma LC 214/2025",
             formula=f"R$ {_br(valor)} × {icms_uf*100:.1f}% (ICMS {uf}) × {int(cron['icms_fator']*100)}% (transição) = R$ {_br(icms_valor)}",
         ))
 
-    # ISS em transição (serviços)
     if cron["iss_fator"] > 0 and tipo == "servico":
         iss_rate = get_iss_padrao(setor)
         iss_efetivo = iss_rate * cron["iss_fator"]
         iss_valor = valor * iss_efetivo
-        detalhes.append(_detalhe(
+        det_antigos.append(_detalhe(
             f"ISS – {int(cron['iss_fator']*100)}% vigente",
             iss_efetivo, iss_valor,
-            f"LC 116/2003 – redução conforme cronograma LC 214/2025",
+            "LC 116/2003 – redução conforme cronograma LC 214/2025",
             formula=f"R$ {_br(valor)} × {iss_rate*100:.1f}% (ISS) × {int(cron['iss_fator']*100)}% (transição) = R$ {_br(iss_valor)}",
         ))
 
-    # Imposto Seletivo
-    if setor.get("is_aplicavel") and cron["cbs_percentual"] >= 0.093:
+    # 2) Base "por fora" do IBS/CBS = valor da operação − tributos que saem da base.
+    base_consumo = max(0.0, valor - (pis + cofins + icms_valor + iss_valor))
+    base_fmt = _br(base_consumo)
+    # Em 2026, CBS/IBS de teste são simbólicos (compensados com PIS/COFINS) → informativos, fora do total.
+    simbolico = (ano == 2026)
+    nota_simb = " — simbólico em 2026 (compensado), não somado à carga" if simbolico else ""
+
+    # 3) CBS e IBS — calculados sobre a base "por fora".
+    if cron["cbs_percentual"] > 0:
+        cbs_bruto = cron["cbs_percentual"] * fator_reducao
+        cbs_efetivo = cbs_bruto * (1 - percentual_credito)
+        cbs_valor = base_consumo * cbs_efetivo
+        nome_cbs = ("CBS (simbólica em 2026 — compensada)" if simbolico
+                    else f"CBS (alíquota-ref. {cbs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)")
+        detalhes.append(_detalhe(
+            nome_cbs, cbs_efetivo, cbs_valor,
+            "LC 214/2025, Art. 9º – CBS (cálculo por fora)",
+            formula=f"R$ {base_fmt} (base por fora) × {cron['cbs_percentual']*100:.1f}% (CBS ref.){red_txt}{cred_txt} = R$ {_br(cbs_valor)}{nota_simb}",
+            informativo=simbolico,
+        ))
+
+    if cron["ibs_percentual"] > 0:
+        ibs_bruto = cron["ibs_percentual"] * fator_reducao
+        ibs_efetivo = ibs_bruto * (1 - percentual_credito)
+        ibs_valor = base_consumo * ibs_efetivo
+        nome_ibs = ("IBS (simbólico em 2026 — compensado)" if simbolico
+                    else f"IBS (alíquota-ref. {ibs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)")
+        detalhes.append(_detalhe(
+            nome_ibs, ibs_efetivo, ibs_valor,
+            "LC 214/2025, Art. 156-A CF – IBS (cálculo por fora)",
+            formula=f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}{nota_simb}",
+            informativo=simbolico,
+        ))
+
+    # 4) Tributos atuais ainda vigentes (exibidos após CBS/IBS).
+    detalhes.extend(det_antigos)
+
+    # 5) Imposto Seletivo (a partir de 2027, quando a CBS entra cheia).
+    if setor.get("is_aplicavel") and cron["cbs_percentual"] >= 0.08:
         is_rate = setor.get("is_estimado", 0.0)
         is_valor = valor * is_rate
         detalhes.append(_detalhe(
@@ -303,7 +319,7 @@ def calcular_sistema_novo(
             formula=f"R$ {_br(valor)} × {is_rate*100:.0f}% (estimativa de IS) = R$ {_br(is_valor)}",
         ))
 
-    total = sum(d.valor for d in detalhes)
+    total = sum(d.valor for d in detalhes if not d.informativo)
     return ResultadoSistema(
         total=round(total, 2),
         percentual_sobre_valor=round(total / valor * 100, 2),
@@ -526,7 +542,7 @@ def gerar_recomendacoes(
             titulo=f"Redução especial de {reducao:.0f}% no seu setor",
             texto=(
                 f"Seu setor tem desconto de {reducao:.0f}% nas alíquotas do IBS e CBS. "
-                f"Em vez de pagar ~28%, você paga ~{28*(1-reducao/100):.1f}%. "
+                f"Em vez de pagar ~26,5%, você paga ~{26.5*(1-reducao/100):.1f}%. "
                 f"Use isso a seu favor na formação de preços."
             ),
             icone="🟢",
@@ -916,9 +932,11 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         pis_cofins_ativo=cron.get("pis_cofins_ativo", False),
         passos_irpj_csll=passos_irpj,
         observacoes=[
-            "Os tributos sobre consumo são calculados por operação, sobre o valor informado.",
-            "IRPJ e CSLL incidem sobre o lucro (mensal/anual) e NÃO entram no comparativo da reforma — a reforma não altera esses tributos.",
-            "Alíquotas de referência de IBS/CBS são provisórias (sujeitas a Resolução do Senado).",
+            "IBS e CBS são calculados “por fora”: somados ao preço, sobre uma base que exclui os demais tributos (ICMS, ISS, PIS/COFINS). No sistema atual, esses tributos são “por dentro” (embutidos no preço).",
+            "Crédito: compras e insumos usados na atividade geram crédito de IBS/CBS (abatem o imposto). Uso/consumo pessoal não gera; bares e restaurantes têm crédito vedado.",
+            "Em 2026, CBS (0,9%) e IBS (0,1%) são simbólicos — compensados com PIS/COFINS, não aumentam a carga real.",
+            "IRPJ e CSLL incidem sobre o lucro (mensal/anual) e NÃO entram no comparativo da reforma — ela não altera esses tributos.",
+            "Alíquotas de referência de IBS/CBS são provisórias: CBS ~8,8% + IBS ~17,7% = ~26,5% (sujeitas a Resolução do Senado).",
         ],
     )
 

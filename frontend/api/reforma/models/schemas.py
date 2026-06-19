@@ -61,6 +61,7 @@ class DetalheTributo(BaseModel):
     valor: float
     base_legal: str
     formula: Optional[str] = None  # memória de cálculo: como o valor foi obtido
+    informativo: bool = False      # True = exibido mas NÃO somado ao total (ex.: CBS/IBS simbólicos em 2026)
 
 
 class ResultadoSistema(BaseModel):

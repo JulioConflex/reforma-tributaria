@@ -209,6 +209,13 @@ function Breakdown({ r }: { r: SimulacaoResult }) {
           highlight
         />
       </div>
+
+      <div className="px-6 lg:px-7 py-3.5 border-t border-ink-100 bg-ink-50/40 text-[11.5px] text-ink-500 leading-relaxed flex gap-2">
+        <span className="text-brand-400 shrink-0">ℹ️</span>
+        <span>
+          <strong className="text-ink-700">Cálculo “por fora”:</strong> no novo sistema, IBS e CBS são somados ao preço e calculados sobre uma base que exclui os demais tributos — diferente do ICMS/ISS atuais, que são “por dentro” (embutidos no preço). Compras e insumos da atividade geram crédito de IBS/CBS; uso/consumo pessoal não.
+        </span>
+      </div>
     </div>
   );
 }
@@ -234,9 +241,12 @@ function BreakdownColumn({
 
       <ul className="mt-5 space-y-3">
         {detalhes.map((d, i) => (
-          <li key={i}>
+          <li key={i} className={d.informativo ? "opacity-60" : ""}>
             <div className="flex items-baseline justify-between gap-3 text-[13px]">
-              <span className="text-ink-700">{nomeFriendly(d.nome)}</span>
+              <span className="text-ink-700">
+                {nomeFriendly(d.nome)}
+                {d.informativo && <span className="ml-1.5 text-[10px] font-normal text-ink-400">(não entra no total)</span>}
+              </span>
               <span className="tab-num text-ink-500 shrink-0">
                 <span className="text-ink-400">{d.aliquota_aplicada.toFixed(2)}%</span>
                 <span className="mx-2 text-ink-200">·</span>
@@ -440,7 +450,7 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
         </table>
       </div>
       <p className="text-xs text-ink-400 mt-3 pt-3 border-t border-ink-100">
-        * Projeções baseadas em alíquotas de referência provisórias (CBS ~9,3% + IBS ~18,7%).
+        * Projeções baseadas em alíquotas de referência provisórias (CBS ~8,8% + IBS ~17,7% = ~26,5%).
         Cronograma: LC 214/2025, Arts. 350–357.
       </p>
     </div>
@@ -593,7 +603,7 @@ function BaseLegal() {
         ))}
       </ul>
       <p className="mt-4 pt-4 border-t border-ink-100 text-[11.5px] text-ink-400 leading-relaxed">
-        Alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) são estimativas sujeitas a resolução do Senado Federal.
+        Alíquotas de referência do IBS (~17,7%) e CBS (~8,8%) são estimativas sujeitas a resolução do Senado Federal.
       </p>
     </div>
   );
