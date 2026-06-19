@@ -15,8 +15,8 @@ interface Props {
 export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
   return (
     <div className="space-y-6">
-      <HeroDelta r={resultado} />
       <TransitionTimeline ano={ano} setAno={setAno} />
+      <HeroDelta r={resultado} />
 
       {/* MEI incompatível */}
       {resultado.mei_incompativel && (

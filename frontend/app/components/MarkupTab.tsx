@@ -167,6 +167,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
 
         {result && (
           <>
+            <TransitionTimeline ano={ano} setAno={setAno} />
+
             {/* Hero */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
               <div className="grid lg:grid-cols-12">
@@ -225,8 +227,6 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 </div>
               </div>
             </div>
-
-            <TransitionTimeline ano={ano} setAno={setAno} />
 
             {/* Split Payment card */}
             <div className="rounded-2xl bg-brand-800 mesh-navy text-ink-100 px-7 py-7 overflow-hidden relative">

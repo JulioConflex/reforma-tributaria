@@ -163,6 +163,8 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
 
         {result && (
           <>
+            <TransitionTimeline ano={ano} setAno={setAno} />
+
             {/* Hero — melhor regime */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
               <div className="grid lg:grid-cols-12">
@@ -225,8 +227,6 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                 </div>
               </div>
             </div>
-
-            <TransitionTimeline ano={ano} setAno={setAno} />
 
             {/* Tabela */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
