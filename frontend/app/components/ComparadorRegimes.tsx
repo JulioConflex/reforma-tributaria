@@ -15,8 +15,8 @@ interface Props {
 }
 
 export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId, sharedUf }: Props) {
-  const [valor, setValor] = useState("10.000,00");
-  const [faturamento, setFaturamento] = useState("360.000,00");
+  const [valor, setValor] = useState("");
+  const [faturamento, setFaturamento] = useState("");
   const [setorId, setSetorId] = useState(sharedSetorId || "comercio_geral");
   const [uf, setUf] = useState(sharedUf || "SP");
   const [folhaPagamento, setFolhaPagamento] = useState("");
@@ -187,7 +187,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                       <p className="mt-3 text-[14px] text-ink-500 leading-relaxed max-w-xl">
                         {(() => {
                           const melhor = disponiveis.find((d) => d.regime === result.regime_mais_vantajoso);
-                          if (!melhor || disponiveis.length < 2) return result.obs;
+                          if (!melhor || disponiveis.length < 2 || parseBRL(valor) <= 0) return result.obs;
                           const pior = disponiveis.reduce((a, b) => ((a.total_novo ?? 0) >= (b.total_novo ?? 0) ? a : b));
                           const economiaAno = ((pior.total_novo ?? 0) - (melhor.total_novo ?? 0)) / parseBRL(valor) * parseBRL(faturamento);
                           return <>Pode economizar até <strong className="text-emerald-600 tab-num">{brl(economiaAno)}/ano</strong> em comparação com {pior.nome}, considerando seu faturamento de {brl(parseBRL(faturamento) || 0)}.</>;

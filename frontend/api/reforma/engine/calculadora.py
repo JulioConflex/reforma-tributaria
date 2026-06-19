@@ -162,7 +162,7 @@ def calcular_sistema_atual(
 
     return ResultadoSistema(
         total=round(total, 2),
-        percentual_sobre_valor=round(total / valor * 100, 2),
+        percentual_sobre_valor=round(total / valor * 100, 2) if valor > 0 else 0.0,
         detalhes=detalhes,
     )
 
@@ -206,7 +206,7 @@ def calcular_sistema_novo(
             ))
             return ResultadoSistema(
                 total=round(v, 2),
-                percentual_sobre_valor=round(v / valor * 100, 2),
+                percentual_sobre_valor=round(v / valor * 100, 2) if valor > 0 else 0.0,
                 detalhes=detalhes,
             )
         else:
@@ -226,7 +226,7 @@ def calcular_sistema_novo(
             ))
             return ResultadoSistema(
                 total=round(v, 2),
-                percentual_sobre_valor=round(v / valor * 100, 2),
+                percentual_sobre_valor=round(v / valor * 100, 2) if valor > 0 else 0.0,
                 detalhes=detalhes,
             )
 
@@ -322,7 +322,7 @@ def calcular_sistema_novo(
     total = sum(d.valor for d in detalhes if not d.informativo)
     return ResultadoSistema(
         total=round(total, 2),
-        percentual_sobre_valor=round(total / valor * 100, 2),
+        percentual_sobre_valor=round(total / valor * 100, 2) if valor > 0 else 0.0,
         detalhes=detalhes,
     )
 

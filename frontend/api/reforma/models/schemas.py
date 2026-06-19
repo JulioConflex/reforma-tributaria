@@ -16,7 +16,7 @@ class TipoOperacao(str, Enum):
 
 
 class SimulacaoInput(BaseModel):
-    valor: float = Field(..., gt=0, description="Valor da operação em R$")
+    valor: float = Field(..., ge=0, description="Valor da operação em R$ (0 = simulação zerada)")
     regime: RegimeTributario
     setor_id: str = Field(..., description="ID do setor (ver /setores)")
     uf: str = Field(default="SP", min_length=2, max_length=2, description="UF de destino (para ICMS)")
@@ -175,7 +175,7 @@ class SimulacaoComProjecaoOutput(SimulacaoOutput):
 
 
 class MarkupInput(BaseModel):
-    custo: float = Field(..., gt=0, description="Custo do produto/serviço em R$")
+    custo: float = Field(..., ge=0, description="Custo do produto/serviço em R$ (0 = zerado)")
     margem_desejada: float = Field(..., gt=0, lt=1, description="Margem de lucro desejada (ex: 0.30 = 30%)")
     despesas_fixas_percentual: float = Field(
         default=0.1, ge=0.0, lt=1.0,

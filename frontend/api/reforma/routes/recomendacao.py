@@ -24,12 +24,12 @@ _LIMITE_FATURAMENTO: dict[str, tuple[float, str]] = {
 
 
 class ComparadorInput(BaseModel):
-    faturamento_anual: float = Field(..., gt=0, description="Faturamento anual em R$")
+    faturamento_anual: float = Field(..., ge=0, description="Faturamento anual em R$ (0 = zerado)")
     setor_id: str
     uf: str = Field(default="SP", min_length=2, max_length=2)
     ano: int = Field(default=2027, ge=2026, le=2033)
     percentual_credito_entrada: float = Field(default=0.4, ge=0.0, le=1.0)
-    valor: float = Field(default=10000.0, gt=0, description="Valor de operação base para comparação")
+    valor: float = Field(default=10000.0, ge=0, description="Valor de operação base para comparação")
     folha_pagamento_mensal: Optional[float] = Field(
         default=None, gt=0,
         description=(
@@ -127,9 +127,9 @@ def comparar_regimes(inp: ComparadorInput):
             "disponivel": True,
             "motivo_indisponivel": None,
             "total_atual": total_atual,
-            "percentual_atual": round(total_atual / inp.valor * 100, 2),
+            "percentual_atual": round(total_atual / inp.valor * 100, 2) if inp.valor > 0 else 0.0,
             "total_novo": total_novo,
-            "percentual_novo": round(total_novo / inp.valor * 100, 2),
+            "percentual_novo": round(total_novo / inp.valor * 100, 2) if inp.valor > 0 else 0.0,
             "diferenca": round(diff, 2),
             "diferenca_percentual": round(diff / total_atual * 100, 2) if total_atual > 0 else 0.0,
             "economia_anual_estimada": round(diff * 12, 2),

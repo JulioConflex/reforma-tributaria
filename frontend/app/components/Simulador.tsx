@@ -69,14 +69,9 @@ export default function Simulador() {
   const mostrarLucroReal = regime === "lucro_real";
 
   // Recalcula automaticamente ao mudar inputs (debounced).
-  // Só calcula quando há valor preenchido — assim o site abre "zerado", sem puxar resultado.
+  // Valor vazio é tratado como 0 → a tela aparece zerada (R$ 0,00), sem prompt de texto.
   useEffect(() => {
     if (aba !== "simulador" || setores.length === 0 || meiBloqueado) return;
-    const precisaFaturamento = regime === "simples_nacional" || regime === "mei";
-    if (parseBRL(valor) <= 0 || (precisaFaturamento && parseBRL(faturamento) <= 0)) {
-      setResultado(null);
-      return;
-    }
     const handler = setTimeout(() => {
       simular();
     }, 280);
@@ -97,7 +92,7 @@ export default function Simulador() {
         ano,
         percentual_credito_entrada: credito / 100,
       };
-      if (regime === "simples_nacional" || regime === "mei") {
+      if ((regime === "simples_nacional" || regime === "mei") && parseBRL(faturamento) > 0) {
         body.faturamento_anual = parseBRL(faturamento);
       }
       if (mostrarFatorR && folhaPagamento) {
@@ -162,7 +157,7 @@ export default function Simulador() {
               )}
               {!resultado && !erro && (
                 <div className="rounded-2xl bg-white hairline px-7 py-16 text-center text-ink-400">
-                  Preencha o <span className="font-semibold text-ink-600">valor da operação</span> ao lado para ver a simulação.
+                  {meiBloqueado ? "Selecione um regime compatível para ver a simulação." : "Carregando…"}
                 </div>
               )}
             </section>

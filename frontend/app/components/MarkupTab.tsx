@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedUf, sharedRegime }: Props) {
-  const [custo, setCusto] = useState("5.000,00");
+  const [custo, setCusto] = useState("");
   const [margem, setMargem] = useState("30");
   const [despesas, setDespesas] = useState("10");
   const [regime, setRegime] = useState(sharedRegime || "lucro_presumido");
