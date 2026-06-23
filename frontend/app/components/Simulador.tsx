@@ -256,9 +256,9 @@ function FormPanel(p: FormPanelProps) {
       </div>
 
       <div className="mb-5">
-        <FieldLabel>Valor da operação</FieldLabel>
+        <FieldLabel>Valor do faturamento mensal</FieldLabel>
         <CurrencyField value={p.valor} onChange={p.setValor} />
-        <p className="text-[12px] text-ink-400 mt-1.5 leading-snug">O valor de uma venda ou serviço típico.</p>
+        <p className="text-[12px] text-ink-400 mt-1.5 leading-snug">O faturamento médio da sua empresa em um mês.</p>
       </div>
 
       <div className="mb-5">
