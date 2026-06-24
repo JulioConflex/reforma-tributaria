@@ -9,6 +9,7 @@ import Header, { type Aba } from "./Header";
 import ResultadoSimulacao from "./ResultadoSimulacao";
 import ComparadorRegimes from "./ComparadorRegimes";
 import MarkupTab from "./MarkupTab";
+import SplitPaymentTab from "./SplitPaymentTab";
 import Onboarding from "./Onboarding";
 import ChatAssistente from "./ChatAssistente";
 
@@ -195,7 +196,7 @@ export default function Simulador() {
         )}
 
         {aba === "split_payment" && (
-          <div className="mt-6" />
+          <SplitPaymentTab setores={setores} />
         )}
       </main>
 
