@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useAuth } from "./AuthProvider";
 
-export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl";
+export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment";
 
 interface Props {
   aba: Aba;
@@ -37,11 +37,11 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
             <button
               onClick={() => setAba("simulador")}
               className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
-                aba !== "base_legal" && aba !== "calculadora_dl" ? "text-white" : "text-ink-300 hover:text-white"
+                aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
               }`}
             >
               Simulador
-              {aba !== "base_legal" && aba !== "calculadora_dl" && (
+              {aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && (
                 <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
               )}
             </button>
@@ -64,6 +64,17 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
             >
               Calculadora Retenção Dividendos
               {aba === "calculadora_dl" && (
+                <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
+              )}
+            </button>
+            <button
+              onClick={() => setAba("split_payment")}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
+              }`}
+            >
+              Split Payment
+              {aba === "split_payment" && (
                 <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
               )}
             </button>
@@ -124,7 +135,7 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
         </div>
 
         {/* Title row + tabs — exibido só nas telas do Simulador (Base legal e Calculadora têm cabeçalho próprio) */}
-        {aba !== "base_legal" && aba !== "calculadora_dl" && (
+        {aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && (
         <div className="pt-7 pb-7 lg:pt-9 lg:pb-9 grid lg:grid-cols-12 gap-6 items-end">
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 text-[11px] font-semibold text-brand-300 uppercase tracking-[0.12em] mb-3">

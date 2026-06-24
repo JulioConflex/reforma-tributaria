@@ -193,6 +193,10 @@ export default function Simulador() {
             />
           </div>
         )}
+
+        {aba === "split_payment" && (
+          <div className="mt-6" />
+        )}
       </main>
 
       {onboardingAberto && (
