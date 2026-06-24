@@ -1,5 +1,14 @@
 {
   "termos": {
+    "operadoras_planos_saude": {
+      "sigla": null,
+      "nome_completo": "Operadoras de Planos de Saúde — Crédito de IBS/CBS",
+      "resumo": "Operadoras reguladas pela ANS têm crédito AMPLO sobre compras operacionais, mas VEDADO sobre sinistros e despesas assistenciais.",
+      "analogia": "Pense assim: a base de cálculo do IBS/CBS das operadoras já desconta os sinistros que elas pagam aos hospitais e médicos. Se elas também tomassem crédito sobre esses sinistros, estariam se beneficiando duas vezes do mesmo valor. Por isso a lei veda o crédito especificamente sobre despesas assistenciais.",
+      "impacto": "O crédito de entrada que você informa no simulador deve considerar apenas as compras operacionais (equipamentos, TI, aluguel, serviços administrativos), excluindo sinistros e despesas assistenciais. Para quem CONTRATA plano de saúde para funcionários: o crédito também é vedado, exceto se o plano for obrigatório por ACT/CCT (acordo ou convenção coletiva).",
+      "vigencia": "Arts. 234–238 e 235 da LC 214/2025. Regime específico vigente a partir de 2027.",
+      "aviso": "A base de cálculo das operadoras no novo regime é a MARGEM (prêmios recebidos menos sinistros e despesas assistenciais), e não o faturamento bruto. O simulador usa o valor bruto como simplificação — os resultados são orientativos. Consulte seu contador para o cálculo exato."
+    },
     "cbs": {
       "sigla": "CBS",
       "nome_completo": "Contribuição sobre Bens e Serviços",
