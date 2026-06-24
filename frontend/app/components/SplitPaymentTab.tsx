@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Setor, SimulacaoResult, DetalheTributo } from "./types";
 import { REGIMES, UFS, API } from "./types";
 import { FieldLabel, SelectField, CurrencyField, parseBRL, brl, NumberTicker } from "./ui";
+import { AlertaOperadoraANS } from "./Simulador";
 
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0, mei: 0, lucro_presumido: 30, lucro_real: 50,
@@ -104,6 +105,7 @@ export default function SplitPaymentTab({ setores }: Props) {
             <SelectField value={setorId} onChange={setSetorId}>
               {setores.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
             </SelectField>
+            {setorId === "operadoras_planos_saude_odontologicos" && <AlertaOperadoraANS />}
           </div>
           <div>
             <FieldLabel>UF</FieldLabel>

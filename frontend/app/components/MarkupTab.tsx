@@ -6,6 +6,7 @@ import { REGIMES, UFS, API } from "./types";
 import { FieldLabel, TextField, SelectField, NumberTicker, brl, CurrencyField, parseBRL } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import TransitionTimeline from "./Timeline";
+import { AlertaOperadoraANS } from "./Simulador";
 
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0, mei: 0, lucro_presumido: 30, lucro_real: 50,
@@ -121,6 +122,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             <SelectField value={setorId} onChange={setSetorId}>
               {setores.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
             </SelectField>
+            {setorId === "operadoras_planos_saude_odontologicos" && <AlertaOperadoraANS />}
           </div>
           <div>
             <FieldLabel>UF</FieldLabel>

@@ -298,6 +298,7 @@ function FormPanel(p: FormPanelProps) {
               Redução setorial de {((p.setor!.reducao_aliquota) * 100).toFixed(0)}%
             </div>
           )}
+          {p.setorId === "operadoras_planos_saude_odontologicos" && <AlertaOperadoraANS />}
         </div>
         <div>
           <FieldLabel>UF</FieldLabel>
@@ -390,5 +391,16 @@ function FormPanel(p: FormPanelProps) {
         {p.carregando ? "Calculando…" : "Cálculo em tempo real"}
       </div>
     </aside>
+  );
+}
+
+export function AlertaOperadoraANS() {
+  return (
+    <div className="mt-2.5 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-3 text-[12px] text-amber-800 leading-snug">
+      <strong className="font-semibold">Regime específico ANS (Arts. 234–238 LC 214/2025):</strong>{" "}
+      a base real de cálculo é a <strong>margem</strong> (prêmios recebidos − sinistros − despesas assistenciais), não o faturamento bruto.
+      O crédito de IBS/CBS é <strong>amplo sobre compras operacionais</strong>, mas <strong>vedado sobre sinistros e despesas assistenciais</strong> já deduzidos da base.
+      Os valores abaixo são orientativos — consulte seu contador para o cálculo exato.
+    </div>
   );
 }
