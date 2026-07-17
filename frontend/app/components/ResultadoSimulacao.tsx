@@ -449,11 +449,11 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
               <div className="text-[11px] text-ink-500 mb-1 uppercase tracking-wide font-semibold">
                 Crédito que seu cliente B2B recupera
               </div>
-              <div className="font-display text-[20px] font-bold text-ink-700 tab-num">
-                ≈ {brl(comp.credito_cliente_normal)}
+              <div className="font-display text-[20px] font-bold text-red-600 tab-num">
+                Nenhum
               </div>
               <div className="text-[11px] text-ink-400 mt-0.5 leading-snug">
-                ~30% do DAS como componente IBS/CBS · estimativa pendente de regulamentação
+                IBS/CBS embutido no DAS sem identificação separada — comprador não pode tomar crédito (LC 214/2025, Art. 28)
               </div>
             </div>
 

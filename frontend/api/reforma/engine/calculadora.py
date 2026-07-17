@@ -893,10 +893,12 @@ def _calcular_simples_por_fora(
         detalhes=detalhes,
     )
 
-    # Crédito que o comprador B2B pode aproveitar
-    # Normal: ~30% do DAS como componente IBS/CSS equivalente (estimativa; aguarda CG-IBS)
-    credito_normal = round(v_das * 0.30, 2)
-    # Por fora: crédito bruto de CBS + IBS (o que a empresa cobrou, antes de seus créditos de entrada)
+    # Crédito que o comprador B2B pode aproveitar:
+    # Normal: ZERO — no regime simplificado o IBS/CBS está embutido no DAS sem identificação
+    # separada; o comprador não pode tomar crédito (LC 214/2025, Art. 28 — crédito exige
+    # recolhimento pelo regime geral).
+    credito_normal = 0.0
+    # Por fora: crédito bruto de CBS + IBS (o que a empresa cobrou antes de seus créditos de entrada)
     credito_por_fora = round(cbs_bruto_val + ibs_bruto_val, 2)
 
     return SimplesNacionalComparativo(

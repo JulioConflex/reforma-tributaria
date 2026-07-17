@@ -32,3 +32,5 @@ _backup-pre-redesign/
 # Sistema operacional / editores
 .DS_Store
 Thumbs.db
+
+.vercel
