@@ -67,12 +67,12 @@ def _intents() -> list[dict]:
             "titulo": "Alíquota de referência",
             "kw": _tokens("aliquota aliquotas referencia total percentual carga quanto paga imposto porcentagem"),
             "resposta": (
-                "A alíquota de referência combinada do IVA Dual é estimada em **~26,5%** "
-                "(**CBS ~8,8%** + **IBS ~17,7%**). É **provisória** — depende de Resolução do Senado. "
+                "A alíquota de referência combinada do IVA Dual é estimada em **~28%** "
+                "(**CBS ~9,3%** + **IBS ~18,7%**). É **provisória** — depende de Resolução do Senado. "
                 "Com os créditos das compras e as reduções por setor, a carga efetiva costuma ser menor. "
                 "Use o **Simulador** para ver o valor no seu caso."
             ),
-            "fontes": ["LC 214/2025; estimativa do governo (teto de 26,5%)"],
+            "fontes": ["LC 214/2025; estimativa do mercado (teto de 28%)"],
         },
         {
             "titulo": "Reduções por setor",

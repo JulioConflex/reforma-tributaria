@@ -41,7 +41,7 @@
       "nome_completo": "Imposto sobre Valor Agregado Dual",
       "resumo": "O novo sistema tributário brasileiro, formado pela soma do CBS (federal) + IBS (estadual/municipal).",
       "analogia": "A maioria dos países europeus tem um IVA único. O Brasil criou dois (daí o nome 'Dual'): um federal (CBS) e um para estados e municípios (IBS). Juntos, formam o novo sistema.",
-      "impacto": "Alíquota total estimada: ~26,5%, mas com créditos de compras e exceções por setor. Para muitas empresas, o impacto real é menor que esse número bruto.",
+      "impacto": "Alíquota total estimada: ~28% (CBS ~9,3% + IBS ~18,7%), mas com créditos de compras e exceções por setor. Para muitas empresas, o impacto real é menor que esse número bruto.",
       "vigencia": "Sistema pleno apenas em 2033."
     },
     "pis": {
@@ -178,7 +178,7 @@
       "sigla": null,
       "nome_completo": "Alíquota Efetiva",
       "resumo": "O percentual real de imposto que sua empresa paga, depois de aplicar créditos de entradas e reduções setoriais.",
-      "analogia": "Se o imposto nominal é 26,5% mas você tem 50% de crédito de entradas e 30% de redução setorial, sua alíquota efetiva é bem menor que 26,5%. É o que você paga de verdade, não o que está na lei.",
+      "analogia": "Se o imposto nominal é 28% mas você tem 50% de crédito de entradas e 30% de redução setorial, sua alíquota efetiva é bem menor que 28%. É o que você paga de verdade, não o que está na lei.",
       "impacto": "Empresas com muitas compras de fornecedores (alto crédito de entrada) têm alíquota efetiva muito menor que a nominal. Empresas de serviços com poucos insumos tendem a ter alíquota efetiva mais próxima da nominal.",
       "vigencia": "Aplica-se ao CBS e IBS a partir de suas vigências."
     },
@@ -187,7 +187,7 @@
       "nome_completo": "Redução de Alíquota (Benefício Setorial)",
       "resumo": "Desconto no percentual do imposto concedido a setores específicos pela Lei Complementar 214/2025.",
       "analogia": "É como um cupom de desconto permanente no imposto para determinados setores. Saúde, educação, farmácias e agronegócio têm desconto de 60%. Profissões como contador, advogado e engenheiro têm 30% de desconto.",
-      "impacto": "Se seu setor tem redução de 60%, em vez de pagar 26,5%, você paga 10,6% de IVA Dual. Isso pode ser muito mais vantajoso que o sistema atual.",
+      "impacto": "Se seu setor tem redução de 60%, em vez de pagar 28%, você paga 11,2% de IVA Dual. Isso pode ser muito mais vantajoso que o sistema atual.",
       "vigencia": "Vigente a partir das datas de entrada do CBS e IBS."
     },
     "irpj": {

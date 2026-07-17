@@ -542,7 +542,7 @@ def gerar_recomendacoes(
             titulo=f"Redução especial de {reducao:.0f}% no seu setor",
             texto=(
                 f"Seu setor tem desconto de {reducao:.0f}% nas alíquotas do IBS e CBS. "
-                f"Em vez de pagar ~26,5%, você paga ~{26.5*(1-reducao/100):.1f}%. "
+                f"Em vez de pagar ~28%, você paga ~{28.0*(1-reducao/100):.1f}%. "
                 f"Use isso a seu favor na formação de preços."
             ),
             icone="🟢",
@@ -936,7 +936,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
             "Crédito: compras e insumos usados na atividade geram crédito de IBS/CBS (abatem o imposto). Uso/consumo pessoal não gera; bares e restaurantes têm crédito vedado.",
             "Em 2026, CBS (0,9%) e IBS (0,1%) são simbólicos — compensados com PIS/COFINS, não aumentam a carga real.",
             "IRPJ e CSLL incidem sobre o lucro (mensal/anual) e NÃO entram no comparativo da reforma — ela não altera esses tributos.",
-            "Alíquotas de referência de IBS/CBS são provisórias: CBS ~8,8% + IBS ~17,7% = ~26,5% (sujeitas a Resolução do Senado).",
+            "Alíquotas de referência de IBS/CBS são provisórias: CBS ~9,3% + IBS ~18,7% = ~28% (sujeitas a Resolução do Senado).",
         ],
     )
 
