@@ -7,7 +7,7 @@ import { FieldLabel, SelectField, CurrencyField, parseBRL, brl, NumberTicker } f
 import { AlertaOperadoraANS } from "./Simulador";
 
 const CREDITO_AUTO: Record<string, number> = {
-  simples_nacional: 0, mei: 0, lucro_presumido: 30, lucro_real: 50,
+  simples_nacional: 0, mei: 0, lucro_presumido: 0, lucro_real: 0,
 };
 
 const ANOS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
@@ -22,14 +22,14 @@ export default function SplitPaymentTab({ setores }: Props) {
   const [setorId, setSetorId] = useState("comercio_geral");
   const [uf, setUf] = useState("SP");
   const [ano, setAno] = useState(2029);
-  const [credito, setCredito] = useState(30);
+  const [credito, setCredito] = useState(0);
 
   const [result, setResult] = useState<SimulacaoResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    setCredito(CREDITO_AUTO[regime] ?? 30);
+    setCredito(CREDITO_AUTO[regime] ?? 0);
   }, [regime]);
 
   useEffect(() => {

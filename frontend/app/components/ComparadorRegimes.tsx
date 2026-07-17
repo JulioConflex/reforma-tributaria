@@ -17,6 +17,7 @@ interface Props {
 export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId, sharedUf }: Props) {
   const [valor, setValor] = useState("");
   const [faturamento, setFaturamento] = useState("");
+  const [credito, setCredito] = useState(0);
   const [setorId, setSetorId] = useState(sharedSetorId || "comercio_geral");
   const [uf, setUf] = useState(sharedUf || "SP");
   const [folhaPagamento, setFolhaPagamento] = useState("");
@@ -34,7 +35,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
     const t = setTimeout(() => comparar(), 280);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valor, faturamento, setorId, uf, ano, folhaPagamento, despesasMensais, setores.length]);
+  }, [valor, faturamento, credito, setorId, uf, ano, folhaPagamento, despesasMensais, setores.length]);
 
   const comparar = async () => {
     setCarregando(true);
@@ -45,7 +46,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
         setor_id: setorId,
         uf, ano,
         valor: parseBRL(valor),
-        percentual_credito_entrada: 0.4,
+        percentual_credito_entrada: credito / 100,
       };
       if (mostrarFatorR && folhaPagamento) {
         body.folha_pagamento_mensal = parseBRL(folhaPagamento);
@@ -100,6 +101,19 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
           </FieldLabel>
           <CurrencyField value={despesasMensais} onChange={setDespesasMensais} />
           <p className="text-[11.5px] text-ink-400 mt-1.5">Inclui o IRPJ/CSLL do Lucro Real na comparação (carga total).</p>
+        </div>
+
+        <div className="mb-4">
+          <FieldLabel>Crédito de entrada</FieldLabel>
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[13px] font-semibold text-ink-700 tab-num">{credito}%</div>
+          </div>
+          <input
+            type="range" min={0} max={80} step={5} value={credito}
+            onChange={(e) => setCredito(parseInt(e.target.value))}
+            className="rng w-full"
+          />
+          <p className="text-[11.5px] text-ink-400 mt-1.5">% de IBS/CBS que você recupera via créditos de entradas.</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-4">

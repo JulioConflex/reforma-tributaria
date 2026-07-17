@@ -9,7 +9,7 @@ import TransitionTimeline from "./Timeline";
 import { AlertaOperadoraANS } from "./Simulador";
 
 const CREDITO_AUTO: Record<string, number> = {
-  simples_nacional: 0, mei: 0, lucro_presumido: 30, lucro_real: 50,
+  simples_nacional: 0, mei: 0, lucro_presumido: 0, lucro_real: 0,
 };
 
 interface Props {
@@ -29,14 +29,14 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
   const [setorId, setSetorId] = useState(sharedSetorId || "comercio_geral");
   const [uf, setUf] = useState(sharedUf || "SP");
   const [creditoAvancado, setCreditoAvancado] = useState(false);
-  const [credito, setCredito] = useState(30);
+  const [credito, setCredito] = useState(0);
 
   const [result, setResult] = useState<MarkupResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    if (!creditoAvancado) setCredito(CREDITO_AUTO[regime] ?? 30);
+    if (!creditoAvancado) setCredito(CREDITO_AUTO[regime] ?? 0);
   }, [regime, creditoAvancado]);
 
   // Debounced recalc
@@ -147,7 +147,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="text-[13px] font-semibold text-ink-700 tab-num">{credito}%</div>
-                <button onClick={() => { setCreditoAvancado(false); setCredito(CREDITO_AUTO[regime] ?? 30); }} className="text-[11px] font-medium text-ink-400 hover:text-ink-700">Voltar</button>
+                <button onClick={() => { setCreditoAvancado(false); setCredito(CREDITO_AUTO[regime] ?? 0); }} className="text-[11px] font-medium text-ink-400 hover:text-ink-700">Voltar</button>
               </div>
               <input type="range" min={0} max={80} step={5} value={credito} onChange={(e) => setCredito(parseInt(e.target.value))} className="rng w-full" />
             </div>

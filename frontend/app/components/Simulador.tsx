@@ -16,7 +16,7 @@ import ChatAssistente from "./ChatAssistente";
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0,
   mei: 0,
-  lucro_presumido: 30,
+  lucro_presumido: 0,
   lucro_real: 50,
 };
 
@@ -35,7 +35,7 @@ export default function Simulador() {
   const [uf, setUf] = useState("SP");
   const [ano, setAno] = useState(2029);
   const [creditoAvancado, setCreditoAvancado] = useState(false);
-  const [credito, setCredito] = useState(30);
+  const [credito, setCredito] = useState(0);
   const [faturamento, setFaturamento] = useState("360.000,00");
   const [folhaPagamento, setFolhaPagamento] = useState("");
   const [faturamentoMensal, setFaturamentoMensal] = useState("");
@@ -61,7 +61,7 @@ export default function Simulador() {
 
   // Auto-crédito
   useEffect(() => {
-    if (!creditoAvancado) setCredito(CREDITO_AUTO[regime] ?? 30);
+    if (!creditoAvancado) setCredito(CREDITO_AUTO[regime] ?? 0);
   }, [regime, creditoAvancado]);
 
   const setor = setores.find((s) => s.id === setorId);
@@ -352,7 +352,7 @@ function FormPanel(p: FormPanelProps) {
           <div className="rounded-lg bg-brand-50 border border-brand-100 px-3.5 py-2.5 flex items-center justify-between">
             <div className="text-[13px] text-brand-700 leading-snug">
               Estimado:{" "}
-              <strong className="tab-num text-brand-800">{CREDITO_AUTO[p.regime] ?? 30}%</strong>
+              <strong className="tab-num text-brand-800">{CREDITO_AUTO[p.regime] ?? 0}%</strong>
               {showSimples && <span className="text-ink-400 block text-[11px]">Simples/MEI não geram crédito</span>}
             </div>
             <button
@@ -365,7 +365,7 @@ function FormPanel(p: FormPanelProps) {
             <div className="flex items-center justify-between mb-1.5">
               <div className="text-[13px] font-semibold text-ink-700 tab-num">{p.credito}%</div>
               <button
-                onClick={() => { p.setCreditoAvancado(false); p.setCredito(CREDITO_AUTO[p.regime] ?? 30); }}
+                onClick={() => { p.setCreditoAvancado(false); p.setCredito(CREDITO_AUTO[p.regime] ?? 0); }}
                 className="text-[11px] font-medium text-ink-400 hover:text-ink-700"
               >Voltar a automático</button>
             </div>
