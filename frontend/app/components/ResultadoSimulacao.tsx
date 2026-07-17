@@ -157,11 +157,11 @@ function HeroDelta({ r }: { r: SimulacaoResult }) {
 function nomeFriendly(nome: string) {
   if (nome.startsWith("CBS")) return "CBS · Imposto federal novo";
   if (nome.startsWith("IBS")) return "IBS · Imposto est./mun. novo";
+  if (nome.startsWith("ISS")) return "ISS · municipal";
   if (nome.startsWith("IS")) return "IS · Imposto Seletivo";
   if (nome.startsWith("PIS")) return "PIS · contrib. federal";
   if (nome.startsWith("COFINS")) return "COFINS · contrib. federal";
   if (nome.startsWith("ICMS")) return nome.replace(/ICMS \((\w{2})\)/, "ICMS · estadual ($1)");
-  if (nome.startsWith("ISS")) return "ISS · municipal";
   if (nome.startsWith("DAS")) return "DAS · Simples Nacional";
   return nome;
 }
