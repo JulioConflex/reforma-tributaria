@@ -17,7 +17,7 @@ const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0,
   mei: 0,
   lucro_presumido: 0,
-  lucro_real: 50,
+  lucro_real: 0,
 };
 
 export default function Simulador() {
