@@ -155,10 +155,14 @@ function HeroDelta({ r }: { r: SimulacaoResult }) {
 
 /* ─────────────────────────────────────────────── BREAKDOWN ─── */
 function nomeFriendly(nome: string) {
-  if (nome.startsWith("CBS")) return "CBS · Imposto federal novo";
-  if (nome.startsWith("IBS")) return "IBS · Imposto est./mun. novo";
+  if (nome.startsWith("CBS")) return "CBS · Contribuição federal (IBS/CBS)";
+  if (nome.startsWith("IBS")) return "IBS · Imposto estadual/municipal (IVA)";
+  // ISS DEVE vir antes de IS — "ISS" começa com "IS" mas são tributos distintos:
+  // ISS = imposto municipal sobre serviços (extingue em 2033)
+  // IS  = Imposto Seletivo, "imposto do pecado" (bebidas, tabaco, veículos, etc.)
+  if (nome.startsWith("ISS") && nome.includes("vigente")) return "ISS · em extinção gradual (→ IBS)";
   if (nome.startsWith("ISS")) return "ISS · municipal";
-  if (nome.startsWith("IS")) return "IS · Imposto Seletivo";
+  if (nome.startsWith("IS ") || nome === "IS") return "IS · Seletivo (bebidas/tabaco/veículos)";
   if (nome.startsWith("PIS")) return "PIS · contrib. federal";
   if (nome.startsWith("COFINS")) return "COFINS · contrib. federal";
   if (nome.startsWith("ICMS")) return nome.replace(/ICMS \((\w{2})\)/, "ICMS · estadual ($1)");
@@ -450,8 +454,8 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
         </table>
       </div>
       <p className="text-xs text-ink-400 mt-3 pt-3 border-t border-ink-100">
-        * Projeções baseadas em alíquotas de referência provisórias (CBS ~8,8% + IBS ~17,7% = ~26,5%).
-        Cronograma: LC 214/2025, Arts. 350–357.
+        * Projeções baseadas em alíquotas de referência provisórias (CBS ~9,3% + IBS ~18,7% = ~28%).
+        Cronograma: LC 214/2025, Arts. 350–357. IS (Imposto Seletivo) incide somente sobre setores específicos (bebidas, tabaco, veículos).
       </p>
     </div>
   );

@@ -216,7 +216,7 @@ export default function SplitPaymentTab({ setores }: Props) {
                     </div>
                     <div className="text-right shrink-0">
                       <div className="font-display text-[20px] font-bold tab-num text-ink-900">{brl(tributo?.valor ?? 0)}</div>
-                      <div className="text-[12px] text-ink-400 tab-num">{((tributo?.aliquota_aplicada ?? 0) * 100).toFixed(2)}% efetivo</div>
+                      <div className="text-[12px] text-ink-400 tab-num">{(tributo?.aliquota_aplicada ?? 0).toFixed(2)}% efetivo</div>
                     </div>
                   </div>
                 ))}
