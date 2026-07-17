@@ -298,12 +298,24 @@ def calcular_sistema_novo(
         ibs_bruto = cron["ibs_percentual"] * fator_reducao
         ibs_efetivo = ibs_bruto * (1 - percentual_credito)
         ibs_valor = base_consumo * ibs_efetivo
-        nome_ibs = ("IBS (simbólico em 2026 — compensado)" if simbolico
-                    else f"IBS (alíquota-ref. {ibs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)")
+        ibs_fator = cron.get("ibs_fator", 0.0)
+        if simbolico:
+            nome_ibs = "IBS (simbólico em 2026 — compensado)"
+            formula_ibs = f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}{nota_simb}"
+        elif ibs_fator > 0 and ibs_fator < 1:
+            ibs_ref_full = cron["ibs_percentual"] / ibs_fator  # alíquota de referência plena
+            nome_ibs = f"IBS — {int(ibs_fator*100)}% em vigência (ref. plena {ibs_ref_full*100:.1f}%)"
+            formula_ibs = (
+                f"R$ {base_fmt} (base por fora) × {ibs_ref_full*100:.1f}% (IBS ref. plena){red_txt}"
+                f" × {int(ibs_fator*100)}% (fase-in 2029-2032){cred_txt} = R$ {_br(ibs_valor)}"
+            )
+        else:
+            nome_ibs = f"IBS (alíquota-ref. {ibs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)"
+            formula_ibs = f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}"
         detalhes.append(_detalhe(
             nome_ibs, ibs_efetivo, ibs_valor,
             "LC 214/2025, Art. 156-A CF – IBS (cálculo por fora)",
-            formula=f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}{nota_simb}",
+            formula=formula_ibs,
             informativo=simbolico,
         ))
 
