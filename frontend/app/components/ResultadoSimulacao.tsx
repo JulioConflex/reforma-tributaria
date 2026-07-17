@@ -155,18 +155,18 @@ function HeroDelta({ r }: { r: SimulacaoResult }) {
 
 /* ─────────────────────────────────────────────── BREAKDOWN ─── */
 function nomeFriendly(nome: string) {
-  if (nome.startsWith("CBS")) return "CBS · Contribuição federal (IBS/CBS)";
-  if (nome.startsWith("IBS")) return "IBS · Imposto estadual/municipal (IVA)";
+  if (nome.startsWith("CBS")) return "CBS — Federal";
+  if (nome.startsWith("IBS")) return "IBS — Estadual/Municipal";
   // ISS DEVE vir antes de IS — "ISS" começa com "IS" mas são tributos distintos:
   // ISS = imposto municipal sobre serviços (extingue em 2033)
   // IS  = Imposto Seletivo, "imposto do pecado" (bebidas, tabaco, veículos, etc.)
-  if (nome.startsWith("ISS") && nome.includes("vigente")) return "ISS · em extinção gradual (→ IBS)";
-  if (nome.startsWith("ISS")) return "ISS · municipal";
-  if (nome.startsWith("IS ") || nome === "IS") return "IS · Seletivo (bebidas/tabaco/veículos)";
-  if (nome.startsWith("PIS")) return "PIS · contrib. federal";
-  if (nome.startsWith("COFINS")) return "COFINS · contrib. federal";
-  if (nome.startsWith("ICMS")) return nome.replace(/ICMS \((\w{2})\)/, "ICMS · estadual ($1)");
-  if (nome.startsWith("DAS")) return "DAS · Simples Nacional";
+  if (nome.startsWith("ISS") && nome.includes("vigente")) return "ISS — Municipal (extingue em 2033)";
+  if (nome.startsWith("ISS")) return "ISS — Municipal";
+  if (nome.startsWith("IS ") || nome === "IS") return "IS — Imposto Seletivo";
+  if (nome.startsWith("PIS")) return "PIS — Federal";
+  if (nome.startsWith("COFINS")) return "COFINS — Federal";
+  if (nome.startsWith("ICMS")) return nome.replace(/ICMS \((\w{2})\)/, "ICMS — Estadual ($1)");
+  if (nome.startsWith("DAS")) return "DAS — Simples Nacional";
   return nome;
 }
 
@@ -186,7 +186,7 @@ function Breakdown({ r }: { r: SimulacaoResult }) {
           onClick={() => setShowLegal((s) => !s)}
           className="text-[12px] font-medium text-ink-400 hover:text-brand-600 transition"
         >
-          {showLegal ? "Ocultar cálculo" : "Ver cálculo e base legal"}
+          {showLegal ? "Ocultar detalhes técnicos" : "Detalhes técnicos"}
         </button>
       </div>
 
@@ -294,15 +294,27 @@ function MemoRow({ k, v }: { k: string; v: string }) {
   );
 }
 
-function MemoSteps({ title, detalhes, accent }: { title: string; detalhes: DetalheTributo[]; accent?: boolean }) {
+function MemoSteps({ title, detalhes, accent, showFormulas }: { title: string; detalhes: DetalheTributo[]; accent?: boolean; showFormulas?: boolean }) {
   return (
     <div>
       <div className={`text-[11px] uppercase tracking-[0.08em] font-semibold mb-2 ${accent ? "text-brand-600" : "text-ink-400"}`}>{title}</div>
-      <ul className="space-y-1.5">
+      <ul className="divide-y divide-ink-100/70 rounded-xl border border-ink-100 overflow-hidden">
         {detalhes.map((d, i) => (
-          <li key={i} className="text-[12.5px] leading-snug">
-            <span className="font-semibold text-ink-700">{nomeFriendly(d.nome)}: </span>
-            <span className="text-ink-500 font-mono">{d.formula ?? brl(d.valor)}</span>
+          <li key={i} className={`px-4 py-3 ${d.informativo ? "opacity-60" : ""}`}>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[13px] font-semibold text-ink-800">{nomeFriendly(d.nome)}</span>
+              <span className="text-right shrink-0">
+                <span className="text-[12px] text-ink-400 tab-num">{d.aliquota_aplicada.toFixed(2)}%</span>
+                <span className="mx-2 text-ink-200">·</span>
+                <span className="text-[13px] font-bold text-ink-900 tab-num">{brl(d.valor)}</span>
+              </span>
+            </div>
+            {showFormulas && d.formula && (
+              <div className="mt-1.5 text-[10.5px] text-ink-400 font-mono leading-relaxed">{d.formula}</div>
+            )}
+            {d.informativo && (
+              <div className="mt-1 text-[11px] text-ink-400">(informativo — não entra no total)</div>
+            )}
           </li>
         ))}
       </ul>
@@ -312,6 +324,7 @@ function MemoSteps({ title, detalhes, accent }: { title: string; detalhes: Detal
 
 function MemoriaCalculoCard({ m, r }: { m: MemoriaCalculo; r: SimulacaoResult }) {
   const [open, setOpen] = useState(false);
+  const [showFormulas, setShowFormulas] = useState(false);
   return (
     <div className="rounded-2xl bg-white hairline overflow-hidden">
       <button
@@ -321,38 +334,50 @@ function MemoriaCalculoCard({ m, r }: { m: MemoriaCalculo; r: SimulacaoResult })
         <div>
           <div className="text-[11px] uppercase tracking-[0.10em] text-ink-500 font-semibold mb-0.5">Transparência</div>
           <h3 className="font-display text-[17px] font-bold text-ink-900 leading-tight">Memória de cálculo</h3>
-          <p className="text-[12.5px] text-ink-500 mt-0.5">Premissas e a fórmula de cada valor — para validar o resultado.</p>
+          <p className="text-[12.5px] text-ink-500 mt-0.5">Quanto cada tributo representa — para validar com seu contador.</p>
         </div>
         <span className={`shrink-0 ml-4 w-7 h-7 rounded-full bg-ink-50 border border-ink-200 flex items-center justify-center text-ink-500 text-lg leading-none transition-transform ${open ? "rotate-45" : ""}`}>+</span>
       </button>
 
       {open && (
         <div className="px-6 lg:px-7 pb-7 space-y-6 anim-in">
-          <MemoSection title="Premissas">
+          <MemoSection title="Dados da simulação">
             <MemoRow k="Valor da operação" v={brl(m.valor_operacao)} />
             <MemoRow k="Regime" v={m.regime.replace(/_/g, " ")} />
             <MemoRow k="Setor" v={m.setor_nome} />
-            <MemoRow k="UF · Ano" v={`${m.uf} · ${m.ano}`} />
+            <MemoRow k="Estado · Ano" v={`${m.uf} · ${m.ano}`} />
             <MemoRow k="Crédito de entrada" v={pctBR(m.percentual_credito_entrada)} />
             {m.faturamento_mensal != null && <MemoRow k="Faturamento mensal" v={brl(m.faturamento_mensal)} />}
             {m.despesas_mensais != null && <MemoRow k="Despesas mensais" v={brl(m.despesas_mensais)} />}
           </MemoSection>
 
-          <MemoSection title={`Fatores aplicados em ${m.ano}`}>
-            <MemoRow k="CBS — alíquota de referência" v={pctBR(m.cbs_percentual)} />
-            <MemoRow k="IBS — alíquota de referência" v={pctBR(m.ibs_percentual)} />
-            <MemoRow k="ICMS vigente (transição)" v={pctBR(m.icms_fator)} />
-            <MemoRow k="ISS vigente (transição)" v={pctBR(m.iss_fator)} />
-            {m.reducao_setor > 0 && <MemoRow k="Redução setorial IBS/CBS" v={pctBR(m.reducao_setor)} />}
-            <MemoRow k={`ICMS ${m.uf}`} v={pctBR(m.aliquota_icms_uf)} />
-            {m.iss_setor > 0 && <MemoRow k="ISS do setor" v={pctBR(m.iss_setor)} />}
-            <MemoRow k="PIS/COFINS vigentes" v={m.pis_cofins_ativo ? "Sim" : "Não (extintos)"} />
-          </MemoSection>
+          <MemoSteps title="Sistema atual — tributo a tributo" detalhes={r.sistema_atual.detalhes} showFormulas={showFormulas} />
+          <MemoSteps title="Novo sistema (reforma) — tributo a tributo" detalhes={r.sistema_novo.detalhes} accent showFormulas={showFormulas} />
 
-          <MemoSteps title="Sistema atual — passo a passo" detalhes={r.sistema_atual.detalhes} />
-          <MemoSteps title="Novo sistema (reforma) — passo a passo" detalhes={r.sistema_novo.detalhes} accent />
+          {/* Toggle fórmulas detalhadas */}
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              onClick={() => setShowFormulas((s) => !s)}
+              className="text-[12px] font-medium text-ink-400 hover:text-brand-600 transition underline underline-offset-2 decoration-dotted"
+            >
+              {showFormulas ? "Ocultar fórmulas detalhadas" : "Ver fórmulas detalhadas (para contadores)"}
+            </button>
+          </div>
 
-          {m.passos_irpj_csll.length > 0 && (
+          {showFormulas && (
+            <MemoSection title={`Alíquotas de referência em ${m.ano}`}>
+              <MemoRow k="CBS (federal)" v={pctBR(m.cbs_percentual)} />
+              <MemoRow k="IBS (estadual/municipal)" v={pctBR(m.ibs_percentual)} />
+              <MemoRow k="ICMS ainda em vigor" v={pctBR(m.icms_fator)} />
+              <MemoRow k="ISS ainda em vigor" v={pctBR(m.iss_fator)} />
+              {m.reducao_setor > 0 && <MemoRow k="Redução setorial IBS/CBS" v={pctBR(m.reducao_setor)} />}
+              <MemoRow k={`ICMS ${m.uf}`} v={pctBR(m.aliquota_icms_uf)} />
+              {m.iss_setor > 0 && <MemoRow k="ISS do setor" v={pctBR(m.iss_setor)} />}
+              <MemoRow k="PIS/COFINS" v={m.pis_cofins_ativo ? "Em vigor" : "Extintos"} />
+            </MemoSection>
+          )}
+
+          {m.passos_irpj_csll.length > 0 && showFormulas && (
             <div>
               <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-2">IRPJ / CSLL — à parte (a reforma não altera)</div>
               <ul className="space-y-1.5">
@@ -607,7 +632,7 @@ function BaseLegal() {
         ))}
       </ul>
       <p className="mt-4 pt-4 border-t border-ink-100 text-[11.5px] text-ink-400 leading-relaxed">
-        Alíquotas de referência do IBS (~17,7%) e CBS (~8,8%) são estimativas sujeitas a resolução do Senado Federal.
+        Alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) são estimativas sujeitas a resolução do Senado Federal.
       </p>
     </div>
   );
