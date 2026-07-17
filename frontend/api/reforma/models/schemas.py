@@ -145,6 +145,19 @@ class ProjecaoAnual(BaseModel):
     diferenca: float
 
 
+class SimplesNacionalComparativo(BaseModel):
+    """Comparativo entre Simples Normal e por fora (IBS/CBS separados do DAS)."""
+    sistema_novo_por_fora: ResultadoSistema
+    total_normal: float
+    total_por_fora: float
+    diferenca_custo: float           # por_fora − normal; positivo = mais caro para a empresa
+    credito_cliente_normal: float    # R$ de IBS/CBS que o comprador B2B aproveita (Simples Normal)
+    credito_cliente_por_fora: float  # R$ de IBS/CBS que o comprador B2B aproveita (por fora)
+    aviso: str
+    quando_b2c: str
+    quando_b2b: str
+
+
 class PassoMemoria(BaseModel):
     """Um passo da memória de cálculo (rótulo + fórmula textual + valor)."""
     rotulo: str
@@ -180,6 +193,7 @@ class MemoriaCalculo(BaseModel):
 class SimulacaoComProjecaoOutput(SimulacaoOutput):
     projecao_2026_2033: list[ProjecaoAnual]
     memoria_calculo: Optional[MemoriaCalculo] = None
+    simples_por_fora: Optional[SimplesNacionalComparativo] = None
 
 
 class MarkupInput(BaseModel):

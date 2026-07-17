@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import type { SimulacaoResult, DetalheTributo, FatorRInfo, IrpjCsllInfo, RecomendacaoItem, MemoriaCalculo } from "./types";
+import type { SimulacaoResult, DetalheTributo, FatorRInfo, IrpjCsllInfo, RecomendacaoItem, MemoriaCalculo, SimplesNacionalComparativo } from "./types";
 import { brl, NumberTicker, Sparkline, ValueBar, Chip, ConflexMark } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import TransitionTimeline, { CRONOGRAMA } from "./Timeline";
@@ -45,6 +45,10 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
       )}
 
       <Breakdown r={resultado} />
+
+      {resultado.simples_por_fora && (
+        <SimplesComparativoCard comp={resultado.simples_por_fora} ano={resultado.ano} />
+      )}
 
       {resultado.memoria_calculo && <MemoriaCalculoCard m={resultado.memoria_calculo} r={resultado} />}
 
@@ -400,6 +404,106 @@ function MemoriaCalculoCard({ m, r }: { m: MemoriaCalculo; r: SimulacaoResult })
               ))}
             </ul>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────── SIMPLES NORMAL vs POR FORA ─── */
+function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativo; ano: number }) {
+  const iguais = comp.diferenca_custo === 0;
+
+  return (
+    <div className="rounded-2xl bg-white hairline overflow-hidden">
+      <div className="px-6 lg:px-7 pt-6 pb-4 border-b border-ink-100/70">
+        <div className="text-[11px] uppercase tracking-[0.10em] text-brand-500 font-semibold mb-0.5">
+          Simples Nacional · {ano}
+        </div>
+        <h3 className="font-display text-[17px] font-bold text-ink-900 leading-tight">
+          Normal vs Por Fora — qual vale mais para o seu negócio?
+        </h3>
+        <p className="text-[12.5px] text-ink-500 mt-1 leading-snug">
+          A partir de 2027, empresas do Simples podem optar por recolher IBS e CBS separados do DAS,
+          abrindo crédito integral para clientes B2B.
+        </p>
+      </div>
+
+      {iguais ? (
+        <div className="px-6 lg:px-7 py-5 text-[13px] text-ink-600">
+          Em 2026, as duas opções são equivalentes — IBS/CBS estão em fase-teste simbólica.
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-ink-100">
+          {/* ── Normal ── */}
+          <div className="px-6 lg:px-7 py-6">
+            <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-2">
+              Simples Normal
+            </div>
+            <div className="font-display text-[28px] font-bold text-ink-900 tab-num leading-tight">
+              {brl(comp.total_normal)}
+            </div>
+            <div className="text-[12px] text-ink-500 mt-0.5">tudo no DAS · menor complexidade</div>
+
+            <div className="mt-5 pt-5 border-t border-ink-100">
+              <div className="text-[11px] text-ink-500 mb-1 uppercase tracking-wide font-semibold">
+                Crédito que seu cliente B2B recupera
+              </div>
+              <div className="font-display text-[20px] font-bold text-ink-700 tab-num">
+                ≈ {brl(comp.credito_cliente_normal)}
+              </div>
+              <div className="text-[11px] text-ink-400 mt-0.5 leading-snug">
+                ~30% do DAS como componente IBS/CBS · estimativa pendente de regulamentação
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-ink-50 border border-ink-100 px-4 py-3">
+              <div className="text-[11px] font-semibold text-ink-700 mb-1">Quando é melhor</div>
+              <p className="text-[11.5px] text-ink-500 leading-snug">{comp.quando_b2c}</p>
+            </div>
+          </div>
+
+          {/* ── Por Fora ── */}
+          <div className="px-6 lg:px-7 py-6 bg-gradient-to-br from-brand-50/50 to-transparent">
+            <div className="text-[11px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-2">
+              Simples por Fora
+            </div>
+            <div className="font-display text-[28px] font-bold text-brand-800 tab-num leading-tight">
+              {brl(comp.total_por_fora)}
+            </div>
+            <div className="text-[12px] text-brand-600 mt-0.5">
+              DAS + CBS + IBS separados
+              {comp.diferenca_custo > 0 && (
+                <span className="ml-1.5 text-[11px] text-ink-400 font-normal">
+                  (+{brl(comp.diferenca_custo)} est. conservadora)
+                </span>
+              )}
+            </div>
+
+            <div className="mt-5 pt-5 border-t border-brand-100/60">
+              <div className="text-[11px] text-ink-500 mb-1 uppercase tracking-wide font-semibold">
+                Crédito que seu cliente B2B recupera
+              </div>
+              <div className="font-display text-[20px] font-bold text-brand-700 tab-num">
+                {brl(comp.credito_cliente_por_fora)}
+              </div>
+              <div className="text-[11px] text-ink-400 mt-0.5 leading-snug">
+                crédito integral de IBS + CBS à alíquota de referência
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3">
+              <div className="text-[11px] font-semibold text-brand-700 mb-1">Quando é melhor</div>
+              <p className="text-[11.5px] text-brand-800 leading-snug">{comp.quando_b2b}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!iguais && (
+        <div className="px-6 lg:px-7 py-3.5 border-t border-amber-100 bg-amber-50/60 flex gap-2 text-[11.5px] text-amber-800 leading-relaxed">
+          <span className="shrink-0">⚠️</span>
+          <span>{comp.aviso}</span>
         </div>
       )}
     </div>

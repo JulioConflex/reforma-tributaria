@@ -125,6 +125,18 @@ export interface MemoriaCalculo {
   observacoes: string[];
 }
 
+export interface SimplesNacionalComparativo {
+  sistema_novo_por_fora: ResultadoSistema;
+  total_normal: number;
+  total_por_fora: number;
+  diferenca_custo: number;
+  credito_cliente_normal: number;
+  credito_cliente_por_fora: number;
+  aviso: string;
+  quando_b2c: string;
+  quando_b2b: string;
+}
+
 export interface SimulacaoResult {
   valor_operacao: number;
   regime: string;
@@ -147,6 +159,7 @@ export interface SimulacaoResult {
   mei_motivo?: string | null;
   irpj_csll_info?: IrpjCsllInfo | null;
   memoria_calculo?: MemoriaCalculo | null;
+  simples_por_fora?: SimplesNacionalComparativo | null;
 }
 
 export interface MarkupResult {

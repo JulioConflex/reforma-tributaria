@@ -13,6 +13,7 @@ from ..models.schemas import (
     MarkupInput, MarkupOutput, RecomendacaoItem,
     FatorRInfo, CenarioFatorR,
     IrpjCsllInfo, MemoriaCalculo, PassoMemoria,
+    SimplesNacionalComparativo,
 )
 
 
@@ -796,6 +797,132 @@ def _irpj_csll_por_operacao(
     return round(total_anual * (valor / faturamento_anual), 2)
 
 
+def _calcular_simples_por_fora(
+    valor: float,
+    setor: dict,
+    ano: int,
+    percentual_credito: float,
+    faturamento_anual: float | None,
+    folha_pagamento_mensal: float | None,
+    total_normal: float,
+) -> SimplesNacionalComparativo:
+    """
+    Calcula o comparativo Simples Normal vs Por Fora para o ano dado.
+    Por fora: DAS (conservador) + CBS + IBS à alíquota de referência, com crédito de entrada.
+    O DAS é mantido integral como estimativa máxima — na prática será reduzido pelo componente
+    IBS/CBS após regulamentação do Comitê Gestor do IBS (CG-IBS).
+    """
+    cron = get_cronograma(ano)
+    aliq_das, base_legal, _ = get_aliquota_simples(setor, faturamento_anual, folha_pagamento_mensal)
+    fator_reducao = 1.0 - setor.get("reducao_aliquota", 0.0)
+    detalhes: list[DetalheTributo] = []
+
+    if ano == 2026:
+        resultado_pf = ResultadoSistema(
+            total=round(total_normal, 2),
+            percentual_sobre_valor=round(total_normal / valor * 100, 2) if valor > 0 else 0.0,
+            detalhes=[],
+        )
+        return SimplesNacionalComparativo(
+            sistema_novo_por_fora=resultado_pf,
+            total_normal=round(total_normal, 2),
+            total_por_fora=round(total_normal, 2),
+            diferenca_custo=0.0,
+            credito_cliente_normal=0.0,
+            credito_cliente_por_fora=0.0,
+            aviso="Em 2026, Simples Nacional está dispensado de IBS/CBS — não há diferença entre as duas opções.",
+            quando_b2c="Ambas as opções são equivalentes em 2026.",
+            quando_b2b="Ambas as opções são equivalentes em 2026.",
+        )
+
+    # DAS (mantido integral — estimativa conservadora)
+    v_das = round(valor * aliq_das, 2)
+    detalhes.append(_detalhe(
+        "DAS — estimativa conservadora (integral)",
+        aliq_das, v_das,
+        f"LC 214/2025, Art. 351; LC 123/2006 | {base_legal}",
+        formula=f"R$ {_br(valor)} × {aliq_das*100:.2f}% (DAS integral — será reduzido após reg. CG-IBS) = R$ {_br(v_das)}",
+    ))
+
+    # CBS à alíquota de referência (por fora, sobre o valor bruto)
+    cbs_bruto_val = 0.0
+    cbs_val = 0.0
+    if cron["cbs_percentual"] > 0:
+        cbs_bruto = cron["cbs_percentual"] * fator_reducao
+        cbs_efetivo = cbs_bruto * (1 - percentual_credito)
+        cbs_val = round(valor * cbs_efetivo, 2)
+        cbs_bruto_val = round(valor * cbs_bruto, 2)
+        cred_txt = f" × (1 − {int(percentual_credito*100)}% créd.)" if percentual_credito else ""
+        detalhes.append(_detalhe(
+            f"CBS — Federal ({cron['cbs_percentual']*100:.1f}% ref., por fora)",
+            cbs_efetivo, cbs_val,
+            "LC 214/2025, Art. 9º — opção de recolhimento pelo regime geral",
+            formula=f"R$ {_br(valor)} × {cbs_bruto*100:.1f}% (CBS ref.){cred_txt} = R$ {_br(cbs_val)}",
+        ))
+
+    # IBS à alíquota de referência × fase-in (por fora, sobre o valor bruto)
+    ibs_bruto_val = 0.0
+    ibs_val = 0.0
+    ibs_fator = cron.get("ibs_fator", 0.0)
+    if cron["ibs_percentual"] > 0:
+        ibs_bruto = cron["ibs_percentual"] * fator_reducao
+        ibs_efetivo = ibs_bruto * (1 - percentual_credito)
+        ibs_val = round(valor * ibs_efetivo, 2)
+        ibs_bruto_val = round(valor * ibs_bruto, 2)
+        cred_txt = f" × (1 − {int(percentual_credito*100)}% créd.)" if percentual_credito else ""
+        if ibs_fator > 0 and ibs_fator < 1:
+            ibs_ref_full = cron["ibs_percentual"] / ibs_fator
+            nome_ibs = f"IBS — Estadual/Municipal ({int(ibs_fator*100)}% de {ibs_ref_full*100:.1f}% ref., por fora)"
+            formula_ibs = (
+                f"R$ {_br(valor)} × {ibs_ref_full*100:.1f}% (IBS ref. plena)"
+                f" × {int(ibs_fator*100)}% (fase-in){cred_txt} = R$ {_br(ibs_val)}"
+            )
+        else:
+            nome_ibs = f"IBS — Estadual/Municipal ({cron['ibs_percentual']*100:.1f}% ref., por fora)"
+            formula_ibs = f"R$ {_br(valor)} × {cron['ibs_percentual']*100:.1f}% (IBS ref.){cred_txt} = R$ {_br(ibs_val)}"
+        detalhes.append(_detalhe(
+            nome_ibs, ibs_efetivo, ibs_val,
+            "LC 214/2025, Art. 156-A CF — opção de recolhimento pelo regime geral",
+            formula=formula_ibs,
+        ))
+
+    total_por_fora = round(v_das + cbs_val + ibs_val, 2)
+    resultado_pf = ResultadoSistema(
+        total=total_por_fora,
+        percentual_sobre_valor=round(total_por_fora / valor * 100, 2) if valor > 0 else 0.0,
+        detalhes=detalhes,
+    )
+
+    # Crédito que o comprador B2B pode aproveitar
+    # Normal: ~30% do DAS como componente IBS/CSS equivalente (estimativa; aguarda CG-IBS)
+    credito_normal = round(v_das * 0.30, 2)
+    # Por fora: crédito bruto de CBS + IBS (o que a empresa cobrou, antes de seus créditos de entrada)
+    credito_por_fora = round(cbs_bruto_val + ibs_bruto_val, 2)
+
+    return SimplesNacionalComparativo(
+        sistema_novo_por_fora=resultado_pf,
+        total_normal=round(total_normal, 2),
+        total_por_fora=total_por_fora,
+        diferenca_custo=round(total_por_fora - total_normal, 2),
+        credito_cliente_normal=credito_normal,
+        credito_cliente_por_fora=credito_por_fora,
+        aviso=(
+            "Estimativa conservadora: o DAS é mantido integral. Na opção por fora, o DAS será "
+            "reduzido pelo componente IBS/CBS — aguardando regulamentação do Comitê Gestor do IBS (CG-IBS). "
+            "O custo real da opção por fora será menor que o estimado aqui."
+        ),
+        quando_b2c=(
+            "Simples Normal costuma ser mais vantajoso para vendas ao consumidor final (B2C) — "
+            "o cliente não aproveita crédito de IBS/CBS, então a menor carga não precisa ser repassada."
+        ),
+        quando_b2b=(
+            "Simples por fora pode compensar se você vende principalmente para empresas (B2B): "
+            "seus clientes recebem crédito integral de IBS/CBS e você ganha competitividade. "
+            "O custo adicional pode ser compensado em preço ou volume."
+        ),
+    )
+
+
 def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
     setor = get_setor(inp.setor_id)
     cron = get_cronograma(inp.ano)
@@ -826,6 +953,16 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
 
     diferenca = novo.total - atual.total
     diferenca_pct = (diferenca / atual.total * 100) if atual.total > 0 else 0.0
+
+    # ── Comparativo Simples Normal vs Por Fora ────────────────────────────────
+    simples_comparativo: SimplesNacionalComparativo | None = None
+    if inp.regime == "simples_nacional":
+        simples_comparativo = _calcular_simples_por_fora(
+            inp.valor, setor, inp.ano,
+            inp.percentual_credito_entrada,
+            inp.faturamento_anual, inp.folha_pagamento_mensal,
+            novo.total,
+        )
 
     # ── Fator R ───────────────────────────────────────────────────────────────
     fator_r_info: FatorRInfo | None = None
@@ -979,6 +1116,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         irpj_csll_info=irpj_csll_info,
         projecao_2026_2033=projecao,
         memoria_calculo=memoria,
+        simples_por_fora=simples_comparativo,
     )
 
 
