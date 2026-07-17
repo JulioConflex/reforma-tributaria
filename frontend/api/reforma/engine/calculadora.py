@@ -64,6 +64,7 @@ def calcular_sistema_atual(
     faturamento_anual: float | None,
     folha_pagamento_mensal: float | None = None,
     percentual_credito: float = 0.0,
+    aliquota_iss: float | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
     total = 0.0
@@ -117,7 +118,7 @@ def calcular_sistema_atual(
                 formula=f"R$ {_br(valor)} × {icms_uf*100:.1f}% (ICMS {uf}) = R$ {_br(icms)}",
             ))
         else:
-            iss_rate = get_iss_padrao(setor)
+            iss_rate = aliquota_iss if aliquota_iss is not None else get_iss_padrao(setor)
             iss = valor * iss_rate
             detalhes.append(_detalhe(
                 "ISS", iss_rate, iss, "LC 116/2003",
@@ -152,7 +153,7 @@ def calcular_sistema_atual(
                 formula=f"R$ {_br(valor)} × {icms_uf*100:.1f}% (ICMS {uf}) = R$ {_br(icms)}",
             ))
         else:
-            iss_rate = get_iss_padrao(setor)
+            iss_rate = aliquota_iss if aliquota_iss is not None else get_iss_padrao(setor)
             iss = valor * iss_rate
             detalhes.append(_detalhe(
                 "ISS", iss_rate, iss, "LC 116/2003",
@@ -176,6 +177,7 @@ def calcular_sistema_novo(
     percentual_credito: float,
     faturamento_anual: float | None,
     folha_pagamento_mensal: float | None = None,
+    aliquota_iss: float | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
     cron = get_cronograma(ano)
@@ -261,7 +263,7 @@ def calcular_sistema_novo(
         ))
 
     if cron["iss_fator"] > 0 and tipo == "servico":
-        iss_rate = get_iss_padrao(setor)
+        iss_rate = aliquota_iss if aliquota_iss is not None else get_iss_padrao(setor)
         iss_efetivo = iss_rate * cron["iss_fator"]
         iss_valor = valor * iss_efetivo
         det_antigos.append(_detalhe(
@@ -801,11 +803,13 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         inp.valor, inp.regime, setor, inp.uf,
         inp.faturamento_anual, inp.folha_pagamento_mensal,
         inp.percentual_credito_entrada,
+        aliquota_iss=inp.aliquota_iss,
     )
     novo = calcular_sistema_novo(
         inp.valor, inp.regime, setor, inp.uf, inp.ano,
         inp.percentual_credito_entrada, inp.faturamento_anual,
-        inp.folha_pagamento_mensal
+        inp.folha_pagamento_mensal,
+        aliquota_iss=inp.aliquota_iss,
     )
 
     diferenca = novo.total - atual.total
@@ -860,7 +864,8 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         novo_ano = calcular_sistema_novo(
             inp.valor, inp.regime, setor, inp.uf, ano,
             inp.percentual_credito_entrada, inp.faturamento_anual,
-            inp.folha_pagamento_mensal
+            inp.folha_pagamento_mensal,
+            aliquota_iss=inp.aliquota_iss,
         )
         cron_ano = get_cronograma(ano)
         projecao.append(ProjecaoAnual(
@@ -889,7 +894,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
     )
 
     # ── Memória de cálculo (premissas + passos de IRPJ/CSLL) ──────────────────
-    iss_setor_aliq = get_iss_padrao(setor) if setor.get("tipo") == "servico" else 0.0
+    iss_setor_aliq = (inp.aliquota_iss if inp.aliquota_iss is not None else get_iss_padrao(setor)) if setor.get("tipo") == "servico" else 0.0
     passos_irpj: list[PassoMemoria] = []
     if (inp.regime == "lucro_real" and irpj_csll_info and irpj_csll_info.estimavel
             and inp.faturamento_mensal and inp.despesas_mensais is not None):

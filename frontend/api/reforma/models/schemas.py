@@ -53,6 +53,14 @@ class SimulacaoInput(BaseModel):
             "estimar o lucro real e, consequentemente, o IRPJ/CSLL."
         )
     )
+    aliquota_iss: Optional[float] = Field(
+        default=None, ge=0.0, le=0.05,
+        description=(
+            "Alíquota municipal do ISS (0 a 5%). Quando informada, substitui o padrão do setor. "
+            "Aplicável apenas a serviços no Lucro Presumido, Lucro Real e MEI. "
+            "No Simples Nacional o ISS já está embutido no DAS."
+        )
+    )
 
 
 class DetalheTributo(BaseModel):
