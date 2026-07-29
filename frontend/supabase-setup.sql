@@ -48,16 +48,18 @@ create trigger on_auth_user_created
 --  Execute no Supabase SQL Editor após o bloco inicial acima.
 -- ============================================================================
 
--- 1) Renomeia "normal" → "basico" nos perfis existentes
-update public.profiles set papel = 'basico' where papel = 'normal';
-
--- 2) Altera o CHECK para aceitar os três papéis; muda o default para 'basico'
+-- 1) Remove constraint antiga ANTES de alterar os dados
 alter table public.profiles
   drop constraint if exists profiles_papel_check;
+
+-- 2) Adiciona nova constraint com os 3 papéis e muda o default
 alter table public.profiles
   add constraint profiles_papel_check
   check (papel in ('basico', 'completo', 'master'));
 alter table public.profiles alter column papel set default 'basico';
+
+-- 3) Agora renomeia "normal" → "basico" (constraint já aceita 'basico')
+update public.profiles set papel = 'basico' where papel = 'normal';
 
 -- 3) Tabela de permissões por perfil (só basico/completo; master = sempre tudo)
 create table if not exists public.profile_permissions (
