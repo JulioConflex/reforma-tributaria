@@ -37,23 +37,26 @@ def _detalhe(
     )
 
 
-def _get_pis_cofins(setor: dict, regime: str) -> tuple[float, str, float, str]:
+def _get_pis_cofins(setor: dict, regime: str, pis_cofins_regime: str | None = None) -> tuple[float, str, float, str]:
     """
     Retorna (pis_rate, pis_base_legal, cofins_rate, cofins_base_legal).
 
-    Setores com `pis_aliquota_especial` usam regime cumulativo obrigatório,
-    independentemente do regime fiscal (Lucro Real ou Presumido).
-    Exemplo: operadoras ANS — PIS 0,65% + COFINS 4% (Lei 9.718/1998).
+    Prioridade: pis_aliquota_especial no setor > pis_cofins_regime do usuário > regime fiscal.
+    Entidades financeiras no Lucro Real devem passar pis_cofins_regime='cumulativo'
+    (Lei 9.718/98, Art. 14 — excluídas do regime não-cumulativo).
     """
     if "pis_aliquota_especial" in setor:
-        pis_r  = setor["pis_aliquota_especial"]
-        cof_r  = setor["cofins_aliquota_especial"]
-        pis_bl = "Lei 9.715/1998 — regime cumulativo obrigatório"
-        cof_bl = "Lei 9.718/1998 — COFINS 4% específica para operadoras ANS"
-        return pis_r, pis_bl, cof_r, cof_bl
-    if regime == "lucro_presumido":
+        return (
+            setor["pis_aliquota_especial"],
+            "Lei 9.715/1998 — regime cumulativo obrigatório",
+            setor["cofins_aliquota_especial"],
+            "Lei 9.718/1998 — COFINS 4% específica para operadoras ANS",
+        )
+    efetivo = pis_cofins_regime if pis_cofins_regime in ("cumulativo", "nao_cumulativo") else None
+    if efetivo is None:
+        efetivo = "cumulativo" if regime == "lucro_presumido" else "nao_cumulativo"
+    if efetivo == "cumulativo":
         return 0.0065, "Lei 9.718/1998", 0.030, "Lei 9.718/1998"
-    # lucro_real — regime não-cumulativo padrão
     return 0.0165, "Lei 10.637/2002", 0.076, "Lei 10.833/2003"
 
 
@@ -66,6 +69,7 @@ def calcular_sistema_atual(
     folha_pagamento_mensal: float | None = None,
     percentual_credito: float = 0.0,
     aliquota_iss: float | None = None,
+    pis_cofins_regime: str | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
     total = 0.0
@@ -101,7 +105,7 @@ def calcular_sistema_atual(
         total = v
 
     elif regime == "lucro_presumido":
-        pis_r, pis_bl, cof_r, cof_bl = _get_pis_cofins(setor, "lucro_presumido")
+        pis_r, pis_bl, cof_r, cof_bl = _get_pis_cofins(setor, "lucro_presumido", pis_cofins_regime)
         pis    = valor * pis_r
         cofins = valor * cof_r
         detalhes.append(_detalhe(
@@ -128,17 +132,19 @@ def calcular_sistema_atual(
         total = sum(d.valor for d in detalhes)
 
     elif regime == "lucro_real":
-        pis_r, pis_bl, cof_r, cof_bl = _get_pis_cofins(setor, "lucro_real")
-        # Setores com regime cumulativo especial não usam label "(não-cumulativo)"
+        pis_r, pis_bl, cof_r, cof_bl = _get_pis_cofins(setor, "lucro_real", pis_cofins_regime)
         _cumulativo_esp = "pis_aliquota_especial" in setor
-        # Regime não-cumulativo: créditos sobre insumos/serviços tributados reduzem PIS/COFINS.
-        # O % de crédito representa a parcela de entradas tributadas (mesmo conceito do CBS/IBS).
-        cred = 0.0 if _cumulativo_esp else percentual_credito
+        _cumulativo = _cumulativo_esp or (pis_cofins_regime == "cumulativo")
+        cred = 0.0 if _cumulativo else percentual_credito
         pis    = valor * pis_r * (1 - cred)
         cofins = valor * cof_r * (1 - cred)
-        nome_pis    = "PIS"                  if _cumulativo_esp else "PIS (não-cumulativo)"
-        nome_cofins = "COFINS"               if _cumulativo_esp else "COFINS (não-cumulativo)"
-        cred_txt = "" if _cumulativo_esp else f" × (1 − {cred*100:.0f}% créd.)"
+        if _cumulativo_esp:
+            nome_pis, nome_cofins = "PIS", "COFINS"
+        elif _cumulativo:
+            nome_pis, nome_cofins = "PIS (cumulativo)", "COFINS (cumulativo)"
+        else:
+            nome_pis, nome_cofins = "PIS (não-cumulativo)", "COFINS (não-cumulativo)"
+        cred_txt = "" if _cumulativo else f" × (1 − {cred*100:.0f}% créd.)"
         detalhes.append(_detalhe(
             nome_pis, pis_r, pis, pis_bl,
             formula=f"R$ {_br(valor)} × {pis_r*100:.2f}%{cred_txt} = R$ {_br(pis)}",
@@ -179,6 +185,7 @@ def calcular_sistema_novo(
     faturamento_anual: float | None,
     folha_pagamento_mensal: float | None = None,
     aliquota_iss: float | None = None,
+    pis_cofins_regime: str | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
     cron = get_cronograma(ano)
@@ -245,7 +252,7 @@ def calcular_sistema_novo(
     det_antigos: list[DetalheTributo] = []
 
     if cron["pis_cofins_ativo"]:
-        pis_r, _, cof_r, _ = _get_pis_cofins(setor, regime)
+        pis_r, _, cof_r, _ = _get_pis_cofins(setor, regime, pis_cofins_regime)
         pis    = valor * pis_r * (1 - percentual_credito)
         cofins = valor * cof_r * (1 - percentual_credito)
         det_antigos.append(_detalhe("PIS (em coexistência 2026)",    pis_r, pis,    "Vigente até extinção em 2027",
@@ -945,12 +952,14 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         inp.faturamento_anual, inp.folha_pagamento_mensal,
         inp.percentual_credito_entrada,
         aliquota_iss=inp.aliquota_iss,
+        pis_cofins_regime=inp.pis_cofins_regime,
     )
     novo = calcular_sistema_novo(
         inp.valor, inp.regime, setor, inp.uf, inp.ano,
         inp.percentual_credito_entrada, inp.faturamento_anual,
         inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
+        pis_cofins_regime=inp.pis_cofins_regime,
     )
 
     diferenca = novo.total - atual.total
@@ -1017,6 +1026,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
             inp.percentual_credito_entrada, inp.faturamento_anual,
             inp.folha_pagamento_mensal,
             aliquota_iss=inp.aliquota_iss,
+            pis_cofins_regime=inp.pis_cofins_regime,
         )
         cron_ano = get_cronograma(ano)
         projecao.append(ProjecaoAnual(
@@ -1126,13 +1136,17 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     setor = get_setor(inp.setor_id)
 
     # Carga tributária atual
-    atual = calcular_sistema_atual(1.0, inp.regime, setor, inp.uf, None)
+    atual = calcular_sistema_atual(
+        1.0, inp.regime, setor, inp.uf, None,
+        pis_cofins_regime=inp.pis_cofins_regime,
+    )
     carga_atual = atual.total  # já é percentual (calculado sobre 1.0)
 
     # Carga tributária nova
     novo = calcular_sistema_novo(
         1.0, inp.regime, setor, inp.uf, inp.ano,
-        inp.percentual_credito_entrada, None
+        inp.percentual_credito_entrada, None,
+        pis_cofins_regime=inp.pis_cofins_regime,
     )
     carga_nova = novo.total
 

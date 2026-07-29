@@ -61,6 +61,15 @@ class SimulacaoInput(BaseModel):
             "No Simples Nacional o ISS já está embutido no DAS."
         )
     )
+    pis_cofins_regime: Optional[str] = Field(
+        default=None,
+        description=(
+            "'cumulativo' | 'nao_cumulativo'. Quando None, deriva do regime fiscal: "
+            "Lucro Presumido → cumulativo (0,65%+3%); Lucro Real → não-cumulativo (1,65%+7,6%). "
+            "Use 'cumulativo' para entidades financeiras e equiparadas no Lucro Real "
+            "(Lei 9.718/98, Art. 14 — excluídas do regime não-cumulativo)."
+        )
+    )
 
 
 class DetalheTributo(BaseModel):
@@ -208,6 +217,7 @@ class MarkupInput(BaseModel):
     uf: str = Field(default="SP")
     ano: int = Field(default=2026, ge=2026, le=2033)
     percentual_credito_entrada: float = Field(default=0.4, ge=0.0, le=1.0)
+    pis_cofins_regime: Optional[str] = Field(default=None, description="'cumulativo' | 'nao_cumulativo'")
 
 
 class MarkupOutput(BaseModel):

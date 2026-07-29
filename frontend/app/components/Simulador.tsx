@@ -36,6 +36,7 @@ export default function Simulador() {
   const [ano, setAno] = useState(2029);
   const [creditoAvancado, setCreditoAvancado] = useState(false);
   const [credito, setCredito] = useState(0);
+  const [pisCofinsRegime, setPisCofinsRegime] = useState<"cumulativo" | "nao_cumulativo">("nao_cumulativo");
   const [faturamento, setFaturamento] = useState("360.000,00");
   const [folhaPagamento, setFolhaPagamento] = useState("");
   const [faturamentoMensal, setFaturamentoMensal] = useState("");
@@ -63,6 +64,11 @@ export default function Simulador() {
   useEffect(() => {
     if (!creditoAvancado) setCredito(CREDITO_AUTO[regime] ?? 0);
   }, [regime, creditoAvancado]);
+
+  // PIS/COFINS: Lucro Real = não-cumulativo por padrão; demais = cumulativo
+  useEffect(() => {
+    setPisCofinsRegime(regime === "lucro_real" ? "nao_cumulativo" : "cumulativo");
+  }, [regime]);
 
   const setor = setores.find((s) => s.id === setorId);
   const meiBloqueado = regime === "mei" && setor?.mei_permitido === false;
@@ -97,6 +103,7 @@ export default function Simulador() {
         uf,
         ano,
         percentual_credito_entrada: credito / 100,
+        pis_cofins_regime: pisCofinsRegime,
       };
       if ((regime === "simples_nacional" || regime === "mei") && parseBRL(faturamento) > 0) {
         body.faturamento_anual = parseBRL(faturamento);
@@ -145,6 +152,7 @@ export default function Simulador() {
               uf={uf} setUf={setUf}
               creditoAvancado={creditoAvancado} setCreditoAvancado={setCreditoAvancado}
               credito={credito} setCredito={setCredito}
+              pisCofinsRegime={pisCofinsRegime} setPisCofinsRegime={setPisCofinsRegime}
               faturamento={faturamento} setFaturamento={setFaturamento}
               folhaPagamento={folhaPagamento} setFolhaPagamento={setFolhaPagamento}
               faturamentoMensal={faturamentoMensal} setFaturamentoMensal={setFaturamentoMensal}
@@ -242,6 +250,7 @@ interface FormPanelProps {
   uf: string; setUf: (v: string) => void;
   creditoAvancado: boolean; setCreditoAvancado: (v: boolean) => void;
   credito: number; setCredito: (v: number) => void;
+  pisCofinsRegime: "cumulativo" | "nao_cumulativo"; setPisCofinsRegime: (v: "cumulativo" | "nao_cumulativo") => void;
   faturamento: string; setFaturamento: (v: string) => void;
   folhaPagamento: string; setFolhaPagamento: (v: string) => void;
   faturamentoMensal: string; setFaturamentoMensal: (v: string) => void;
@@ -297,6 +306,48 @@ function FormPanel(p: FormPanelProps) {
                 ? "Atividade de escala industrial."
                 : "Atividade vedada pelo CGSN 140/2018."}
             {" "}Selecione outro regime.
+          </div>
+        )}
+
+        {/* PIS/COFINS regime — só aparece para Lucro Presumido ou Real */}
+        {(p.regime === "lucro_presumido" || p.regime === "lucro_real") && (
+          <div className="mt-3 rounded-lg border border-ink-100 bg-ink-50 px-3.5 py-2.5">
+            <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-500 font-semibold mb-2">
+              PIS / COFINS
+            </div>
+            {p.regime === "lucro_presumido" ? (
+              <div className="text-[12px] text-ink-600">
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-ink-400 inline-block" />
+                  Cumulativo <span className="font-normal text-ink-400">(obrigatório — 0,65% + 3%)</span>
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {(["nao_cumulativo", "cumulativo"] as const).map((opt) => (
+                  <label key={opt} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="pisCofinsRegime"
+                      value={opt}
+                      checked={p.pisCofinsRegime === opt}
+                      onChange={() => p.setPisCofinsRegime(opt)}
+                      className="mt-0.5 accent-brand-600"
+                    />
+                    <div>
+                      <span className="text-[12.5px] font-medium text-ink-700">
+                        {opt === "nao_cumulativo" ? "Não Cumulativo" : "Cumulativo"}
+                      </span>
+                      <span className="text-[11px] text-ink-400 block leading-snug">
+                        {opt === "nao_cumulativo"
+                          ? "1,65% + 7,6% com crédito de entradas (regra geral Lucro Real)"
+                          : "0,65% + 3% sem crédito — para entidades financeiras e equiparadas (Lei 9.718/98, Art. 14)"}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

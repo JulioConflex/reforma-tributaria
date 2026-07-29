@@ -23,6 +23,7 @@ export default function SplitPaymentTab({ setores }: Props) {
   const [uf, setUf] = useState("SP");
   const [ano, setAno] = useState(2029);
   const [credito, setCredito] = useState(0);
+  const [pisCofinsRegime, setPisCofinsRegime] = useState<"cumulativo" | "nao_cumulativo">("nao_cumulativo");
 
   const [result, setResult] = useState<SimulacaoResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -33,11 +34,15 @@ export default function SplitPaymentTab({ setores }: Props) {
   }, [regime]);
 
   useEffect(() => {
+    setPisCofinsRegime(regime === "lucro_real" ? "nao_cumulativo" : "cumulativo");
+  }, [regime]);
+
+  useEffect(() => {
     if (setores.length === 0 || !valor) return;
     const t = setTimeout(() => calcular(), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valor, regime, setorId, uf, ano, credito, setores.length]);
+  }, [valor, regime, setorId, uf, ano, credito, pisCofinsRegime, setores.length]);
 
   const calcular = async () => {
     const v = parseBRL(valor);
@@ -55,6 +60,7 @@ export default function SplitPaymentTab({ setores }: Props) {
           uf,
           ano,
           percentual_credito_entrada: credito / 100,
+          pis_cofins_regime: pisCofinsRegime,
         }),
       });
       if (!res.ok) throw new Error("Erro ao calcular");
@@ -98,6 +104,38 @@ export default function SplitPaymentTab({ setores }: Props) {
             {REGIMES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
           </SelectField>
         </div>
+
+        {(regime === "lucro_presumido" || regime === "lucro_real") && (
+          <div className="mb-4 rounded-lg border border-ink-100 bg-ink-50 px-3.5 py-2.5">
+            <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-500 font-semibold mb-2">PIS / COFINS</div>
+            {regime === "lucro_presumido" ? (
+              <div className="text-[12px] text-ink-600 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-ink-400 inline-block" />
+                Cumulativo <span className="font-normal text-ink-400 ml-1">(obrigatório — 0,65% + 3%)</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {(["nao_cumulativo", "cumulativo"] as const).map((opt) => (
+                  <label key={opt} className="flex items-start gap-2 cursor-pointer">
+                    <input type="radio" name="pisCofinsSplit" value={opt}
+                      checked={pisCofinsRegime === opt} onChange={() => setPisCofinsRegime(opt)}
+                      className="mt-0.5 accent-brand-600" />
+                    <div>
+                      <span className="text-[12.5px] font-medium text-ink-700">
+                        {opt === "nao_cumulativo" ? "Não Cumulativo" : "Cumulativo"}
+                      </span>
+                      <span className="text-[11px] text-ink-400 block leading-snug">
+                        {opt === "nao_cumulativo"
+                          ? "1,65% + 7,6% com crédito (regra geral Lucro Real)"
+                          : "0,65% + 3% sem crédito — entidades financeiras e equiparadas (Lei 9.718/98, Art. 14)"}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="col-span-2">
