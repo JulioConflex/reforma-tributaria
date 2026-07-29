@@ -281,7 +281,7 @@
 
     label small { font-size: 10px; text-transform: none; letter-spacing: 0; font-weight: 400; }
 
-    input[type="number"] {
+    input[type="number"], input[type="text"] {
       width: 100%;
       padding: 9px 12px;
       border: 1.5px solid var(--gray-200);
@@ -294,7 +294,7 @@
       transition: border-color 0.15s, background 0.15s;
     }
 
-    input[type="number"]:focus {
+    input[type="number"]:focus, input[type="text"]:focus {
       border-color: var(--navy-500);
       background: var(--white);
       box-shadow: 0 0 0 3px rgba(1,209,255,0.20);
@@ -541,7 +541,7 @@
 
       <div class="field">
         <label for="totalDistrib">Valor total a distribuir no mês (R$)</label>
-        <input type="number" id="totalDistrib" value="100000" min="0" step="1000">
+        <input type="text" id="totalDistrib" inputmode="numeric" value="100.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
       </div>
 
       <div class="field">
@@ -594,12 +594,12 @@
 
       <div class="field">
         <label for="rendaAnual">Renda total anual estimada (R$)</label>
-        <input type="number" id="rendaAnual" value="1200000" min="0" step="10000">
+        <input type="text" id="rendaAnual" inputmode="numeric" value="1.200.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
       </div>
 
       <div class="field">
         <label for="irJaPago">IR já retido / pago no ano (R$) <small>(inclui IRRF s/ dividendos)</small></label>
-        <input type="number" id="irJaPago" value="0" min="0" step="1000">
+        <input type="text" id="irJaPago" inputmode="numeric" value="0,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
       </div>
 
       <div class="metrics">
@@ -643,6 +643,17 @@
   const R = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:0,maximumFractionDigits:0});
   const P = v => (v*100).toFixed(1).replace('.',',') + '%';
   const LIMITE = 50000;
+
+  function onCurrencyInput(el) {
+    const digits = el.value.replace(/\D/g, '');
+    const centavos = parseInt(digits || '0', 10);
+    el.value = (centavos / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function parseBRL(str) {
+    const digits = (str || '').replace(/\D/g, '');
+    return parseInt(digits || '0', 10) / 100;
+  }
   let chartIRRF, chartIRPFM;
 
   function toggleResumo() {
@@ -660,7 +671,7 @@
   }
 
   function calcIRRF() {
-    const total = parseFloat(document.getElementById('totalDistrib').value) || 0;
+    const total = parseBRL(document.getElementById('totalDistrib').value);
     const n     = Math.max(1, parseInt(document.getElementById('numEmpresas').value) || 1);
     const por   = total / n;
     let irrf = 0, trib = 0;
@@ -711,8 +722,8 @@
   }
 
   function calcIRPFM() {
-    const renda  = parseFloat(document.getElementById('rendaAnual').value) || 0;
-    const pago   = parseFloat(document.getElementById('irJaPago').value)   || 0;
+    const renda  = parseBRL(document.getElementById('rendaAnual').value);
+    const pago   = parseBRL(document.getElementById('irJaPago').value);
     let aliq = 0, irpfm = 0;
     if (renda > 1200000)      { aliq = 0.10; irpfm = renda * 0.10; }
     else if (renda > 600000)  { aliq = 0.10*(renda-600000)/600000; irpfm = renda*aliq; }
