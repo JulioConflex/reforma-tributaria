@@ -212,7 +212,7 @@
     },
     {
       "id": "saude_clinicas",
-      "nome": "Saúde Humana (hospitais, laboratórios, planos de saúde)",
+      "nome": "Saúde Humana (hospitais, laboratórios)",
       "tipo": "servico",
       "anexo_simples": "III",
       "mei_permitido": false,
