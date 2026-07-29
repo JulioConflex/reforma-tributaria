@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
 export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment";
@@ -12,14 +13,58 @@ interface Props {
 }
 
 const TAB_MODULO: Partial<Record<Aba, string>> = {
-  simulador:    "tributos",
-  markup:       "markup",
-  comparador:   "comparador",
+  simulador:     "tributos",
+  markup:        "markup",
+  comparador:    "comparador",
   split_payment: "split_payment",
 };
 
+function IconCadeado() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+function TooltipCadeado({ visivel }: { visivel: boolean }) {
+  if (!visivel) return null;
+  return (
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 z-50 pointer-events-none">
+      <div className="bg-ink-900 text-white text-[11.5px] rounded-xl px-3.5 py-2.5 shadow-xl text-center whitespace-nowrap leading-snug">
+        <div className="font-semibold mb-0.5">Disponível no perfil Completo</div>
+        <div className="text-ink-400 text-[11px]">Fale com o administrador para liberar</div>
+      </div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-ink-900" />
+    </div>
+  );
+}
+
 export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
   const { papel, modulos, sair } = useAuth();
+  const [cadeadoAtivo, setCadeadoAtivo] = useState<string | null>(null);
+
+  function clicarAba(id: Aba, modulo: string) {
+    if (modulos.includes(modulo)) {
+      setAba(id);
+    } else {
+      setCadeadoAtivo(id);
+      setTimeout(() => setCadeadoAtivo((prev) => (prev === id ? null : prev)), 3000);
+    }
+  }
+
+  function clicarNavTop(id: Aba, modulo?: string) {
+    if (!modulo || modulos.includes(modulo)) {
+      setAba(id);
+    } else {
+      setCadeadoAtivo(id);
+      setTimeout(() => setCadeadoAtivo((prev) => (prev === id ? null : prev)), 3000);
+    }
+  }
+
+  const isSimuladorArea = aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment";
+
   return (
     <header className="mesh-navy">
       <div className="max-w-[1320px] mx-auto px-4 lg:px-6">
@@ -44,13 +89,11 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
             <button
               onClick={() => setAba("simulador")}
               className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
-                aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
+                isSimuladorArea ? "text-white" : "text-ink-300 hover:text-white"
               }`}
             >
               Simulador
-              {aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && (
-                <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
-              )}
+              {isSimuladorArea && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
             <button
               onClick={() => setAba("base_legal")}
@@ -59,9 +102,7 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
               }`}
             >
               Base legal
-              {aba === "base_legal" && (
-                <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
-              )}
+              {aba === "base_legal" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
             <button
               onClick={() => setAba("calculadora_dl")}
@@ -70,23 +111,27 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
               }`}
             >
               Calculadora Retenção Dividendos
-              {aba === "calculadora_dl" && (
-                <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
-              )}
+              {aba === "calculadora_dl" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
-            {modulos.includes("split_payment") && (
+
+            {/* Split Payment — sempre visível; cadeado se não tiver acesso */}
+            <div className="relative">
               <button
-                onClick={() => setAba("split_payment")}
-                className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
-                  aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
+                onClick={() => clicarNavTop("split_payment", "split_payment")}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                  modulos.includes("split_payment")
+                    ? aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
+                    : "text-ink-500 cursor-default"
                 }`}
               >
+                {!modulos.includes("split_payment") && <IconCadeado />}
                 Split Payment
-                {aba === "split_payment" && (
+                {aba === "split_payment" && modulos.includes("split_payment") && (
                   <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
                 )}
               </button>
-            )}
+              <TooltipCadeado visivel={cadeadoAtivo === "split_payment"} />
+            </div>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -143,50 +188,57 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
           </div>
         </div>
 
-        {/* Title row + tabs — exibido só nas telas do Simulador (Base legal e Calculadora têm cabeçalho próprio) */}
-        {aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && (
-        <div className="pt-7 pb-7 lg:pt-9 lg:pb-9 grid lg:grid-cols-12 gap-6 items-end">
-          <div className="lg:col-span-7">
-            <div className="inline-flex items-center gap-2 text-[11px] font-semibold text-brand-300 uppercase tracking-[0.12em] mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
-              LC 214/2025 · Em vigor desde 2026
+        {/* Title row + tab pills — só nas abas do simulador */}
+        {isSimuladorArea && (
+          <div className="pt-7 pb-7 lg:pt-9 lg:pb-9 grid lg:grid-cols-12 gap-6 items-end">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 text-[11px] font-semibold text-brand-300 uppercase tracking-[0.12em] mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+                LC 214/2025 · Em vigor desde 2026
+              </div>
+              <h1 className="font-display text-white text-[40px] lg:text-[48px] leading-[1.02] font-bold tracking-tight">
+                Quanto sua empresa vai pagar de imposto<br />
+                <span className="text-brand-300">a partir da reforma?</span>
+              </h1>
+              <p className="mt-4 text-ink-200 text-[15px] leading-relaxed max-w-2xl">
+                Simule o impacto da LC 214/2025 no seu negócio — IBS, CBS e Imposto Seletivo —
+                com cálculo em tempo real e cronograma de transição até 2033.
+              </p>
             </div>
-            <h1 className="font-display text-white text-[40px] lg:text-[48px] leading-[1.02] font-bold tracking-tight">
-              Quanto sua empresa vai pagar de imposto<br />
-              <span className="text-brand-300">a partir da reforma?</span>
-            </h1>
-            <p className="mt-4 text-ink-200 text-[15px] leading-relaxed max-w-2xl">
-              Simule o impacto da LC 214/2025 no seu negócio — IBS, CBS e Imposto Seletivo —
-              com cálculo em tempo real e cronograma de transição até 2033.
-            </p>
-          </div>
 
-          <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-4">
-            <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/10">
-              {([
-                { id: "simulador",  label: "Tributos",   modulo: "tributos"   },
-                { id: "markup",     label: "Markup",     modulo: "markup"     },
-                { id: "comparador", label: "Comparador", modulo: "comparador" },
-              ] as { id: Aba; label: string; modulo: string }[])
-                .filter((a) => modulos.includes(a.modulo))
-                .map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => setAba(a.id)}
-                  className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all
-                    ${aba === a.id
-                      ? "bg-white text-brand-800 shadow-[0_2px_8px_rgba(0,0,0,.25)]"
-                      : "text-brand-200 hover:text-white"}`}
-                >
-                  {a.label}
-                </button>
-              ))}
-            </div>
-            <div className="text-[11.5px] text-brand-300 font-medium tab-num">
-              <span className="text-white font-semibold">8 anos</span> de transição · 2026 → 2033
+            <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-4">
+              <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/10">
+                {([
+                  { id: "simulador",  label: "Tributos",   modulo: "tributos"   },
+                  { id: "markup",     label: "Markup",     modulo: "markup"     },
+                  { id: "comparador", label: "Comparador", modulo: "comparador" },
+                ] as { id: Aba; label: string; modulo: string }[]).map((a) => {
+                  const bloqueada = !modulos.includes(a.modulo);
+                  return (
+                    <div key={a.id} className="relative">
+                      <button
+                        onClick={() => clicarAba(a.id, a.modulo)}
+                        className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
+                          bloqueada
+                            ? "text-white/30 cursor-default"
+                            : aba === a.id
+                              ? "bg-white text-brand-800 shadow-[0_2px_8px_rgba(0,0,0,.25)]"
+                              : "text-brand-200 hover:text-white"
+                        }`}
+                      >
+                        {bloqueada && <IconCadeado />}
+                        {a.label}
+                      </button>
+                      <TooltipCadeado visivel={cadeadoAtivo === a.id} />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-[11.5px] text-brand-300 font-medium tab-num">
+                <span className="text-white font-semibold">8 anos</span> de transição · 2026 → 2033
+              </div>
             </div>
           </div>
-        </div>
         )}
       </div>
     </header>
