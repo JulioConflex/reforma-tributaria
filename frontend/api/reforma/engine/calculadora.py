@@ -1169,9 +1169,23 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         "é automaticamente reduzido. Considere esse efeito no planejamento de caixa."
     )
 
+    # Escala detalhes (calculados sobre 1.0) para o PV real
+    def _escalar(detalhes, pv):
+        scaled = []
+        for d in detalhes:
+            scaled.append(DetalheTributo(
+                nome=d.nome,
+                aliquota_aplicada=d.aliquota_aplicada,
+                valor=round(d.valor * pv, 2),
+                base_legal=d.base_legal,
+                formula=d.formula,
+            ))
+        return scaled
+
     return MarkupOutput(
         custo=inp.custo,
         margem_desejada=round(inp.margem_desejada * 100, 2),
+        despesas_fixas_percentual=round(inp.despesas_fixas_percentual * 100, 2),
         preco_venda_sistema_atual=round(pv_atual, 2),
         preco_venda_sistema_novo=round(pv_novo, 2),
         diferenca_preco=round(pv_novo - pv_atual, 2),
@@ -1181,4 +1195,6 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         carga_tributaria_nova_percentual=round(carga_nova * 100, 2),
         aliquota_efetiva_nova=round(carga_nova * 100, 2),
         obs_split_payment=obs,
+        detalhes_atual=_escalar(atual.detalhes, pv_atual),
+        detalhes_novo=_escalar(novo.detalhes, pv_novo),
     )

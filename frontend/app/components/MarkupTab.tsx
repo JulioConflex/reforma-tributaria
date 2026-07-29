@@ -295,6 +295,9 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
               </div>
             </div>
 
+            {/* Memória de cálculo */}
+            <MemoriaMarkup result={result} />
+
             {/* 3 ações práticas */}
             <div className="rounded-2xl bg-white hairline px-6 lg:px-7 py-6">
               <div className="text-[11px] uppercase tracking-[0.10em] text-ink-500 font-semibold mb-0.5">Como ajustar agora</div>
@@ -318,6 +321,110 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           </>
         )}
       </section>
+    </div>
+  );
+}
+
+function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
+  const [aberto, setAberto] = useState(false);
+  const pv = result.preco_venda_sistema_novo;
+  const carga = result.carga_tributaria_nova_percentual;
+  const margem = result.margem_desejada;
+  const despesas = result.despesas_fixas_percentual;
+  const divisor = 100 - margem - despesas - carga;
+
+  const totalTributos = result.detalhes_novo.reduce((s, d) => s + d.valor, 0);
+  const valorDespesas = pv * (despesas / 100);
+  const valorMargem = pv * (margem / 100);
+  const soma = result.custo + totalTributos + valorDespesas + valorMargem;
+
+  return (
+    <div className="rounded-2xl bg-white hairline overflow-hidden">
+      <button
+        className="w-full flex items-center justify-between px-6 lg:px-7 py-5 text-left hover:bg-ink-50/40 transition-colors"
+        onClick={() => setAberto(!aberto)}
+      >
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-0.5">Transparência</div>
+          <div className="font-display text-[16px] font-bold text-ink-900">Memória de cálculo do preço</div>
+        </div>
+        <span className={`text-ink-400 transition-transform ${aberto ? "rotate-180" : ""}`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+
+      {aberto && (
+        <div className="px-6 lg:px-7 pb-7 border-t border-ink-100">
+          {/* Fórmula */}
+          <div className="mt-5 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3.5">
+            <div className="text-[11px] uppercase tracking-[0.07em] text-brand-600 font-semibold mb-2">Fórmula aplicada</div>
+            <div className="font-mono text-[13px] text-ink-800 leading-relaxed">
+              PV = Custo ÷ (1 − Margem% − Despesas% − Carga%)
+            </div>
+            <div className="font-mono text-[13px] text-brand-700 font-semibold mt-1.5 leading-relaxed">
+              PV = {brl(result.custo)} ÷ {(divisor / 100).toFixed(4)} = {brl(pv)}
+            </div>
+            <div className="text-[11.5px] text-ink-500 mt-2 leading-snug">
+              Divisor = 1 − {margem.toFixed(1)}% (margem) − {despesas.toFixed(1)}% (despesas) − {carga.toFixed(2)}% (tributos) = {divisor.toFixed(2)}%
+            </div>
+          </div>
+
+          {/* Decomposição do PV */}
+          <div className="mt-5">
+            <div className="text-[11px] uppercase tracking-[0.07em] text-ink-400 font-semibold mb-3">
+              Decomposição do preço de venda ({brl(pv)})
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-ink-100">
+                    <th className="text-left text-[11px] text-ink-400 font-semibold pb-2 pr-4">Componente</th>
+                    <th className="text-right text-[11px] text-ink-400 font-semibold pb-2 pr-4 tab-num">%&nbsp;s/ PV</th>
+                    <th className="text-right text-[11px] text-ink-400 font-semibold pb-2 tab-num">Valor</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-50">
+                  <tr>
+                    <td className="py-2 pr-4 font-medium text-ink-700">Custo</td>
+                    <td className="py-2 pr-4 text-right tab-num text-ink-500">{((result.custo / pv) * 100).toFixed(2)}%</td>
+                    <td className="py-2 text-right tab-num font-semibold text-ink-800">{brl(result.custo)}</td>
+                  </tr>
+                  {result.detalhes_novo.map((d) => (
+                    <tr key={d.nome}>
+                      <td className="py-2 pr-4 text-ink-600 text-[12.5px]">{d.nome}</td>
+                      <td className="py-2 pr-4 text-right tab-num text-ink-400 text-[12px]">{d.aliquota_aplicada.toFixed(2)}%</td>
+                      <td className="py-2 text-right tab-num text-ink-600">{brl(d.valor)}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-ink-50/60">
+                    <td className="py-2 pr-4 font-medium text-ink-700">Subtotal tributos</td>
+                    <td className="py-2 pr-4 text-right tab-num text-ink-500">{carga.toFixed(2)}%</td>
+                    <td className="py-2 text-right tab-num font-semibold text-amber-700">{brl(totalTributos)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 text-ink-600">Despesas fixas</td>
+                    <td className="py-2 pr-4 text-right tab-num text-ink-400">{despesas.toFixed(1)}%</td>
+                    <td className="py-2 text-right tab-num text-ink-600">{brl(valorDespesas)}</td>
+                  </tr>
+                  <tr className="bg-emerald-50/60">
+                    <td className="py-2 pr-4 font-semibold text-emerald-700">Margem (lucro bruto)</td>
+                    <td className="py-2 pr-4 text-right tab-num text-emerald-600">{margem.toFixed(1)}%</td>
+                    <td className="py-2 text-right tab-num font-bold text-emerald-700">{brl(valorMargem)}</td>
+                  </tr>
+                  <tr className="border-t-2 border-ink-200">
+                    <td className="pt-3 pr-4 font-bold text-ink-900">Total (PV)</td>
+                    <td className="pt-3 pr-4 text-right tab-num font-bold text-ink-700">100%</td>
+                    <td className="pt-3 text-right tab-num font-bold text-brand-700">{brl(soma)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-3 text-[11.5px] text-ink-400 leading-snug">
+              ✓ Custo ({brl(result.custo)}) + Tributos ({brl(totalTributos)}) + Despesas ({brl(valorDespesas)}) + Margem ({brl(valorMargem)}) = {brl(soma)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

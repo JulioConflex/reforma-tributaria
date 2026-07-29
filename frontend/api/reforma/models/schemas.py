@@ -223,6 +223,7 @@ class MarkupInput(BaseModel):
 class MarkupOutput(BaseModel):
     custo: float
     margem_desejada: float
+    despesas_fixas_percentual: float
     preco_venda_sistema_atual: float
     preco_venda_sistema_novo: float
     diferenca_preco: float
@@ -232,3 +233,5 @@ class MarkupOutput(BaseModel):
     carga_tributaria_nova_percentual: float
     aliquota_efetiva_nova: float
     obs_split_payment: str
+    detalhes_atual: list[DetalheTributo] = []
+    detalhes_novo: list[DetalheTributo] = []

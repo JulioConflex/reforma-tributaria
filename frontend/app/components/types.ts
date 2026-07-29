@@ -165,6 +165,7 @@ export interface SimulacaoResult {
 export interface MarkupResult {
   custo: number;
   margem_desejada: number;
+  despesas_fixas_percentual: number;
   preco_venda_sistema_atual: number;
   preco_venda_sistema_novo: number;
   diferenca_preco: number;
@@ -174,6 +175,8 @@ export interface MarkupResult {
   carga_tributaria_nova_percentual: number;
   aliquota_efetiva_nova: number;
   obs_split_payment: string;
+  detalhes_atual: DetalheTributo[];
+  detalhes_novo: DetalheTributo[];
 }
 
 export const REGIMES = [
