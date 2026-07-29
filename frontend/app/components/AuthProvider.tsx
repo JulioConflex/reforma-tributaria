@@ -4,11 +4,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
-type Papel = "normal" | "master";
+export type Papel = "basico" | "completo" | "master";
+
+const TODOS_MODULOS = ["tributos", "markup", "comparador", "split_payment"];
 
 interface AuthCtx {
   user: User | null;
   papel: Papel | null;
+  modulos: string[];
   carregando: boolean;
   sair: () => Promise<void>;
 }
@@ -16,6 +19,7 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>({
   user: null,
   papel: null,
+  modulos: [],
   carregando: true,
   sair: async () => {},
 });
@@ -27,6 +31,7 @@ export function useAuth() {
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [papel, setPapel] = useState<Papel | null>(null);
+  const [modulos, setModulos] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
@@ -42,14 +47,30 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           .select("papel")
           .eq("id", u.id)
           .single();
-        if (ativo) setPapel(((data?.papel as Papel) ?? "normal"));
+        const p = (data?.papel as Papel) ?? "basico";
+        if (ativo) setPapel(p);
+
+        if (p === "master") {
+          if (ativo) setModulos(TODOS_MODULOS);
+        } else {
+          const { data: perms } = await supabase
+            .from("profile_permissions")
+            .select("modulo, permitido")
+            .eq("papel", p);
+          if (ativo) {
+            const permitidos = (perms ?? [])
+              .filter((r: { modulo: string; permitido: boolean }) => r.permitido)
+              .map((r: { modulo: string; permitido: boolean }) => r.modulo);
+            setModulos(permitidos);
+          }
+        }
       } else {
         setPapel(null);
+        setModulos([]);
       }
       if (ativo) setCarregando(false);
     }
 
-    // onAuthStateChange dispara imediatamente com a sessão atual (INITIAL_SESSION).
     const { data: sub } = supabase.auth.onAuthStateChange((_evento, session) => {
       carregar(session?.user ?? null);
     });
@@ -67,6 +88,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   };
 
   return (
-    <Ctx.Provider value={{ user, papel, carregando, sair }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ user, papel, modulos, carregando, sair }}>{children}</Ctx.Provider>
   );
 }

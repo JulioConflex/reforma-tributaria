@@ -2,13 +2,40 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+type PapelUsuario = "basico" | "completo" | "master";
+
 interface Usuario {
   id: string;
   email: string;
   nome: string | null;
-  papel: "normal" | "master";
+  papel: PapelUsuario;
   criado_em: string;
 }
+
+interface Permissao {
+  papel: "basico" | "completo";
+  modulo: string;
+  permitido: boolean;
+}
+
+const MODULOS = [
+  { id: "tributos",      label: "Tributos" },
+  { id: "markup",        label: "Markup" },
+  { id: "comparador",   label: "Comparador" },
+  { id: "split_payment", label: "Split Payment" },
+] as const;
+
+const PAPEL_LABEL: Record<PapelUsuario, string> = {
+  basico:   "Básico",
+  completo: "Completo",
+  master:   "Master",
+};
+
+const PAPEL_BADGE: Record<PapelUsuario, string> = {
+  basico:   "bg-ink-100 text-ink-500",
+  completo: "bg-blue-50 text-blue-700",
+  master:   "bg-brand-100 text-brand-700",
+};
 
 export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: string }) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -19,19 +46,29 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [papel, setPapel] = useState<"normal" | "master">("normal");
+  const [papel, setPapel] = useState<PapelUsuario>("basico");
   const [criando, setCriando] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [senhaTemp, setSenhaTemp] = useState<{ email: string; senha: string } | null>(null);
+
+  // Permissões
+  const [permissoes, setPermissoes] = useState<Permissao[]>([]);
+  const [salvandoPerm, setSalvandoPerm] = useState<string | null>(null); // "papel:modulo"
 
   const carregar = useCallback(async () => {
     setCarregando(true);
     setErro(null);
     try {
-      const res = await fetch("/api/admin/usuarios");
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.erro || "Falha ao carregar usuários");
-      setUsuarios(d.usuarios ?? []);
+      const [resU, resP] = await Promise.all([
+        fetch("/api/admin/usuarios"),
+        fetch("/api/admin/permissoes"),
+      ]);
+      const dU = await resU.json();
+      const dP = await resP.json();
+      if (!resU.ok) throw new Error(dU.erro || "Falha ao carregar usuários");
+      if (!resP.ok) throw new Error(dP.erro || "Falha ao carregar permissões");
+      setUsuarios(dU.usuarios ?? []);
+      setPermissoes(dP.permissoes ?? []);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
@@ -39,9 +76,35 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
     }
   }, []);
 
-  useEffect(() => {
-    carregar();
-  }, [carregar]);
+  useEffect(() => { carregar(); }, [carregar]);
+
+  function getPermitido(p: "basico" | "completo", m: string): boolean {
+    return permissoes.find((x) => x.papel === p && x.modulo === m)?.permitido ?? false;
+  }
+
+  async function togglePermissao(p: "basico" | "completo", m: string) {
+    const atual = getPermitido(p, m);
+    const chave = `${p}:${m}`;
+    setSalvandoPerm(chave);
+    try {
+      const res = await fetch("/api/admin/permissoes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ papel: p, modulo: m, permitido: !atual }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.erro || "Falha ao salvar permissão");
+      setPermissoes((prev) =>
+        prev.map((x) =>
+          x.papel === p && x.modulo === m ? { ...x, permitido: !atual } : x
+        )
+      );
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao salvar permissão");
+    } finally {
+      setSalvandoPerm(null);
+    }
+  }
 
   async function criarUsuario(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +123,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
       setNome("");
       setEmail("");
       setSenha("");
-      setPapel("normal");
+      setPapel("basico");
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro desconhecido");
@@ -69,16 +132,16 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
     }
   }
 
-  async function alterarPapel(u: Usuario) {
-    const novo = u.papel === "master" ? "normal" : "master";
-    const acao = novo === "master" ? "promover a master" : "rebaixar para normal";
-    if (!confirm(`Deseja ${acao} o usuário ${u.email}?`)) return;
+  async function alterarPapel(u: Usuario, novoPapel: PapelUsuario) {
+    if (novoPapel === u.papel) return;
+    const acao = `mudar ${u.email} para ${PAPEL_LABEL[novoPapel]}`;
+    if (!confirm(`Deseja ${acao}?`)) return;
     setErro(null);
     try {
       const res = await fetch("/api/admin/usuarios", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: u.id, papel: novo }),
+        body: JSON.stringify({ id: u.id, papel: novoPapel }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.erro || "Falha ao alterar papel");
@@ -116,7 +179,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
               Administração
             </div>
             <h1 className="font-display text-white text-[20px] font-bold leading-tight">
-              Usuários do sistema
+              Usuários e permissões
             </h1>
           </div>
           <a
@@ -131,178 +194,248 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
         </div>
       </header>
 
-      <main className="max-w-[1100px] mx-auto px-4 lg:px-6 py-8 grid lg:grid-cols-[380px_1fr] gap-6">
-        {/* Criar usuário */}
-        <section className="rounded-2xl bg-white hairline-strong p-6 self-start lg:sticky lg:top-6">
-          <h2 className="font-display text-[17px] font-bold text-ink-900">Criar novo usuário</h2>
-          <p className="text-[12.5px] text-ink-500 mt-1 mb-5 leading-snug">
-            O usuário entra direto com este e-mail e senha. Só masters podem criar.
-          </p>
+      <main className="max-w-[1100px] mx-auto px-4 lg:px-6 py-8 space-y-6">
+        <div className="grid lg:grid-cols-[380px_1fr] gap-6 items-start">
+          {/* Criar usuário */}
+          <section className="rounded-2xl bg-white hairline-strong p-6 self-start lg:sticky lg:top-6">
+            <h2 className="font-display text-[17px] font-bold text-ink-900">Criar novo usuário</h2>
+            <p className="text-[12.5px] text-ink-500 mt-1 mb-5 leading-snug">
+              O usuário entra direto com este e-mail e senha. Só masters podem criar.
+            </p>
 
-          <form onSubmit={criarUsuario} className="space-y-3.5">
-            <div>
-              <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">Nome</label>
-              <input
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
-                placeholder="Nome do usuário"
-              />
-            </div>
-            <div>
-              <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">E-mail</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
-                placeholder="pessoa@conflex.com.br"
-              />
-            </div>
-            <div>
-              <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">
-                Senha <span className="font-normal text-ink-400">(mín. 8 caracteres)</span>
-              </label>
-              <input
-                type="text"
-                required
-                minLength={8}
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
-                placeholder="Senha inicial"
-              />
-            </div>
-            <div>
-              <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">Tipo de acesso</label>
-              <select
-                value={papel}
-                onChange={(e) => setPapel(e.target.value as "normal" | "master")}
-                className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition bg-white"
+            <form onSubmit={criarUsuario} className="space-y-3.5">
+              <div>
+                <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">Nome</label>
+                <input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
+                  placeholder="Nome do usuário"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">E-mail</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
+                  placeholder="pessoa@conflex.com.br"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">
+                  Senha <span className="font-normal text-ink-400">(mín. 8 caracteres)</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  minLength={8}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition"
+                  placeholder="Senha inicial"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-semibold text-ink-600 mb-1.5">Perfil de acesso</label>
+                <select
+                  value={papel}
+                  onChange={(e) => setPapel(e.target.value as PapelUsuario)}
+                  className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition bg-white"
+                >
+                  <option value="basico">Básico — somente Tributos</option>
+                  <option value="completo">Completo — todos os módulos</option>
+                  <option value="master">Master — gerencia usuários e permissões</option>
+                </select>
+              </div>
+
+              {msg && (
+                <div className="rounded-lg bg-brand-50 border border-brand-100 px-3.5 py-2.5 text-[12.5px] text-brand-700">
+                  {msg}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={criando}
+                className="w-full inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-brand-800 bg-brand-400 hover:bg-brand-300 disabled:opacity-60 rounded-lg px-4 py-2.5 transition"
               >
-                <option value="normal">Normal (usa o sistema)</option>
-                <option value="master">Master (também gerencia usuários)</option>
-              </select>
+                {criando ? "Criando…" : "Criar usuário"}
+              </button>
+            </form>
+          </section>
+
+          {/* Lista de usuários */}
+          <section className="rounded-2xl bg-white hairline-strong overflow-hidden self-start">
+            {senhaTemp && (
+              <div className="m-4 rounded-xl bg-brand-50 border border-brand-200 px-4 py-3">
+                <div className="text-[12.5px] text-ink-700">
+                  Senha temporária de <span className="font-semibold">{senhaTemp.email}</span>:
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <code className="text-[15px] font-bold text-brand-800 bg-white border border-brand-200 rounded px-2.5 py-1 tracking-wide select-all">
+                    {senhaTemp.senha}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(senhaTemp.senha)}
+                    className="text-[12px] font-medium text-brand-600 hover:text-brand-700"
+                  >
+                    Copiar
+                  </button>
+                  <button
+                    onClick={() => setSenhaTemp(null)}
+                    className="text-[12px] font-medium text-ink-400 hover:text-ink-700 ml-auto"
+                  >
+                    Fechar
+                  </button>
+                </div>
+                <p className="text-[11.5px] text-ink-500 mt-2 leading-snug">
+                  Envie esta senha ao usuário. No próximo acesso ele será levado a definir a senha própria.
+                </p>
+              </div>
+            )}
+            <div className="px-6 py-4 border-b border-ink-100 flex items-center justify-between">
+              <h2 className="font-display text-[17px] font-bold text-ink-900">
+                Usuários{" "}
+                <span className="text-ink-400 font-medium text-[14px]">({usuarios.length})</span>
+              </h2>
+              <button
+                onClick={carregar}
+                className="text-[12px] font-medium text-brand-600 hover:text-brand-700"
+              >
+                Atualizar
+              </button>
             </div>
 
-            {msg && (
-              <div className="rounded-lg bg-brand-50 border border-brand-100 px-3.5 py-2.5 text-[12.5px] text-brand-700">
-                {msg}
+            {erro && (
+              <div className="m-4 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12.5px] text-red-700">
+                {erro}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={criando}
-              className="w-full inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-brand-800 bg-brand-400 hover:bg-brand-300 disabled:opacity-60 rounded-lg px-4 py-2.5 transition"
-            >
-              {criando ? "Criando…" : "Criar usuário"}
-            </button>
-          </form>
-        </section>
-
-        {/* Lista de usuários */}
-        <section className="rounded-2xl bg-white hairline-strong overflow-hidden self-start">
-          {senhaTemp && (
-            <div className="m-4 rounded-xl bg-brand-50 border border-brand-200 px-4 py-3">
-              <div className="text-[12.5px] text-ink-700">
-                Senha temporária de <span className="font-semibold">{senhaTemp.email}</span>:
-              </div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <code className="text-[15px] font-bold text-brand-800 bg-white border border-brand-200 rounded px-2.5 py-1 tracking-wide select-all">
-                  {senhaTemp.senha}
-                </code>
-                <button
-                  onClick={() => navigator.clipboard?.writeText(senhaTemp.senha)}
-                  className="text-[12px] font-medium text-brand-600 hover:text-brand-700"
-                >
-                  Copiar
-                </button>
-                <button
-                  onClick={() => setSenhaTemp(null)}
-                  className="text-[12px] font-medium text-ink-400 hover:text-ink-700 ml-auto"
-                >
-                  Fechar
-                </button>
-              </div>
-              <p className="text-[11.5px] text-ink-500 mt-2 leading-snug">
-                Envie esta senha ao usuário. No próximo acesso ele será levado a definir a senha própria.
-              </p>
+            {carregando ? (
+              <div className="px-6 py-12 text-center text-[13px] text-ink-400">Carregando…</div>
+            ) : usuarios.length === 0 ? (
+              <div className="px-6 py-12 text-center text-[13px] text-ink-400">Nenhum usuário ainda.</div>
+            ) : (
+              <ul className="divide-y divide-ink-100">
+                {usuarios.map((u) => {
+                  const souEu = u.id === meId;
+                  return (
+                    <li key={u.id} className="px-6 py-3.5 flex items-center justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <div className="text-[13.5px] font-semibold text-ink-900 truncate">
+                          {u.nome || u.email}
+                          {souEu && <span className="ml-2 text-[11px] font-medium text-ink-400">(você)</span>}
+                        </div>
+                        <div className="text-[12px] text-ink-500 truncate">{u.email}</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`text-[11px] font-semibold px-2 py-1 rounded-full ${PAPEL_BADGE[u.papel]}`}>
+                          {PAPEL_LABEL[u.papel]}
+                        </span>
+                        {souEu ? (
+                          <span className="text-[12px] text-ink-300">—</span>
+                        ) : (
+                          <select
+                            value={u.papel}
+                            onChange={(e) => alterarPapel(u, e.target.value as PapelUsuario)}
+                            className="text-[12px] font-medium text-ink-700 border border-ink-200 rounded-lg px-2 py-1 bg-white outline-none focus:border-brand-400 transition"
+                          >
+                            <option value="basico">Básico</option>
+                            <option value="completo">Completo</option>
+                            <option value="master">Master</option>
+                          </select>
+                        )}
+                        <button
+                          onClick={() => resetarSenha(u)}
+                          disabled={souEu}
+                          title={souEu ? "Use 'Trocar senha' no topo para a sua própria conta" : ""}
+                          className="text-[12px] font-medium text-ink-500 hover:text-brand-700 disabled:text-ink-300 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          Resetar senha
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="px-6 py-3 border-t border-ink-100 text-[11.5px] text-ink-400 leading-snug">
+              Logado como <span className="font-medium text-ink-600">{meEmail}</span>.
             </div>
-          )}
-          <div className="px-6 py-4 border-b border-ink-100 flex items-center justify-between">
-            <h2 className="font-display text-[17px] font-bold text-ink-900">
-              Usuários{" "}
-              <span className="text-ink-400 font-medium text-[14px]">({usuarios.length})</span>
-            </h2>
-            <button
-              onClick={carregar}
-              className="text-[12px] font-medium text-brand-600 hover:text-brand-700"
-            >
-              Atualizar
-            </button>
+          </section>
+        </div>
+
+        {/* Permissões por perfil */}
+        <section className="rounded-2xl bg-white hairline-strong overflow-hidden">
+          <div className="px-6 py-4 border-b border-ink-100">
+            <h2 className="font-display text-[17px] font-bold text-ink-900">Permissões por perfil</h2>
+            <p className="text-[12.5px] text-ink-500 mt-1">
+              Defina quais módulos cada perfil pode acessar. Alterações têm efeito imediato.
+            </p>
           </div>
-
-          {erro && (
-            <div className="m-4 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12.5px] text-red-700">
-              {erro}
-            </div>
-          )}
 
           {carregando ? (
-            <div className="px-6 py-12 text-center text-[13px] text-ink-400">Carregando…</div>
-          ) : usuarios.length === 0 ? (
-            <div className="px-6 py-12 text-center text-[13px] text-ink-400">Nenhum usuário ainda.</div>
+            <div className="px-6 py-10 text-center text-[13px] text-ink-400">Carregando…</div>
           ) : (
-            <ul className="divide-y divide-ink-100">
-              {usuarios.map((u) => {
-                const souEu = u.id === meId;
-                return (
-                  <li key={u.id} className="px-6 py-3.5 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[13.5px] font-semibold text-ink-900 truncate">
-                        {u.nome || u.email}
-                        {souEu && <span className="ml-2 text-[11px] font-medium text-ink-400">(você)</span>}
-                      </div>
-                      <div className="text-[12px] text-ink-500 truncate">{u.email}</div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span
-                        className={`text-[11px] font-semibold px-2 py-1 rounded-full ${
-                          u.papel === "master"
-                            ? "bg-brand-100 text-brand-700"
-                            : "bg-ink-100 text-ink-500"
-                        }`}
-                      >
-                        {u.papel === "master" ? "Master" : "Normal"}
-                      </span>
-                      <button
-                        onClick={() => alterarPapel(u)}
-                        disabled={souEu}
-                        title={souEu ? "Você não pode alterar o próprio acesso" : ""}
-                        className="text-[12px] font-medium text-brand-600 hover:text-brand-700 disabled:text-ink-300 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {u.papel === "master" ? "Tornar normal" : "Tornar master"}
-                      </button>
-                      <button
-                        onClick={() => resetarSenha(u)}
-                        disabled={souEu}
-                        title={souEu ? "Use 'Trocar senha' no topo para a sua própria conta" : ""}
-                        className="text-[12px] font-medium text-ink-500 hover:text-brand-700 disabled:text-ink-300 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        Resetar senha
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-ink-100">
+                    <th className="px-6 py-3 text-left text-[11px] uppercase tracking-wide text-ink-400 font-semibold w-48">
+                      Módulo
+                    </th>
+                    {(["basico", "completo"] as const).map((p) => (
+                      <th key={p} className="px-6 py-3 text-center text-[11px] uppercase tracking-wide text-ink-400 font-semibold">
+                        {PAPEL_LABEL[p]}
+                      </th>
+                    ))}
+                    <th className="px-6 py-3 text-center text-[11px] uppercase tracking-wide text-ink-400 font-semibold">
+                      Master
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-50">
+                  {MODULOS.map((m) => (
+                    <tr key={m.id} className="hover:bg-ink-50/50 transition">
+                      <td className="px-6 py-3.5 font-medium text-ink-800">{m.label}</td>
+                      {(["basico", "completo"] as const).map((p) => {
+                        const chave = `${p}:${m.id}`;
+                        const permitido = getPermitido(p, m.id);
+                        const salvando = salvandoPerm === chave;
+                        return (
+                          <td key={p} className="px-6 py-3.5 text-center">
+                            <button
+                              onClick={() => togglePermissao(p, m.id)}
+                              disabled={salvando}
+                              className={`w-9 h-5 rounded-full transition-colors relative ${
+                                permitido ? "bg-brand-400" : "bg-ink-200"
+                              } ${salvando ? "opacity-50" : ""}`}
+                              title={`${PAPEL_LABEL[p]} — ${m.label}: ${permitido ? "permitido" : "bloqueado"}`}
+                            >
+                              <span
+                                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                                  permitido ? "translate-x-4" : "translate-x-0"
+                                }`}
+                              />
+                            </button>
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-3.5 text-center">
+                        <span className="text-[11px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">
+                          Sempre
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-          <div className="px-6 py-3 border-t border-ink-100 text-[11.5px] text-ink-400 leading-snug">
-            Logado como <span className="font-medium text-ink-600">{meEmail}</span>. Para redefinir a
-            senha de alguém, use o painel do Supabase (Authentication → Users).
-          </div>
         </section>
       </main>
     </div>

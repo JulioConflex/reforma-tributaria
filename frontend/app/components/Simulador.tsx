@@ -6,6 +6,7 @@ import { REGIMES, UFS, API } from "./types";
 import { FieldLabel, SelectField, CurrencyField, parseBRL } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import Header, { type Aba } from "./Header";
+import { useAuth } from "./AuthProvider";
 import ResultadoSimulacao from "./ResultadoSimulacao";
 import ComparadorRegimes from "./ComparadorRegimes";
 import MarkupTab from "./MarkupTab";
@@ -20,7 +21,15 @@ const CREDITO_AUTO: Record<string, number> = {
   lucro_real: 0,
 };
 
+const TAB_MODULO: Partial<Record<Aba, string>> = {
+  simulador:    "tributos",
+  markup:       "markup",
+  comparador:   "comparador",
+  split_payment: "split_payment",
+};
+
 export default function Simulador() {
+  const { modulos } = useAuth();
   const [aba, setAba] = useState<Aba>("simulador");
   const [setores, setSetores] = useState<Setor[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -69,6 +78,20 @@ export default function Simulador() {
   useEffect(() => {
     setPisCofinsRegime(regime === "lucro_real" ? "nao_cumulativo" : "cumulativo");
   }, [regime]);
+
+  // Redireciona para a primeira aba permitida se a atual não estiver acessível
+  useEffect(() => {
+    if (modulos.length === 0) return;
+    const moduloAtual = TAB_MODULO[aba];
+    if (moduloAtual && !modulos.includes(moduloAtual)) {
+      const primeiraAba = (["simulador", "markup", "comparador", "split_payment"] as Aba[])
+        .find((t) => {
+          const m = TAB_MODULO[t];
+          return !m || modulos.includes(m);
+        });
+      if (primeiraAba) setAba(primeiraAba);
+    }
+  }, [modulos, aba]);
 
   const setor = setores.find((s) => s.id === setorId);
   const meiBloqueado = regime === "mei" && setor?.mei_permitido === false;

@@ -44,6 +44,49 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ============================================================================
+--  MIGRAÇÃO v2 — Perfis Básico / Completo + Permissões configuráveis
+--  Execute no Supabase SQL Editor após o bloco inicial acima.
+-- ============================================================================
+
+-- 1) Renomeia "normal" → "basico" nos perfis existentes
+update public.profiles set papel = 'basico' where papel = 'normal';
+
+-- 2) Altera o CHECK para aceitar os três papéis; muda o default para 'basico'
+alter table public.profiles
+  drop constraint if exists profiles_papel_check;
+alter table public.profiles
+  add constraint profiles_papel_check
+  check (papel in ('basico', 'completo', 'master'));
+alter table public.profiles alter column papel set default 'basico';
+
+-- 3) Tabela de permissões por perfil (só basico/completo; master = sempre tudo)
+create table if not exists public.profile_permissions (
+  papel     text    not null check (papel in ('basico', 'completo')),
+  modulo    text    not null check (modulo in ('tributos', 'markup', 'comparador', 'split_payment')),
+  permitido boolean not null default true,
+  primary key (papel, modulo)
+);
+
+-- 4) RLS — autenticados podem LER; escrita apenas via service_role
+alter table public.profile_permissions enable row level security;
+drop policy if exists "permissoes_select" on public.profile_permissions;
+create policy "permissoes_select"
+  on public.profile_permissions for select
+  using (auth.role() = 'authenticated');
+
+-- 5) Defaults: básico = só tributos; completo = tudo
+insert into public.profile_permissions (papel, modulo, permitido) values
+  ('basico',   'tributos',      true),
+  ('basico',   'markup',        false),
+  ('basico',   'comparador',    false),
+  ('basico',   'split_payment', false),
+  ('completo', 'tributos',      true),
+  ('completo', 'markup',        true),
+  ('completo', 'comparador',    true),
+  ('completo', 'split_payment', true)
+on conflict (papel, modulo) do nothing;
+
+-- ============================================================================
 --  BOOTSTRAP DO PRIMEIRO MASTER
 --  Depois de criar o 1º usuário no painel (Authentication → Users → Add user),
 --  rode a linha abaixo trocando o e-mail pelo do seu usuário:

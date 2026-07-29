@@ -11,8 +11,15 @@ interface Props {
   onAbrirOnboarding?: () => void;
 }
 
+const TAB_MODULO: Partial<Record<Aba, string>> = {
+  simulador:    "tributos",
+  markup:       "markup",
+  comparador:   "comparador",
+  split_payment: "split_payment",
+};
+
 export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
-  const { papel, sair } = useAuth();
+  const { papel, modulos, sair } = useAuth();
   return (
     <header className="mesh-navy">
       <div className="max-w-[1320px] mx-auto px-4 lg:px-6">
@@ -67,17 +74,19 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
                 <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
               )}
             </button>
-            <button
-              onClick={() => setAba("split_payment")}
-              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
-                aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
-              }`}
-            >
-              Split Payment
-              {aba === "split_payment" && (
-                <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
-              )}
-            </button>
+            {modulos.includes("split_payment") && (
+              <button
+                onClick={() => setAba("split_payment")}
+                className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                  aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
+                }`}
+              >
+                Split Payment
+                {aba === "split_payment" && (
+                  <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
+                )}
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -155,10 +164,12 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
           <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-4">
             <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/10">
               {([
-                { id: "simulador",  label: "Tributos"   },
-                { id: "markup",     label: "Markup"     },
-                { id: "comparador", label: "Comparador" },
-              ] as { id: Aba; label: string }[]).map((a) => (
+                { id: "simulador",  label: "Tributos",   modulo: "tributos"   },
+                { id: "markup",     label: "Markup",     modulo: "markup"     },
+                { id: "comparador", label: "Comparador", modulo: "comparador" },
+              ] as { id: Aba; label: string; modulo: string }[])
+                .filter((a) => modulos.includes(a.modulo))
+                .map((a) => (
                 <button
                   key={a.id}
                   onClick={() => setAba(a.id)}
