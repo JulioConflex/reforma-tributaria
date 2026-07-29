@@ -72,9 +72,9 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   const piorTotal = disponiveis.length ? Math.max(...disponiveis.map((c) => c.total_novo ?? 0)) : 1;
 
   return (
-    <div className="grid lg:grid-cols-[400px_1fr] gap-6 mt-7">
+    <div className="grid lg:grid-cols-[400px_1fr] gap-6 mt-7 lg:items-start">
       {/* ── Form ── */}
-      <aside className="rounded-2xl bg-white hairline-strong p-6 lg:p-7 lg:sticky lg:top-6 self-start">
+      <aside className="rounded-2xl bg-white hairline-strong p-6 lg:p-7 lg:sticky lg:top-6 self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
         <div className="mb-5">
           <div className="text-[11px] uppercase tracking-[0.10em] text-brand-500 font-semibold">Comparador</div>
           <h2 className="font-display text-[20px] font-bold text-ink-900 mt-0.5 leading-tight">4 regimes lado a lado</h2>
@@ -172,7 +172,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
       </aside>
 
       {/* ── Result ── */}
-      <section className="space-y-6">
+      <section className="space-y-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1 lg:pb-6">
         {erro && <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">{erro}</div>}
 
         {result && (
