@@ -219,6 +219,10 @@ class MarkupInput(BaseModel):
     ano: int = Field(default=2026, ge=2026, le=2033)
     percentual_credito_entrada: float = Field(default=0.4, ge=0.0, le=1.0)
     pis_cofins_regime: Optional[str] = Field(default=None, description="'cumulativo' | 'nao_cumulativo'")
+    aliquota_iss: Optional[float] = Field(
+        default=None, ge=0.0, le=0.05,
+        description="Alíquota municipal do ISS (0 a 5%). Quando informada, substitui o padrão do setor.",
+    )
 
 
 class MarkupOutput(BaseModel):

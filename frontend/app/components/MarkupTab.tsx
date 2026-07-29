@@ -31,6 +31,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
   const [creditoAvancado, setCreditoAvancado] = useState(false);
   const [credito, setCredito] = useState(0);
   const [pisCofinsRegime, setPisCofinsRegime] = useState<"cumulativo" | "nao_cumulativo">("nao_cumulativo");
+  const [issManual, setIssManual] = useState("");
 
   const [result, setResult] = useState<MarkupResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
     const t = setTimeout(() => calcular(), 280);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [custo, margem, despesas, regime, setorId, uf, ano, credito, pisCofinsRegime, setores.length]);
+  }, [custo, margem, despesas, regime, setorId, uf, ano, credito, pisCofinsRegime, issManual, setores.length]);
 
   const calcular = async () => {
     setCarregando(true);
@@ -69,6 +70,10 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           ano,
           percentual_credito_entrada: credito / 100,
           pis_cofins_regime: pisCofinsRegime,
+          ...(mostrarISS && issManual ? (() => {
+            const v = parseFloat(issManual.replace(",", "."));
+            return (!isNaN(v) && v >= 0 && v <= 5) ? { aliquota_iss: v / 100 } : {};
+          })() : {}),
         }),
       });
       if (!res.ok) throw new Error("Erro no cálculo de markup");
@@ -79,6 +84,9 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
       setCarregando(false);
     }
   };
+
+  const setor = setores.find((s) => s.id === setorId);
+  const mostrarISS = setor?.tipo === "servico" && regime !== "simples_nacional" && regime !== "mei";
 
   const margemNum = parseFloat(margem) || 0;
   const despesasNum = parseFloat(despesas) || 0;
@@ -112,7 +120,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             <TextField type="number" suffix="%" value={margem} onChange={setMargem} />
           </div>
           <div>
-            <FieldLabel>Outras despesas variáveis</FieldLabel>
+            <FieldLabel>Outras despesas variáveis (sem contar impostos)</FieldLabel>
             <TextField type="number" suffix="%" value={despesas} onChange={setDespesas} />
           </div>
         </div>
@@ -188,6 +196,29 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             </SelectField>
           </div>
         </div>
+
+        {mostrarISS && (
+          <div className="mb-4 anim-in">
+            <FieldLabel>
+              Alíquota de ISS municipal{" "}
+              <span className="normal-case font-normal text-ink-400">(opcional, 2%–5%)</span>
+            </FieldLabel>
+            <div className="relative">
+              <input
+                type="number"
+                min={2} max={5} step={0.5}
+                value={issManual}
+                onChange={(e) => setIssManual(e.target.value)}
+                placeholder="Ex: 3"
+                className="w-full rounded-lg border border-ink-200 bg-white px-3.5 py-2.5 text-[14px] text-ink-900 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 pr-8"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-ink-400 pointer-events-none">%</span>
+            </div>
+            <p className="text-[11.5px] text-ink-400 mt-1.5 leading-snug">
+              ISS varia por município (2% a 5%). Sem preenchimento, usa o padrão do setor.
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <FieldLabel>
