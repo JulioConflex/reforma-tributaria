@@ -32,6 +32,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
   const [credito, setCredito] = useState(0);
   const [pisCofinsRegime, setPisCofinsRegime] = useState<"cumulativo" | "nao_cumulativo">("nao_cumulativo");
   const [issManual, setIssManual] = useState("");
+  const [faturamento, setFaturamento] = useState("360.000,00");
+  const [folhaPagamento, setFolhaPagamento] = useState("");
 
   const [result, setResult] = useState<MarkupResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
     const t = setTimeout(() => calcular(), 280);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [custo, margem, despesas, regime, setorId, uf, ano, credito, pisCofinsRegime, issManual, setores.length]);
+  }, [custo, margem, despesas, regime, setorId, uf, ano, credito, pisCofinsRegime, issManual, faturamento, folhaPagamento, setores.length]);
 
   const calcular = async () => {
     setCarregando(true);
@@ -70,6 +72,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           ano,
           percentual_credito_entrada: credito / 100,
           pis_cofins_regime: pisCofinsRegime,
+          ...(showSimples && parseBRL(faturamento) > 0 ? { faturamento_anual: parseBRL(faturamento) } : {}),
+          ...(mostrarFatorR && folhaPagamento ? { folha_pagamento_mensal: parseBRL(folhaPagamento) } : {}),
           ...(mostrarISS && issManual ? (() => {
             const v = parseFloat(issManual.replace(",", "."));
             return (!isNaN(v) && v >= 0 && v <= 5) ? { aliquota_iss: v / 100 } : {};
@@ -86,6 +90,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
   };
 
   const setor = setores.find((s) => s.id === setorId);
+  const showSimples = regime === "simples_nacional" || regime === "mei";
+  const mostrarFatorR = regime === "simples_nacional" && setor?.anexo_simples === "FATOR_R";
   const mostrarISS = setor?.tipo === "servico" && regime !== "simples_nacional" && regime !== "mei";
 
   const margemNum = parseFloat(margem) || 0;
@@ -178,6 +184,29 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {showSimples && (
+          <div className="mb-4 anim-in">
+            <FieldLabel>Faturamento anual</FieldLabel>
+            <CurrencyField value={faturamento} onChange={setFaturamento} />
+            <p className="text-[11.5px] text-ink-400 mt-1.5 leading-snug">
+              Define a faixa da alíquota efetiva do Simples — quanto maior o faturamento, maior a taxa.
+            </p>
+          </div>
+        )}
+
+        {mostrarFatorR && (
+          <div className="mb-4 anim-in">
+            <FieldLabel>
+              Folha de pagamento mensal{" "}
+              <span className="normal-case font-normal text-ink-400">(opcional)</span>
+            </FieldLabel>
+            <CurrencyField value={folhaPagamento} onChange={setFolhaPagamento} />
+            <div className="mt-1.5 text-[11.5px] bg-amber-50 border border-amber-200 rounded px-2 py-1 text-amber-700">
+              ⚖️ <strong>Fator R:</strong> define Anexo III ou V do Simples. Sem folha, usa Anexo V (conservador).
+            </div>
           </div>
         )}
 

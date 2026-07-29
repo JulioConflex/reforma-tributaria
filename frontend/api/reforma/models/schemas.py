@@ -223,6 +223,14 @@ class MarkupInput(BaseModel):
         default=None, ge=0.0, le=0.05,
         description="Alíquota municipal do ISS (0 a 5%). Quando informada, substitui o padrão do setor.",
     )
+    faturamento_anual: Optional[float] = Field(
+        default=None, gt=0,
+        description="Faturamento anual em R$ (necessário para calcular a alíquota efetiva do Simples Nacional / MEI).",
+    )
+    folha_pagamento_mensal: Optional[float] = Field(
+        default=None, gt=0,
+        description="Folha de pagamento média mensal em R$ — necessária para o Fator R em setores de serviços intelectuais.",
+    )
 
 
 class MarkupOutput(BaseModel):

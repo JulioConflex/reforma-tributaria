@@ -1144,7 +1144,8 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
 
     # Carga tributária atual
     atual = calcular_sistema_atual(
-        1.0, inp.regime, setor, inp.uf, None,
+        1.0, inp.regime, setor, inp.uf, inp.faturamento_anual,
+        folha_pagamento_mensal=inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
     )
@@ -1153,7 +1154,8 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     # Carga tributária nova
     novo = calcular_sistema_novo(
         1.0, inp.regime, setor, inp.uf, inp.ano,
-        inp.percentual_credito_entrada, None,
+        inp.percentual_credito_entrada, inp.faturamento_anual,
+        folha_pagamento_mensal=inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
     )
