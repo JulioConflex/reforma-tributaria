@@ -180,6 +180,8 @@ export interface MarkupResult {
   detalhes_novo: DetalheTributo[];
   aviso_impossivel?: boolean;
   soma_sem_tributos?: number;
+  preco_sem_tributo?: number;
+  markup_sem_tributo?: number;
 }
 
 export const REGIMES = [

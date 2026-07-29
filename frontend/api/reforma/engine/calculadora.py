@@ -1162,13 +1162,16 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     # Todas as porcentagens são sobre o PV (por dentro).
     # "Despesas variáveis" = taxa maquininha, comissão, etc. — NÃO inclui aluguel/salários.
     soma_sem_tributos = inp.margem_desejada + inp.despesas_fixas_percentual
+    divisor_sem_tributo = 1.0 - soma_sem_tributos
     divisor_atual = 1.0 - soma_sem_tributos - carga_atual
     divisor_novo  = 1.0 - soma_sem_tributos - carga_nova
     aviso_impossivel = divisor_atual <= 0 or divisor_novo <= 0
 
+    pv_sem_tributo = inp.custo / divisor_sem_tributo if divisor_sem_tributo > 0 else 0.0
     pv_atual = inp.custo / divisor_atual if divisor_atual > 0 else 0.0
     pv_novo  = inp.custo / divisor_novo  if divisor_novo  > 0 else 0.0
 
+    markup_sem_tributo = pv_sem_tributo / inp.custo if inp.custo > 0 and pv_sem_tributo > 0 else 0.0
     markup_atual = pv_atual / inp.custo if inp.custo > 0 and pv_atual > 0 else 0.0
     markup_novo  = pv_novo  / inp.custo if inp.custo > 0 and pv_novo  > 0 else 0.0
 
@@ -1208,4 +1211,6 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         detalhes_novo=_escalar(novo.detalhes, pv_novo),
         aviso_impossivel=aviso_impossivel,
         soma_sem_tributos=round(soma_sem_tributos * 100, 1),
+        preco_sem_tributo=round(pv_sem_tributo, 2),
+        markup_sem_tributo=round(markup_sem_tributo, 4),
     )

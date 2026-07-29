@@ -238,3 +238,5 @@ class MarkupOutput(BaseModel):
     detalhes_novo: list[DetalheTributo] = []
     aviso_impossivel: bool = False
     soma_sem_tributos: float = 0.0   # margem% + despesas% (para mostrar no aviso)
+    preco_sem_tributo: float = 0.0
+    markup_sem_tributo: float = 0.0

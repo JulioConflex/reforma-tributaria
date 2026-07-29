@@ -266,61 +266,95 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
               </div>
             )}
 
-            {/* Hero */}
+            {/* Hero — três preços */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
-              <div className="grid lg:grid-cols-12">
-                <div className="lg:col-span-7 p-7 lg:p-9 border-r border-ink-100/70">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold
-                      ${Math.abs(aumentoPct) < 1 ? "bg-amber-50 text-amber-700 border-amber-100" :
-                        aumento ? "bg-red-50 text-red-700 border-red-100" :
-                                  "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full
-                        ${Math.abs(aumentoPct) < 1 ? "bg-amber-400" : aumento ? "bg-red-500" : "bg-emerald-500"}`}/>
-                      {Math.abs(aumentoPct) < 1 ? "Preço quase igual" : aumento ? "Preço sobe" : "Preço cai"}
+              {/* Badge row */}
+              <div className="px-6 lg:px-7 pt-5 pb-4 flex items-center gap-2 flex-wrap border-b border-ink-100">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold
+                  ${Math.abs(aumentoPct) < 1 ? "bg-amber-50 text-amber-700 border-amber-100" :
+                    aumento ? "bg-red-50 text-red-700 border-red-100" :
+                              "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full
+                    ${Math.abs(aumentoPct) < 1 ? "bg-amber-400" : aumento ? "bg-red-500" : "bg-emerald-500"}`}/>
+                  {Math.abs(aumentoPct) < 1 ? "Preço quase igual" : aumento ? "Preço sobe" : "Preço cai"}
+                </span>
+                <span className="text-[11.5px] text-ink-400 font-medium">em {ano} · margem alvo {margem}%</span>
+              </div>
+
+              {/* Três colunas de preço */}
+              <div className="grid grid-cols-1 lg:grid-cols-3">
+                {/* 1. Sem impostos */}
+                <div className="p-6 lg:p-7 border-b lg:border-b-0 lg:border-r border-ink-100">
+                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-3">
+                    Sem impostos
+                  </div>
+                  <div className="font-display text-[30px] leading-none font-bold text-ink-600 tab-num">
+                    <NumberTicker value={result.preco_sem_tributo ?? 0} />
+                  </div>
+                  <div className="text-[12px] text-ink-400 mt-2">
+                    Markup <strong className="tab-num text-ink-600">{(result.markup_sem_tributo ?? 0).toFixed(2)}×</strong>{" "}
+                    sobre o custo
+                  </div>
+                  <p className="mt-3 text-[11px] text-ink-400 leading-snug">
+                    Preço-base sem nenhum imposto — cobre custo, despesas e margem.
+                  </p>
+                </div>
+
+                {/* 2. Sistema atual */}
+                <div className="p-6 lg:p-7 border-b lg:border-b-0 lg:border-r border-ink-100">
+                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-3">
+                    Sistema atual
+                  </div>
+                  <div className="font-display text-[30px] leading-none font-bold text-ink-700 tab-num">
+                    <NumberTicker value={result.preco_venda_sistema_atual} />
+                  </div>
+                  <div className="text-[12px] text-ink-400 mt-2">
+                    Markup <strong className="tab-num text-ink-700">{result.markup_atual.toFixed(2)}×</strong>
+                    {" · "}carga <span className="tab-num">{result.carga_tributaria_atual_percentual.toFixed(2)}%</span>
+                  </div>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center gap-1 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1 font-medium">
+                      +{brl((result.preco_venda_sistema_atual - (result.preco_sem_tributo ?? 0)))} em impostos
                     </span>
-                    <span className="text-[11.5px] text-ink-400 font-medium">em {ano} · margem alvo {margem}%</span>
-                  </div>
-
-                  <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-2">Você deve cobrar</div>
-                  <div className="font-display text-[56px] leading-none font-bold tab-num text-brand-800">
-                    <NumberTicker value={result.preco_venda_sistema_novo} />
-                  </div>
-                  <div className="mt-3 text-[13px] text-ink-500">
-                    Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>{" "}
-                    sobre o custo de <strong className="tab-num text-ink-700">{brl(parseBRL(custo))}</strong>
-                  </div>
-
-                  <div className="mt-6 rounded-xl bg-ink-50/70 hairline px-4 py-3.5 flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-1">Hoje você cobraria</div>
-                      <div className="font-display text-[20px] font-bold text-ink-700 tab-num">{brl(result.preco_venda_sistema_atual)}</div>
-                    </div>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#01D1FF" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-                    <div className="text-right">
-                      <div className="text-[11px] uppercase tracking-[0.08em] text-brand-500 font-semibold mb-1">Diferença</div>
-                      <div className={`font-display text-[20px] font-bold tab-num ${aumento ? "text-red-600" : "text-emerald-600"}`}>
-                        {aumento ? "+" : "−"}{brl(Math.abs(result.diferenca_preco))}
-                      </div>
-                    </div>
                   </div>
                 </div>
 
-                {/* Carga sparkline */}
-                <div className="lg:col-span-5 p-7 lg:p-9 mesh-bone">
-                  <div className="text-[11px] uppercase tracking-[0.10em] text-ink-500 font-semibold mb-1">Carga tributária</div>
-                  <h3 className="font-display text-[15px] font-bold text-ink-900 mb-4">Atual vs com reforma</h3>
-
-                  <div className="space-y-3.5">
-                    <CargaBar label="Sistema atual" pct={result.carga_tributaria_atual_percentual} color="#5F6E84"
-                      max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} />
-                    <CargaBar label={`Em ${ano}`} pct={result.carga_tributaria_nova_percentual} color="#01D1FF"
-                      max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} highlight />
+                {/* 3. Com reforma */}
+                <div className="p-6 lg:p-7 bg-brand-50/40">
+                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-3">
+                    Com reforma · {ano} — você deve cobrar
                   </div>
-
-                  <div className="mt-5 pt-4 border-t border-ink-100/60 text-[11.5px] text-ink-500 leading-relaxed">
-                    Cálculo &quot;por fora&quot; — PV = Custo ÷ (1 − Margem − Despesas − Carga).
+                  <div className="font-display text-[40px] leading-none font-bold text-brand-800 tab-num">
+                    <NumberTicker value={result.preco_venda_sistema_novo} />
                   </div>
+                  <div className="text-[12px] text-ink-500 mt-2">
+                    Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>
+                    {" · "}carga <span className="tab-num">{result.carga_tributaria_nova_percentual.toFixed(2)}%</span>
+                  </div>
+                  <div className="mt-3">
+                    <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
+                      ${Math.abs(aumentoPct) < 1
+                        ? "text-amber-700 bg-amber-50"
+                        : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
+                      {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carga tributária bars */}
+              <div className="border-t border-ink-100/70 px-6 lg:px-7 py-5 mesh-bone">
+                <div className="text-[11px] uppercase tracking-[0.08em] text-ink-500 font-semibold mb-3">
+                  Carga tributária — atual vs com reforma
+                </div>
+                <div className="space-y-3">
+                  <CargaBar label="Sistema atual" pct={result.carga_tributaria_atual_percentual} color="#5F6E84"
+                    max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} />
+                  <CargaBar label={`Em ${ano}`} pct={result.carga_tributaria_nova_percentual} color="#01D1FF"
+                    max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} highlight />
+                </div>
+                <div className="mt-4 text-[11.5px] text-ink-500 leading-relaxed">
+                  Cálculo &quot;por dentro&quot; — PV = Custo ÷ (1 − Margem − Despesas − Carga).
                 </div>
               </div>
             </div>
