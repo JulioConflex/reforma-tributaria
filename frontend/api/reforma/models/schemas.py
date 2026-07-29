@@ -235,3 +235,5 @@ class MarkupOutput(BaseModel):
     obs_split_payment: str
     detalhes_atual: list[DetalheTributo] = []
     detalhes_novo: list[DetalheTributo] = []
+    aviso_impossivel: bool = False
+    soma_sem_tributos: float = 0.0   # margem% + despesas% (para mostrar no aviso)

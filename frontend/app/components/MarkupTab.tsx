@@ -80,6 +80,10 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
     }
   };
 
+  const margemNum = parseFloat(margem) || 0;
+  const despesasNum = parseFloat(despesas) || 0;
+  const somaMargemDespesas = margemNum + despesasNum;
+
   const aumento = (result?.diferenca_preco ?? 0) > 0;
   const aumentoPct = (result && result.preco_venda_sistema_atual > 0)
     ? (result.diferenca_preco / result.preco_venda_sistema_atual) * 100
@@ -102,7 +106,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           <CurrencyField value={custo} onChange={setCusto} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-1">
           <div>
             <FieldLabel>Margem desejada</FieldLabel>
             <TextField type="number" suffix="%" value={margem} onChange={setMargem} />
@@ -112,6 +116,18 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             <TextField type="number" suffix="%" value={despesas} onChange={setDespesas} />
           </div>
         </div>
+        {somaMargemDespesas >= 100 && (
+          <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12px] text-red-700 leading-snug">
+            <strong>Soma inválida:</strong> Margem ({margemNum}%) + Despesas ({despesasNum}%) = {somaMargemDespesas}%
+            — já esgota 100% do preço sem incluir nenhum tributo. Reduza um dos dois valores.
+          </div>
+        )}
+        {somaMargemDespesas > 0 && somaMargemDespesas < 100 && somaMargemDespesas >= 90 && (
+          <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-700 leading-snug">
+            <strong>Atenção:</strong> Margem + Despesas = {somaMargemDespesas}% — sobram apenas {(100 - somaMargemDespesas).toFixed(1)}% para tributos. Com a carga tributária, o cálculo pode se tornar inviável.
+          </div>
+        )}
+        {somaMargemDespesas > 0 && somaMargemDespesas < 100 && somaMargemDespesas < 90 && <div className="mb-4" />}
 
         <div className="mb-4">
           <FieldLabel>
@@ -205,7 +221,30 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
       <section className="space-y-6">
         {erro && <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">{erro}</div>}
 
-        {result && (
+        {result?.aviso_impossivel && (
+          <div className="rounded-2xl bg-red-50 border border-red-200 p-6">
+            <div className="flex items-start gap-3">
+              <svg className="shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div>
+                <div className="text-[14px] font-bold text-red-700 mb-1">Preço inviável — parâmetros incompatíveis</div>
+                <p className="text-[13px] text-red-600 leading-snug">
+                  Margem ({margem}%) + Despesas ({despesas}%) = <strong>{somaMargemDespesas.toFixed(1)}%</strong>,
+                  e os tributos acrescentam mais <strong>{result.carga_tributaria_atual_percentual.toFixed(2)}%</strong> (sistema atual).
+                  A soma ultrapassa 100%, tornando impossível precificar com essa margem e essas despesas.
+                </p>
+                <p className="text-[12.5px] text-red-500 mt-2">
+                  Reduza a margem desejada ou as despesas fixas para que a soma com a carga tributária fique abaixo de 100%.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {result && !result.aviso_impossivel && (
           <>
             <TransitionTimeline ano={ano} setAno={setAno} />
 

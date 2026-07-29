@@ -1151,17 +1151,16 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     carga_nova = novo.total
 
     # Preço de venda = Custo / (1 - Margem% - DespesasFixas% - CargaTributária%)
-    def preco_venda(custo, carga):
-        divisor = 1.0 - inp.margem_desejada - inp.despesas_fixas_percentual - carga
-        if divisor <= 0:
-            divisor = 0.01
-        return custo / divisor
+    soma_sem_tributos = inp.margem_desejada + inp.despesas_fixas_percentual  # ex: 0.30 + 0.70 = 1.00
+    divisor_atual = 1.0 - soma_sem_tributos - carga_atual
+    divisor_novo  = 1.0 - soma_sem_tributos - carga_nova
+    aviso_impossivel = divisor_atual <= 0 or divisor_novo <= 0
 
-    pv_atual = preco_venda(inp.custo, carga_atual)
-    pv_novo = preco_venda(inp.custo, carga_nova)
+    pv_atual = inp.custo / divisor_atual if divisor_atual > 0 else 0.0
+    pv_novo  = inp.custo / divisor_novo  if divisor_novo  > 0 else 0.0
 
-    markup_atual = pv_atual / inp.custo if inp.custo > 0 else 1.0
-    markup_novo = pv_novo / inp.custo if inp.custo > 0 else 1.0
+    markup_atual = pv_atual / inp.custo if inp.custo > 0 and pv_atual > 0 else 0.0
+    markup_novo  = pv_novo  / inp.custo if inp.custo > 0 and pv_novo  > 0 else 0.0
 
     obs = (
         "⚠️ Split Payment: no novo sistema, o fisco debita IBS/CBS diretamente na conta bancária "
@@ -1197,4 +1196,6 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         obs_split_payment=obs,
         detalhes_atual=_escalar(atual.detalhes, pv_atual),
         detalhes_novo=_escalar(novo.detalhes, pv_novo),
+        aviso_impossivel=aviso_impossivel,
+        soma_sem_tributos=round(soma_sem_tributos * 100, 1),
     )

@@ -177,6 +177,8 @@ export interface MarkupResult {
   obs_split_payment: string;
   detalhes_atual: DetalheTributo[];
   detalhes_novo: DetalheTributo[];
+  aviso_impossivel?: boolean;
+  soma_sem_tributos?: number;
 }
 
 export const REGIMES = [
