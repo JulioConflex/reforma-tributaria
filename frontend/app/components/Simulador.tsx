@@ -338,7 +338,20 @@ function FormPanel(p: FormPanelProps) {
             <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-500 font-semibold mb-2">
               PIS / COFINS
             </div>
-            {p.regime === "lucro_presumido" ? (
+            {p.setor?.pis_aliquota_especial ? (
+              /* Setor com alíquotas especiais (ex.: ANS) — cumulativo obrigatório em qualquer regime */
+              <div className="text-[12px] text-ink-600">
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-ink-400 inline-block" />
+                  Cumulativo obrigatório{" "}
+                  <span className="font-normal text-ink-400">
+                    — {(p.setor.pis_aliquota_especial * 100).toFixed(2).replace(".", ",")}% +{" "}
+                    {((p.setor.cofins_aliquota_especial ?? 0) * 100).toFixed(0).replace(".", ",")}%
+                    {" "}(regime específico)
+                  </span>
+                </span>
+              </div>
+            ) : p.regime === "lucro_presumido" ? (
               <div className="text-[12px] text-ink-600">
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <span className="w-2 h-2 rounded-full bg-ink-400 inline-block" />

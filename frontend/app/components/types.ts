@@ -10,6 +10,9 @@ export interface Setor {
   mei_permitido?: boolean;
   mei_restricao?: string | null;    // "profissao_regulamentada" | "escala_industrial" | "atividade_vedada"
   mei_conselho?: string | null;     // "CRM" | "OAB" | "CRC" etc.
+  // PIS/COFINS especial (ex.: operadoras ANS — regime cumulativo obrigatório com alíquotas próprias)
+  pis_aliquota_especial?: number;
+  cofins_aliquota_especial?: number;
 }
 
 export interface DetalheTributo {
