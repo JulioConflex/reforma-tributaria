@@ -162,7 +162,7 @@
       margin: 0 auto;
       padding: 1.5rem 1.5rem 3rem;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 1.25rem;
       align-items: start;
     }
@@ -171,7 +171,6 @@
 
     @media (max-width: 760px) {
       .main { grid-template-columns: 1fr; }
-      .main-full { grid-column: 1; }
     }
 
     /* ── RESUMO PANEL (full width) ── */
@@ -264,7 +263,23 @@
     .card-header h2 { font-size: 14px; font-weight: 500; color: var(--white); }
     .card-header p { font-size: 11px; color: var(--navy-300); margin-top: 1px; }
 
-    .card-body { padding: 1.25rem 1.25rem 1rem; }
+    .card-body {
+      padding: 1.25rem 1.25rem 1rem;
+      display: grid;
+      grid-template-columns: minmax(240px, 320px) 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .card-results {
+      position: sticky;
+      top: 1rem;
+    }
+
+    @media (max-width: 700px) {
+      .card-body { grid-template-columns: 1fr; }
+      .card-results { position: static; }
+    }
 
     /* ── INPUTS ── */
     .field { margin-bottom: 0.85rem; }
@@ -539,40 +554,44 @@
     </div>
     <div class="card-body">
 
-      <div class="field">
-        <label for="totalDistrib">Valor total a distribuir no mês (R$)</label>
-        <input type="text" id="totalDistrib" inputmode="numeric" value="100.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
-      </div>
+      <div class="card-inputs">
+        <div class="field">
+          <label for="totalDistrib">Valor total a distribuir no mês (R$)</label>
+          <input type="text" id="totalDistrib" inputmode="numeric" value="100.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
+        </div>
 
-      <div class="field">
-        <label for="numEmpresas">Número de empresas pagadoras</label>
-        <input type="number" id="numEmpresas" value="1" min="1" max="20" step="1">
-      </div>
-
-      <div class="metrics">
-        <div class="metric" id="card-porempresa">
-          <p class="metric-lbl">Por empresa (média)</p>
-          <p class="metric-val" id="val-porempresa">—</p>
-        </div>
-        <div class="metric" id="card-irrf">
-          <p class="metric-lbl">IRRF retido total</p>
-          <p class="metric-val" id="val-irrf">—</p>
-        </div>
-        <div class="metric" id="card-aliqef">
-          <p class="metric-lbl">Alíquota efetiva</p>
-          <p class="metric-val" id="val-aliqef">—</p>
-        </div>
-        <div class="metric" id="card-liq">
-          <p class="metric-lbl">Valor líquido</p>
-          <p class="metric-val" id="val-liq">—</p>
+        <div class="field">
+          <label for="numEmpresas">Número de empresas pagadoras</label>
+          <input type="number" id="numEmpresas" value="1" min="1" max="20" step="1">
         </div>
       </div>
 
-      <div class="msg info" id="irrf-msg"></div>
-      <div id="tip-otimizacao"></div>
+      <div class="card-results">
+        <div class="metrics">
+          <div class="metric" id="card-porempresa">
+            <p class="metric-lbl">Por empresa (média)</p>
+            <p class="metric-val" id="val-porempresa">—</p>
+          </div>
+          <div class="metric" id="card-irrf">
+            <p class="metric-lbl">IRRF retido total</p>
+            <p class="metric-val" id="val-irrf">—</p>
+          </div>
+          <div class="metric" id="card-aliqef">
+            <p class="metric-lbl">Alíquota efetiva</p>
+            <p class="metric-val" id="val-aliqef">—</p>
+          </div>
+          <div class="metric" id="card-liq">
+            <p class="metric-lbl">Valor líquido</p>
+            <p class="metric-val" id="val-liq">—</p>
+          </div>
+        </div>
 
-      <div class="chart-wrap" style="height:100px;">
-        <canvas id="irrfChart"></canvas>
+        <div class="msg info" id="irrf-msg"></div>
+        <div id="tip-otimizacao"></div>
+
+        <div class="chart-wrap" style="height:100px;">
+          <canvas id="irrfChart"></canvas>
+        </div>
       </div>
 
     </div>
@@ -592,39 +611,43 @@
     </div>
     <div class="card-body">
 
-      <div class="field">
-        <label for="rendaAnual">Renda total anual estimada (R$)</label>
-        <input type="text" id="rendaAnual" inputmode="numeric" value="1.200.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
-      </div>
+      <div class="card-inputs">
+        <div class="field">
+          <label for="rendaAnual">Renda total anual estimada (R$)</label>
+          <input type="text" id="rendaAnual" inputmode="numeric" value="1.200.000,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
+        </div>
 
-      <div class="field">
-        <label for="irJaPago">IR já retido / pago no ano (R$) <small>(inclui IRRF s/ dividendos)</small></label>
-        <input type="text" id="irJaPago" inputmode="numeric" value="0,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
-      </div>
-
-      <div class="metrics">
-        <div class="metric" id="card-irpfm">
-          <p class="metric-lbl">IRPF mínimo calculado</p>
-          <p class="metric-val" id="irpfm-total">—</p>
-        </div>
-        <div class="metric" id="card-aliqmin">
-          <p class="metric-lbl">Alíquota mínima efetiva</p>
-          <p class="metric-val" id="irpfm-aliq">—</p>
-        </div>
-        <div class="metric">
-          <p class="metric-lbl">IR já pago / retido</p>
-          <p class="metric-val" id="irpfm-pago">—</p>
-        </div>
-        <div class="metric" id="card-compl">
-          <p class="metric-lbl">Complemento na declaração</p>
-          <p class="metric-val" id="irpfm-compl">—</p>
+        <div class="field">
+          <label for="irJaPago">IR já retido / pago no ano (R$) <small>(inclui IRRF s/ dividendos)</small></label>
+          <input type="text" id="irJaPago" inputmode="numeric" value="0,00" oninput="onCurrencyInput(this)" onblur="onCurrencyInput(this)">
         </div>
       </div>
 
-      <div class="msg info" id="irpfm-msg"></div>
+      <div class="card-results">
+        <div class="metrics">
+          <div class="metric" id="card-irpfm">
+            <p class="metric-lbl">IRPF mínimo calculado</p>
+            <p class="metric-val" id="irpfm-total">—</p>
+          </div>
+          <div class="metric" id="card-aliqmin">
+            <p class="metric-lbl">Alíquota mínima efetiva</p>
+            <p class="metric-val" id="irpfm-aliq">—</p>
+          </div>
+          <div class="metric">
+            <p class="metric-lbl">IR já pago / retido</p>
+            <p class="metric-val" id="irpfm-pago">—</p>
+          </div>
+          <div class="metric" id="card-compl">
+            <p class="metric-lbl">Complemento na declaração</p>
+            <p class="metric-val" id="irpfm-compl">—</p>
+          </div>
+        </div>
 
-      <div class="chart-wrap" style="height:160px;">
-        <canvas id="irpfmChart"></canvas>
+        <div class="msg info" id="irpfm-msg"></div>
+
+        <div class="chart-wrap" style="height:160px;">
+          <canvas id="irpfmChart"></canvas>
+        </div>
       </div>
 
     </div>
