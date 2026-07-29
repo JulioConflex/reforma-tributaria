@@ -1157,15 +1157,17 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     )
     carga_nova = novo.total
 
-    # Preço de venda — despesas fixas como % do CUSTO (não do PV):
-    #   PV = Custo × (1 + Despesas%) ÷ (1 − Margem% − CargaTributária%)
-    custo_com_despesas = inp.custo * (1.0 + inp.despesas_fixas_percentual)
-    divisor_atual = 1.0 - inp.margem_desejada - carga_atual
-    divisor_novo  = 1.0 - inp.margem_desejada - carga_nova
+    # Markup divisor (fórmula padrão de formação de preço):
+    #   PV = Custo ÷ (1 − Margem% − DespesasVariáveis% − CargaTributária%)
+    # Todas as porcentagens são sobre o PV (por dentro).
+    # "Despesas variáveis" = taxa maquininha, comissão, etc. — NÃO inclui aluguel/salários.
+    soma_sem_tributos = inp.margem_desejada + inp.despesas_fixas_percentual
+    divisor_atual = 1.0 - soma_sem_tributos - carga_atual
+    divisor_novo  = 1.0 - soma_sem_tributos - carga_nova
     aviso_impossivel = divisor_atual <= 0 or divisor_novo <= 0
 
-    pv_atual = custo_com_despesas / divisor_atual if divisor_atual > 0 else 0.0
-    pv_novo  = custo_com_despesas / divisor_novo  if divisor_novo  > 0 else 0.0
+    pv_atual = inp.custo / divisor_atual if divisor_atual > 0 else 0.0
+    pv_novo  = inp.custo / divisor_novo  if divisor_novo  > 0 else 0.0
 
     markup_atual = pv_atual / inp.custo if inp.custo > 0 and pv_atual > 0 else 0.0
     markup_novo  = pv_novo  / inp.custo if inp.custo > 0 and pv_novo  > 0 else 0.0
@@ -1205,5 +1207,5 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         detalhes_atual=_escalar(atual.detalhes, pv_atual),
         detalhes_novo=_escalar(novo.detalhes, pv_novo),
         aviso_impossivel=aviso_impossivel,
-        soma_sem_tributos=round(inp.margem_desejada * 100, 1),
+        soma_sem_tributos=round(soma_sem_tributos * 100, 1),
     )

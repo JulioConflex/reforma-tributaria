@@ -82,6 +82,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
 
   const margemNum = parseFloat(margem) || 0;
   const despesasNum = parseFloat(despesas) || 0;
+  const somaMargemDespesas = margemNum + despesasNum;
 
   const aumento = (result?.diferenca_preco ?? 0) > 0;
   const aumentoPct = (result && result.preco_venda_sistema_atual > 0)
@@ -107,20 +108,29 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
 
         <div className="grid grid-cols-2 gap-3 mb-1">
           <div>
-            <FieldLabel>Margem desejada <span className="text-ink-400 font-normal">(% do PV)</span></FieldLabel>
+            <FieldLabel>Margem desejada</FieldLabel>
             <TextField type="number" suffix="%" value={margem} onChange={setMargem} />
           </div>
           <div>
-            <FieldLabel>Despesas fixas <span className="text-ink-400 font-normal">(% do custo)</span></FieldLabel>
+            <FieldLabel>Outras despesas variáveis</FieldLabel>
             <TextField type="number" suffix="%" value={despesas} onChange={setDespesas} />
           </div>
         </div>
-        {margemNum >= 90 && (
-          <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-700 leading-snug">
-            <strong>Atenção:</strong> Margem de {margemNum}% — com a carga tributária, pode ultrapassar 100% do preço e tornar o cálculo inviável.
+        <p className="text-[11px] text-ink-400 mb-3 leading-snug">
+          Despesas que incidem por venda: taxa da maquininha, comissão de vendedor, etc. Aluguel e salários <strong>não entram aqui</strong> — já estão cobertos pela margem acumulada das vendas.
+        </p>
+        {somaMargemDespesas >= 100 && (
+          <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12px] text-red-700 leading-snug">
+            <strong>Soma inválida:</strong> Margem ({margemNum}%) + Despesas ({despesasNum}%) = {somaMargemDespesas}%
+            — já esgota 100% do preço sem incluir nenhum imposto. Reduza um dos valores.
           </div>
         )}
-        {margemNum > 0 && margemNum < 90 && <div className="mb-4" />}
+        {somaMargemDespesas > 0 && somaMargemDespesas < 100 && somaMargemDespesas >= 90 && (
+          <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-700 leading-snug">
+            <strong>Atenção:</strong> Margem + Despesas = {somaMargemDespesas}% — sobram apenas {(100 - somaMargemDespesas).toFixed(1)}% para os impostos.
+          </div>
+        )}
+        {somaMargemDespesas > 0 && somaMargemDespesas < 90 && <div className="mb-1" />}
 
         <div className="mb-4">
           <FieldLabel>
@@ -223,13 +233,14 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               <div>
-                <div className="text-[14px] font-bold text-red-700 mb-1">Preço inviável — margem + impostos ≥ 100%</div>
+                <div className="text-[14px] font-bold text-red-700 mb-1">Preço inviável — parâmetros incompatíveis</div>
                 <p className="text-[13px] text-red-600 leading-snug">
-                  Margem desejada <strong>{margem}%</strong> + carga tributária <strong>{result.carga_tributaria_atual_percentual.toFixed(2)}%</strong> = <strong>{(margemNum + result.carga_tributaria_atual_percentual).toFixed(1)}%</strong>.
-                  Quando a soma da margem com os impostos ultrapassa 100% do preço de venda, não existe preço válido.
+                  Margem ({margem}%) + Despesas ({despesas}%) = <strong>{somaMargemDespesas.toFixed(1)}%</strong>,
+                  e os impostos acrescentam mais <strong>{result.carga_tributaria_atual_percentual.toFixed(2)}%</strong>.
+                  A soma ultrapassa 100% do preço de venda — matematicamente impossível.
                 </p>
                 <p className="text-[12.5px] text-red-500 mt-2">
-                  Reduza a margem desejada para que a soma com a carga tributária fique abaixo de 100%.
+                  Reduza a margem ou as despesas variáveis. Lembre: aluguel e salários <strong>não entram</strong> neste campo — use apenas taxas e comissões por venda.
                 </p>
               </div>
             </div>
