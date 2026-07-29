@@ -16,6 +16,24 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
   return (
     <div className="space-y-6">
       <TransitionTimeline ano={ano} setAno={setAno} />
+
+      {resultado.valores_projetados && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 flex gap-3">
+          <span className="text-amber-500 text-xl shrink-0 mt-0.5">⚠️</span>
+          <div>
+            <p className="font-semibold text-amber-900 text-[13.5px] mb-0.5">
+              Resultados baseados em projeções — sujeitos a alteração
+            </p>
+            <p className="text-[12.5px] text-amber-800 leading-relaxed">
+              As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) ainda não foram confirmadas pelo Senado Federal,
+              e as taxas do Imposto Seletivo dependem de decreto regulamentador não publicado.
+              Os valores exibidos são estimativas e <strong>poderão ser diferentes</strong> quando os valores definitivos forem divulgados.
+              Consulte seu contador antes de tomar decisões estratégicas.
+            </p>
+          </div>
+        </div>
+      )}
+
       <HeroDelta r={resultado} />
 
       {/* MEI incompatível */}
@@ -568,6 +586,7 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
                 >
                   <td className="py-2.5 px-2 tab-num">
                     <span className={ativo ? "text-brand-700" : "text-ink-700"}>{p.ano}</span>
+                    {p.ano >= 2027 && <sup className="ml-0.5 text-amber-500 text-[9px] font-bold">EST</sup>}
                     {ativo && <span className="ml-1.5 text-brand-400">●</span>}
                   </td>
                   <td className="py-2.5 px-2 text-ink-500 hidden sm:table-cell">{p.descricao}</td>
@@ -583,8 +602,9 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
         </table>
       </div>
       <p className="text-xs text-ink-400 mt-3 pt-3 border-t border-ink-100">
-        * Projeções baseadas em alíquotas de referência provisórias (CBS ~9,3% + IBS ~18,7% = ~28%).
-        Cronograma: LC 214/2025, Arts. 350–357. IS (Imposto Seletivo) incide somente sobre setores específicos (bebidas, tabaco, veículos).
+        <span className="font-semibold text-amber-600">EST</span> Anos 2027–2033: valores estimados com alíquotas de referência provisórias
+        (CBS ~9,3% + IBS ~18,7%), sujeitas a confirmação pelo Senado Federal.
+        Cronograma: LC 214/2025, Arts. 350–357.
       </p>
     </div>
   );

@@ -1018,6 +1018,12 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
             "Os resultados usam Anexo V (conservador). Informe a folha mensal para cálculo exato."
         )
 
+    # Sinaliza quando os resultados dependem de alíquotas ainda não confirmadas
+    valores_projetados: bool = (
+        cron.get("aliquotas_provisorias", False)
+        or bool(setor.get("is_aplicavel"))
+    )
+
     # ── Projeção 2026–2033 ────────────────────────────────────────────────────
     projecao = []
     for ano in range(2026, 2034):
@@ -1129,6 +1135,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         projecao_2026_2033=projecao,
         memoria_calculo=memoria,
         simples_por_fora=simples_comparativo,
+        valores_projetados=valores_projetados,
     )
 
 

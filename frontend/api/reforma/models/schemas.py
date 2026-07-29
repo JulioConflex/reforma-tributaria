@@ -203,6 +203,7 @@ class SimulacaoComProjecaoOutput(SimulacaoOutput):
     projecao_2026_2033: list[ProjecaoAnual]
     memoria_calculo: Optional[MemoriaCalculo] = None
     simples_por_fora: Optional[SimplesNacionalComparativo] = None
+    valores_projetados: bool = False
 
 
 class MarkupInput(BaseModel):

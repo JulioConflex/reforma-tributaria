@@ -160,6 +160,7 @@ export interface SimulacaoResult {
   irpj_csll_info?: IrpjCsllInfo | null;
   memoria_calculo?: MemoriaCalculo | null;
   simples_por_fora?: SimplesNacionalComparativo | null;
+  valores_projetados?: boolean;
 }
 
 export interface MarkupResult {
