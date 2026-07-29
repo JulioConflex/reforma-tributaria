@@ -447,12 +447,25 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
         </p>
       </div>
 
+      {!iguais && (
+        <div className="px-6 lg:px-7 pt-4 pb-0">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3.5 flex gap-2.5">
+            <span className="shrink-0 mt-0.5 text-amber-500 text-base">⚠️</span>
+            <p className="text-[12px] text-amber-800 leading-relaxed">
+              <strong className="font-semibold text-amber-900">Estimativa com dupla incerteza:</strong>{" "}
+              as alíquotas de referência de CBS (~9,3%) e IBS (~18,7%) são provisórias (sujeitas ao Senado), e o mecanismo exato
+              do Simples por fora ainda aguarda regulamentação do Comitê Gestor do IBS. Os valores reais poderão ser diferentes.
+            </p>
+          </div>
+        </div>
+      )}
+
       {iguais ? (
         <div className="px-6 lg:px-7 py-5 text-[13px] text-ink-600">
           Em 2026, as duas opções são equivalentes — IBS/CBS estão em fase-teste simbólica.
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-ink-100">
+        <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-ink-100 mt-4">
           {/* ── Normal ── */}
           <div className="px-6 lg:px-7 py-6">
             <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-2">
@@ -518,12 +531,6 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
         </div>
       )}
 
-      {!iguais && (
-        <div className="px-6 lg:px-7 py-3.5 border-t border-amber-100 bg-amber-50/60 flex gap-2 text-[11.5px] text-amber-800 leading-relaxed">
-          <span className="shrink-0">⚠️</span>
-          <span>{comp.aviso}</span>
-        </div>
-      )}
     </div>
   );
 }

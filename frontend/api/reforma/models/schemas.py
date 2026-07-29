@@ -252,3 +252,4 @@ class MarkupOutput(BaseModel):
     soma_sem_tributos: float = 0.0   # margem% + despesas% (para mostrar no aviso)
     preco_sem_tributo: float = 0.0
     markup_sem_tributo: float = 0.0
+    valores_projetados: bool = False

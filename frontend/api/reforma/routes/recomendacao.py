@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
-from ..engine.regras import get_setor, validar_mei
+from ..engine.regras import get_setor, validar_mei, get_cronograma
 from ..engine.calculadora import (
     calcular_sistema_atual, calcular_sistema_novo, _irpj_csll_por_operacao,
 )
@@ -144,6 +144,9 @@ def comparar_regimes(inp: ComparadorInput):
     ordenados = disponiveis + indisponiveis
     melhor = disponiveis[0] if disponiveis else None
 
+    cron = get_cronograma(inp.ano)
+    valores_projetados = cron.get("aliquotas_provisorias", False) or bool(setor.get("is_aplicavel"))
+
     return {
         "valor_base": inp.valor,
         "setor": setor["nome"],
@@ -153,4 +156,5 @@ def comparar_regimes(inp: ComparadorInput):
         "regime_mais_vantajoso": melhor["regime"] if melhor else None,
         "regime_mais_vantajoso_nome": melhor["nome"] if melhor else None,
         "obs": "Análise informativa. Consulte seu contador para decisão definitiva de regime tributário.",
+        "valores_projetados": valores_projetados,
     }

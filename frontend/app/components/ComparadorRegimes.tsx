@@ -179,6 +179,23 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
           <>
             <TransitionTimeline ano={ano} setAno={setAno} />
 
+            {result.valores_projetados && (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 flex gap-3">
+                <span className="text-amber-500 text-xl shrink-0 mt-0.5">⚠️</span>
+                <div>
+                  <p className="font-semibold text-amber-900 text-[13.5px] mb-1">
+                    Resultados baseados em projeções — sujeitos a alteração
+                  </p>
+                  <p className="text-[12.5px] text-amber-800 leading-relaxed">
+                    As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) ainda não foram confirmadas pelo Senado Federal.
+                    Para <strong>Simples Nacional e MEI</strong>, o modelo exato de cobrança de IBS/CBS a partir de 2027
+                    (integração ao DAS ou recolhimento separado) ainda não foi regulamentado pelo Comitê Gestor do IBS (CG-IBS).
+                    Os valores exibidos são estimativas — os resultados reais poderão ser diferentes.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Hero — melhor regime */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
               <div className="grid lg:grid-cols-12">
@@ -261,7 +278,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                   </thead>
                   <tbody>
                     {result.comparativo.map((c) => (
-                      <RegimeRow key={c.regime} c={c} melhor={c.regime === result.regime_mais_vantajoso} />
+                      <RegimeRow key={c.regime} c={c} melhor={c.regime === result.regime_mais_vantajoso} ano={ano} />
                     ))}
                   </tbody>
                 </table>
@@ -286,7 +303,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   );
 }
 
-function RegimeRow({ c, melhor }: { c: ComparativoRegime; melhor: boolean }) {
+function RegimeRow({ c, melhor, ano }: { c: ComparativoRegime; melhor: boolean; ano: number }) {
   if (!c.disponivel) {
     return (
       <tr className="border-t border-ink-100 bg-ink-50/30">
@@ -312,6 +329,9 @@ function RegimeRow({ c, melhor }: { c: ComparativoRegime; melhor: boolean }) {
           <div>
             <div className={`text-[14px] font-semibold ${melhor ? "text-emerald-700" : "text-ink-900"}`}>{c.nome}</div>
             <div className="text-[11.5px] text-ink-500 mt-0.5">{c.descricao}</div>
+            {ano >= 2027 && (c.regime === "simples_nacional" || c.regime === "mei") && (
+              <div className="text-[10.5px] text-amber-700 mt-0.5 font-medium">EST · regime híbrido estimado</div>
+            )}
           </div>
         </div>
       </td>

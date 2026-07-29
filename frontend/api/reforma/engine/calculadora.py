@@ -916,9 +916,11 @@ def _calcular_simples_por_fora(
         credito_cliente_normal=credito_normal,
         credito_cliente_por_fora=credito_por_fora,
         aviso=(
-            "Estimativa conservadora: o DAS é mantido integral. Na opção por fora, o DAS será "
-            "reduzido pelo componente IBS/CBS — aguardando regulamentação do Comitê Gestor do IBS (CG-IBS). "
-            "O custo real da opção por fora será menor que o estimado aqui."
+            "⚠️ Estimativa com dupla incerteza: (1) as alíquotas de referência de CBS (~9,3%) e IBS (~18,7%) "
+            "são provisórias, sujeitas à Resolução do Senado Federal; (2) o mecanismo exato de como o Simples "
+            "Nacional funcionará com IBS/CBS ('por fora') ainda aguarda regulamentação do Comitê Gestor do IBS "
+            "(CG-IBS). O DAS é mantido integral nesta estimativa — na prática será reduzido pelo componente "
+            "IBS/CBS após regulamentação. Os valores reais poderão ser significativamente diferentes."
         ),
         quando_b2c=(
             "Simples Normal costuma ser mais vantajoso para vendas ao consumidor final (B2C) — "
@@ -1198,6 +1200,9 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
             ))
         return scaled
 
+    cron = get_cronograma(inp.ano)
+    valores_projetados = cron.get("aliquotas_provisorias", False) or bool(setor.get("is_aplicavel"))
+
     return MarkupOutput(
         custo=inp.custo,
         margem_desejada=round(inp.margem_desejada * 100, 2),
@@ -1217,4 +1222,5 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         soma_sem_tributos=round(soma_sem_tributos * 100, 1),
         preco_sem_tributo=round(pv_sem_tributo, 2),
         markup_sem_tributo=round(markup_sem_tributo, 4),
+        valores_projetados=valores_projetados,
     )

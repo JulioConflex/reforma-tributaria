@@ -85,6 +85,7 @@ export interface ComparadorResult {
   regime_mais_vantajoso: string | null;
   regime_mais_vantajoso_nome: string | null;
   obs: string;
+  valores_projetados?: boolean;
 }
 
 export interface IrpjCsllInfo {
@@ -182,6 +183,7 @@ export interface MarkupResult {
   soma_sem_tributos?: number;
   preco_sem_tributo?: number;
   markup_sem_tributo?: number;
+  valores_projetados?: boolean;
 }
 
 export const REGIMES = [

@@ -311,16 +311,20 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           <>
             <TransitionTimeline ano={ano} setAno={setAno} />
 
-            {ano >= 2027 && (
+            {result.valores_projetados && (
               <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 flex gap-3">
                 <span className="text-amber-500 text-xl shrink-0 mt-0.5">⚠️</span>
                 <div>
-                  <p className="font-semibold text-amber-900 text-[13.5px] mb-0.5">
-                    Valores baseados em projeções — sujeitos a alteração
+                  <p className="font-semibold text-amber-900 text-[13.5px] mb-1">
+                    Preços baseados em projeções — sujeitos a alteração
                   </p>
                   <p className="text-[12.5px] text-amber-800 leading-relaxed">
-                    As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) para {ano} ainda não foram confirmadas pelo Senado Federal.
-                    Os preços calculados são estimativas e poderão ser diferentes quando as alíquotas definitivas forem publicadas.
+                    As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) ainda não foram confirmadas pelo Senado Federal.
+                    {showSimples && ano >= 2027 && (
+                      <> Para o <strong>Simples Nacional</strong>, o modelo exato de integração do IBS/CBS ao DAS ainda não foi
+                      regulamentado pelo Comitê Gestor do IBS — a estimativa usada pode ser significativamente diferente do resultado real.</>
+                    )}
+                    {" "}Os preços calculados poderão mudar quando os valores definitivos forem publicados.
                   </p>
                 </div>
               </div>
