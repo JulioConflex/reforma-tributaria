@@ -112,7 +112,7 @@ export default function Simulador() {
     }, 280);
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valor, regime, setorId, uf, ano, credito, faturamento, folhaPagamento, faturamentoMensal, despesasMensais, issManual, setores, aba]);
+  }, [valor, regime, setorId, uf, ano, credito, pisCofinsRegime, faturamento, folhaPagamento, faturamentoMensal, despesasMensais, issManual, setores, aba]);
 
   const simular = async () => {
     if (meiBloqueado) return;
