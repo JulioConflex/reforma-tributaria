@@ -307,6 +307,9 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
               </div>
             </div>
 
+            {/* Memória de cálculo */}
+            <MemoriaMarkup result={result} />
+
             {/* Split Payment card */}
             <div className="rounded-2xl bg-brand-800 mesh-navy text-ink-100 px-7 py-7 overflow-hidden relative">
               <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-[0.13] pointer-events-none">
@@ -333,9 +336,6 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 </div>
               </div>
             </div>
-
-            {/* Memória de cálculo */}
-            <MemoriaMarkup result={result} />
 
             {/* 3 ações práticas */}
             <div className="rounded-2xl bg-white hairline px-6 lg:px-7 py-6">
