@@ -396,7 +396,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     story.append(Spacer(1, 18))
 
     # Logo + título lado a lado
-    _logo_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'public', 'conflex-logo.png'))
+    _logo_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'conflex-logo.png'))
     _logo_cell: list = []
     if os.path.exists(_logo_path):
         _logo = Image(_logo_path, width=4.8*cm, height=4.8*cm/4.15)
