@@ -97,6 +97,9 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
         ...pdfForm,
         faturamento_anual: parseBRL(faturamento),
         despesas_mensais: despesasMensais ? parseBRL(despesasMensais) : null,
+        setor_id: setorId,
+        credito_entrada: credito / 100,
+        folha_pagamento_mensal: mostrarFatorR && folhaPagamento ? parseBRL(folhaPagamento) : null,
         comparador: result,
       };
       const res = await fetch(`${API}/gerar-estudo-tributario`, {
