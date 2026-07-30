@@ -301,7 +301,7 @@ function SlideInterpretar() {
           {
             icon: "💳",
             titulo: "Crédito de entrada",
-            desc: "Percentual do imposto que você recupera sobre o que compra para vender. Simples Nacional e MEI não geram crédito, pois o imposto já está embutido no DAS.",
+            desc: "Percentual do imposto que você recupera sobre o que compra para vender. Simples Nacional pode gerar crédito optando pelo modelo 'por fora' (IBS/CBS cobrados separado do DAS), mas o custo é maior. MEI não gera crédito.",
           },
           {
             icon: "📅",
