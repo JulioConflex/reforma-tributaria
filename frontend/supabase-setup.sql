@@ -95,3 +95,57 @@ on conflict (papel, modulo) do nothing;
 -- ============================================================================
 -- update public.profiles set papel = 'master'
 -- where email = 'julio.silva@conflex.com.br';
+
+-- ============================================================================
+--  MIGRAÇÃO v3 — Tabelas de configuração de alíquotas (editor master)
+--  Execute no Supabase SQL Editor após os blocos anteriores.
+-- ============================================================================
+
+-- Overrides do cronograma CBS/IBS por ano (2026-2033)
+create table if not exists public.config_cronograma (
+  ano                   int primary key,
+  cbs_percentual        numeric,
+  ibs_percentual        numeric,
+  ibs_fator             numeric,
+  icms_fator            numeric,
+  iss_fator             numeric,
+  pis_cofins_ativo      boolean,
+  aliquotas_provisorias boolean,
+  atualizado_em         timestamptz not null default now(),
+  atualizado_por        uuid references auth.users
+);
+
+-- Overrides setoriais (reducao_aliquota, is_estimado, iss_padrao)
+create table if not exists public.config_setores (
+  setor_id           text primary key,
+  reducao_aliquota   numeric,
+  is_estimado        numeric,
+  iss_padrao         numeric,
+  atualizado_em      timestamptz not null default now(),
+  atualizado_por     uuid references auth.users
+);
+
+-- Overrides de ICMS por UF (27 estados + DF)
+create table if not exists public.config_estados (
+  uf              char(2) primary key,
+  icms_interno    numeric not null,
+  atualizado_em   timestamptz not null default now(),
+  atualizado_por  uuid references auth.users
+);
+
+-- RLS: leitura para todos autenticados; escrita somente via service_role (ignora RLS)
+alter table public.config_cronograma enable row level security;
+alter table public.config_setores    enable row level security;
+alter table public.config_estados    enable row level security;
+
+drop policy if exists "config_cronograma_select" on public.config_cronograma;
+create policy "config_cronograma_select" on public.config_cronograma
+  for select using (auth.role() = 'authenticated');
+
+drop policy if exists "config_setores_select" on public.config_setores;
+create policy "config_setores_select" on public.config_setores
+  for select using (auth.role() = 'authenticated');
+
+drop policy if exists "config_estados_select" on public.config_estados;
+create policy "config_estados_select" on public.config_estados
+  for select using (auth.role() = 'authenticated');

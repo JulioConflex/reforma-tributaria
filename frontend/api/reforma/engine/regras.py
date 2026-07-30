@@ -11,26 +11,34 @@ def _load(nome: str) -> dict:
         return json.load(f)
 
 
-def get_setor(setor_id: str) -> dict:
+def get_setor(setor_id: str, overrides: dict | None = None) -> dict:
     setores = {s["id"]: s for s in _load("setores")["setores"]}
     if setor_id not in setores:
         raise ValueError(f"Setor '{setor_id}' não encontrado.")
-    return setores[setor_id]
+    setor = dict(setores[setor_id])
+    if overrides and setor_id in overrides:
+        setor.update({k: v for k, v in overrides[setor_id].items() if v is not None})
+    return setor
 
 
 def listar_setores() -> list[dict]:
     return _load("setores")["setores"]
 
 
-def get_cronograma(ano: int) -> dict:
+def get_cronograma(ano: int, overrides: dict | None = None) -> dict:
     dados = _load("cronograma")["anos"]
     key = str(ano)
     if key not in dados:
         raise ValueError(f"Ano {ano} fora do período de transição (2026–2033).")
-    return dados[key]
+    cron = dict(dados[key])
+    if overrides and key in overrides:
+        cron.update({k: v for k, v in overrides[key].items() if v is not None})
+    return cron
 
 
-def get_icms_uf(uf: str) -> float:
+def get_icms_uf(uf: str, overrides: dict | None = None) -> float:
+    if overrides and uf.upper() in overrides:
+        return float(overrides[uf.upper()])
     estados = _load("estados")["icms_interno"]
     return estados.get(uf.upper(), 0.18)
 

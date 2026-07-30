@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Simulador from "./components/Simulador";
+import { ConfigOverridesProvider } from "./components/ConfigOverridesContext";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -10,5 +11,9 @@ export default async function Home() {
 
   if (!user) redirect("/login");
 
-  return <Simulador />;
+  return (
+    <ConfigOverridesProvider>
+      <Simulador />
+    </ConfigOverridesProvider>
+  );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, MarkupResult } from "./types";
 import { REGIMES, UFS, API } from "./types";
+import { useConfigOverrides } from "./ConfigOverridesContext";
 import { FieldLabel, TextField, SelectField, NumberTicker, brl, CurrencyField, parseBRL } from "./ui";
 import TooltipGlossario from "./TooltipGlossario";
 import TransitionTimeline from "./Timeline";
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedUf, sharedRegime }: Props) {
+  const configOverrides = useConfigOverrides();
   const [custo, setCusto] = useState("");
   const [margem, setMargem] = useState("30");
   const [despesas, setDespesas] = useState("10");
@@ -78,6 +80,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             const v = parseFloat(issManual.replace(",", "."));
             return (!isNaN(v) && v >= 0 && v <= 5) ? { aliquota_iss: v / 100 } : {};
           })() : {}),
+          config_overrides: configOverrides,
         }),
       });
       if (!res.ok) throw new Error("Erro no cálculo de markup");

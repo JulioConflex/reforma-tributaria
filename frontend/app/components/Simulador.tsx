@@ -13,6 +13,7 @@ import MarkupTab from "./MarkupTab";
 import SplitPaymentTab from "./SplitPaymentTab";
 import Onboarding from "./Onboarding";
 import ChatAssistente from "./ChatAssistente";
+import { useConfigOverrides } from "./ConfigOverridesContext";
 
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0,
@@ -30,6 +31,7 @@ const TAB_MODULO: Partial<Record<Aba, string>> = {
 
 export default function Simulador() {
   const { modulos } = useAuth();
+  const configOverrides = useConfigOverrides();
   const [aba, setAba] = useState<Aba>("simulador");
   const [setores, setSetores] = useState<Setor[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -144,6 +146,7 @@ export default function Simulador() {
           body.aliquota_iss = issVal / 100;
         }
       }
+      body.config_overrides = configOverrides;
       const res = await fetch(`${API}/simular`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

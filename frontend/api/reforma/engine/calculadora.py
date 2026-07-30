@@ -70,11 +70,12 @@ def calcular_sistema_atual(
     percentual_credito: float = 0.0,
     aliquota_iss: float | None = None,
     pis_cofins_regime: str | None = None,
+    _icms_uf: float | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
     total = 0.0
     tipo = setor["tipo"]
-    icms_uf = get_icms_uf(uf)
+    icms_uf = _icms_uf if _icms_uf is not None else get_icms_uf(uf)
 
     if regime == "mei":
         # MEI paga DAS fixo mensal (não é percentual da receita)
@@ -186,11 +187,13 @@ def calcular_sistema_novo(
     folha_pagamento_mensal: float | None = None,
     aliquota_iss: float | None = None,
     pis_cofins_regime: str | None = None,
+    _cron: dict | None = None,
+    _icms_uf: float | None = None,
 ) -> ResultadoSistema:
     detalhes: list[DetalheTributo] = []
-    cron = get_cronograma(ano)
+    cron = _cron if _cron is not None else get_cronograma(ano)
     tipo = setor["tipo"]
-    icms_uf = get_icms_uf(uf)
+    icms_uf = _icms_uf if _icms_uf is not None else get_icms_uf(uf)
 
     fator_reducao = 1.0 - setor["reducao_aliquota"]
 
@@ -935,8 +938,13 @@ def _calcular_simples_por_fora(
 
 
 def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
-    setor = get_setor(inp.setor_id)
-    cron = get_cronograma(inp.ano)
+    _ov = inp.config_overrides
+    ov_cron: dict = _ov.cronograma if _ov else {}
+    ov_set: dict  = _ov.setores  if _ov else {}
+    ov_est: dict  = _ov.estados  if _ov else {}
+    icms_uf_resolved = get_icms_uf(inp.uf, ov_est or None)
+    setor = get_setor(inp.setor_id, ov_set or None)
+    cron = get_cronograma(inp.ano, ov_cron or None)
 
     # ── Validação MEI ─────────────────────────────────────────────────────────
     mei_incompativel = False
@@ -955,6 +963,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         inp.percentual_credito_entrada,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
+        _icms_uf=icms_uf_resolved,
     )
     novo = calcular_sistema_novo(
         inp.valor, inp.regime, setor, inp.uf, inp.ano,
@@ -962,6 +971,8 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
+        _cron=cron,
+        _icms_uf=icms_uf_resolved,
     )
 
     diferenca = novo.total - atual.total
@@ -1029,14 +1040,16 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
     # ── Projeção 2026–2033 ────────────────────────────────────────────────────
     projecao = []
     for ano in range(2026, 2034):
+        cron_ano = get_cronograma(ano, ov_cron or None)
         novo_ano = calcular_sistema_novo(
             inp.valor, inp.regime, setor, inp.uf, ano,
             inp.percentual_credito_entrada, inp.faturamento_anual,
             inp.folha_pagamento_mensal,
             aliquota_iss=inp.aliquota_iss,
             pis_cofins_regime=inp.pis_cofins_regime,
+            _cron=cron_ano,
+            _icms_uf=icms_uf_resolved,
         )
-        cron_ano = get_cronograma(ano)
         projecao.append(ProjecaoAnual(
             ano=ano,
             descricao=cron_ano["descricao"],
@@ -1097,7 +1110,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
         faturamento_mensal=inp.faturamento_mensal,
         despesas_mensais=inp.despesas_mensais,
         reducao_setor=setor.get("reducao_aliquota", 0.0),
-        aliquota_icms_uf=get_icms_uf(inp.uf),
+        aliquota_icms_uf=icms_uf_resolved,
         iss_setor=iss_setor_aliq,
         cbs_percentual=cron["cbs_percentual"],
         ibs_percentual=cron["ibs_percentual"],
@@ -1142,7 +1155,13 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
 
 
 def calcular_markup(inp: MarkupInput) -> MarkupOutput:
-    setor = get_setor(inp.setor_id)
+    _ov = inp.config_overrides
+    ov_cron: dict = _ov.cronograma if _ov else {}
+    ov_set: dict  = _ov.setores  if _ov else {}
+    ov_est: dict  = _ov.estados  if _ov else {}
+    icms_uf_resolved = get_icms_uf(inp.uf, ov_est or None)
+    setor = get_setor(inp.setor_id, ov_set or None)
+    cron_markup = get_cronograma(inp.ano, ov_cron or None)
 
     # Carga tributária atual
     atual = calcular_sistema_atual(
@@ -1150,6 +1169,7 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         folha_pagamento_mensal=inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
+        _icms_uf=icms_uf_resolved,
     )
     carga_atual = atual.total  # já é percentual (calculado sobre 1.0)
 
@@ -1160,6 +1180,8 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         folha_pagamento_mensal=inp.folha_pagamento_mensal,
         aliquota_iss=inp.aliquota_iss,
         pis_cofins_regime=inp.pis_cofins_regime,
+        _cron=cron_markup,
+        _icms_uf=icms_uf_resolved,
     )
     carga_nova = novo.total
 
@@ -1200,8 +1222,7 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
             ))
         return scaled
 
-    cron = get_cronograma(inp.ano)
-    valores_projetados = cron.get("aliquotas_provisorias", False) or bool(setor.get("is_aplicavel"))
+    valores_projetados = cron_markup.get("aliquotas_provisorias", False) or bool(setor.get("is_aplicavel"))
 
     return MarkupOutput(
         custo=inp.custo,

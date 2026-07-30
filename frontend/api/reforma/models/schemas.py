@@ -15,6 +15,13 @@ class TipoOperacao(str, Enum):
     servico = "servico"
 
 
+class ConfigOverrides(BaseModel):
+    """Overrides de alíquotas configurados pelo master no painel de administração."""
+    cronograma: dict = {}  # {"2027": {"cbs_percentual": 0.095, ...}}
+    setores: dict = {}     # {"comercio_geral": {"reducao_aliquota": 0.1}}
+    estados: dict = {}     # {"SP": 0.19}
+
+
 class SimulacaoInput(BaseModel):
     valor: float = Field(..., ge=0, description="Valor da operação em R$ (0 = simulação zerada)")
     regime: RegimeTributario
@@ -70,6 +77,7 @@ class SimulacaoInput(BaseModel):
             "(Lei 9.718/98, Art. 14 — excluídas do regime não-cumulativo)."
         )
     )
+    config_overrides: Optional[ConfigOverrides] = None
 
 
 class DetalheTributo(BaseModel):
@@ -231,6 +239,7 @@ class MarkupInput(BaseModel):
         default=None, gt=0,
         description="Folha de pagamento média mensal em R$ — necessária para o Fator R em setores de serviços intelectuais.",
     )
+    config_overrides: Optional[ConfigOverrides] = None
 
 
 class MarkupOutput(BaseModel):

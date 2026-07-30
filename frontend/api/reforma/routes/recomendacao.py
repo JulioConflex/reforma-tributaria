@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
-from ..engine.regras import get_setor, validar_mei, get_cronograma
+from ..engine.regras import get_setor, validar_mei, get_cronograma, get_icms_uf
 from ..engine.calculadora import (
     calcular_sistema_atual, calcular_sistema_novo, _irpj_csll_por_operacao,
 )
+from ..models.schemas import ConfigOverrides
 
 router = APIRouter(prefix="/api/py", tags=["recomendacao"])
 
@@ -44,12 +45,19 @@ class ComparadorInput(BaseModel):
             "estimar o IRPJ/CSLL (carga total) sobre o lucro real (receita − despesas)."
         )
     )
+    config_overrides: Optional[ConfigOverrides] = None
 
 
 @router.post("/comparar-regimes")
 def comparar_regimes(inp: ComparadorInput):
+    _ov = inp.config_overrides
+    ov_cron: dict = _ov.cronograma if _ov else {}
+    ov_set: dict  = _ov.setores  if _ov else {}
+    ov_est: dict  = _ov.estados  if _ov else {}
+    icms_uf_resolved = get_icms_uf(inp.uf, ov_est or None)
+
     try:
-        setor = get_setor(inp.setor_id)
+        setor = get_setor(inp.setor_id, ov_set or None)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -108,10 +116,14 @@ def comparar_regimes(inp: ComparadorInput):
         credito = _CREDITO_POR_REGIME.get(regime_key, inp.percentual_credito_entrada)
         folha = inp.folha_pagamento_mensal if regime_key == "simples_nacional" else None
 
-        atual = calcular_sistema_atual(inp.valor, regime_key, setor, inp.uf, fat, folha)
+        cron_comp = get_cronograma(inp.ano, ov_cron or None)
+        atual = calcular_sistema_atual(inp.valor, regime_key, setor, inp.uf, fat, folha,
+                                       _icms_uf=icms_uf_resolved)
         novo = calcular_sistema_novo(
             inp.valor, regime_key, setor, inp.uf, inp.ano,
             credito, fat, folha,
+            _cron=cron_comp,
+            _icms_uf=icms_uf_resolved,
         )
         # Carga TOTAL: soma o IRPJ/CSLL atribuível à operação (Simples/MEI já no DAS → 0).
         ic_op = _irpj_csll_por_operacao(
@@ -144,7 +156,7 @@ def comparar_regimes(inp: ComparadorInput):
     ordenados = disponiveis + indisponiveis
     melhor = disponiveis[0] if disponiveis else None
 
-    cron = get_cronograma(inp.ano)
+    cron = get_cronograma(inp.ano, ov_cron or None)
     valores_projetados = cron.get("aliquotas_provisorias", False) or bool(setor.get("is_aplicavel"))
 
     return {

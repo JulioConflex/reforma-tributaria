@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, SimulacaoResult, DetalheTributo } from "./types";
 import { REGIMES, UFS, API } from "./types";
+import { useConfigOverrides } from "./ConfigOverridesContext";
 import { FieldLabel, SelectField, CurrencyField, parseBRL, brl, NumberTicker } from "./ui";
 import { AlertaOperadoraANS } from "./Simulador";
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function SplitPaymentTab({ setores }: Props) {
+  const configOverrides = useConfigOverrides();
   const [valor, setValor] = useState("");
   const [regime, setRegime] = useState("lucro_presumido");
   const [setorId, setSetorId] = useState("comercio_geral");
@@ -61,6 +63,7 @@ export default function SplitPaymentTab({ setores }: Props) {
           ano,
           percentual_credito_entrada: credito / 100,
           pis_cofins_regime: pisCofinsRegime,
+          config_overrides: configOverrides,
         }),
       });
       if (!res.ok) throw new Error("Erro ao calcular");

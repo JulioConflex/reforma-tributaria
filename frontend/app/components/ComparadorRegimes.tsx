@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Setor, ComparadorResult, ComparativoRegime } from "./types";
 import { UFS, API } from "./types";
+import { useConfigOverrides } from "./ConfigOverridesContext";
 import { FieldLabel, SelectField, brl, CurrencyField, parseBRL } from "./ui";
 import TransitionTimeline from "./Timeline";
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId, sharedUf }: Props) {
+  const configOverrides = useConfigOverrides();
   const [valor, setValor] = useState("");
   const [faturamento, setFaturamento] = useState("");
   const [credito, setCredito] = useState(0);
@@ -47,6 +49,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
         uf, ano,
         valor: parseBRL(valor),
         percentual_credito_entrada: credito / 100,
+        config_overrides: configOverrides,
       };
       if (mostrarFatorR && folhaPagamento) {
         body.folha_pagamento_mensal = parseBRL(folhaPagamento);
