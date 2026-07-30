@@ -49,7 +49,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
   const irParaConfig = () => { setStep(5); setWizStep(1); };
 
   const headerSub =
-    step < 5 ? `Tela ${step} de 4 — entenda a reforma` : "Configure seu perfil (opcional)";
+    step < 5 ? `Tela ${step} de 4 · entenda a reforma` : "Configure seu perfil (opcional)";
 
   return (
     <div className="fixed inset-0 z-50 bg-brand-800/70 backdrop-blur-sm flex items-center justify-center p-4 anim-in">
@@ -138,7 +138,7 @@ function SlideReforma() {
         <h3 className="font-display text-[20px] font-bold text-ink-900 leading-tight">O que é a Reforma Tributária?</h3>
       </div>
       <p className="text-[14px] text-ink-600 leading-relaxed">
-        A partir de 2026, o Brasil começa a substituir cinco tributos sobre consumo por um sistema unificado —{" "}
+        A partir de 2026, o Brasil começa a substituir cinco tributos sobre consumo por um sistema unificado,{" "}
         <strong>mais simples, mais transparente e com menos burocracia</strong>.
       </p>
       <div className="grid grid-cols-2 gap-3">
@@ -158,15 +158,15 @@ function SlideReforma() {
           <div className="space-y-2.5 text-[13px]">
             <div className="flex items-start gap-2">
               <span className="shrink-0 rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[10px] font-bold mt-0.5">CBS</span>
-              <span className="text-ink-700">Federal — substitui PIS/COFINS</span>
+              <span className="text-ink-700">Federal, substitui PIS/COFINS</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="shrink-0 rounded bg-green-100 text-green-700 px-1.5 py-0.5 text-[10px] font-bold mt-0.5">IBS</span>
-              <span className="text-ink-700">Estadual/municipal — substitui ICMS/ISS</span>
+              <span className="text-ink-700">Estadual/municipal, substitui ICMS/ISS</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="shrink-0 rounded bg-red-100 text-red-700 px-1.5 py-0.5 text-[10px] font-bold mt-0.5">IS</span>
-              <span className="text-ink-700">Seletivo — cigarro, bebidas, armas</span>
+              <span className="text-ink-700">Seletivo, para cigarro, bebidas e armas</span>
             </div>
           </div>
         </div>
@@ -197,14 +197,14 @@ function SlideMudancas() {
             <span className="text-brand-500 mt-0.5 shrink-0">→</span>
             <span>
               Comprou R$ 10.000 em mercadoria e pagou R$ 2.650 de CBS+IBS?{" "}
-              <strong>Esse valor vira crédito</strong> — você anota para usar depois.
+              <strong>Esse valor vira crédito</strong> para abater nas vendas.
             </span>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-brand-500 mt-0.5 shrink-0">→</span>
             <span>
               Vendeu R$ 20.000? Calcula CBS+IBS sobre R$ 20.000, <strong>desconta o crédito acumulado</strong>{" "}
-              — e paga só a diferença.
+              e paga só a diferença.
             </span>
           </div>
         </div>
@@ -213,9 +213,9 @@ function SlideMudancas() {
         <div className="rounded-xl border border-green-200 bg-green-50 p-3.5">
           <div className="font-semibold text-green-700 mb-2">Setores com benefício</div>
           <div className="text-ink-600 space-y-1 leading-snug">
-            <div>⚕️ Saúde — redução de 60%</div>
-            <div>📚 Educação — redução de 60%</div>
-            <div>🥦 Alimentos básicos — isenção</div>
+            <div>⚕️ Saúde: redução de 60%</div>
+            <div>📚 Educação: redução de 60%</div>
+            <div>🥦 Alimentos básicos: isenção</div>
           </div>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5">
@@ -238,7 +238,7 @@ function SlideSimulador() {
         <h3 className="font-display text-[20px] font-bold text-ink-900 leading-tight">O que este simulador calcula?</h3>
       </div>
       <p className="text-[14px] text-ink-600 leading-relaxed">
-        Para uma operação — um produto ou serviço que você vende — o simulador compara{" "}
+        Para uma operação (um produto ou serviço que você vende), o simulador compara{" "}
         <strong>o imposto que você paga hoje com o que vai pagar com a reforma</strong>.
       </p>
       <div className="rounded-xl border border-ink-150 overflow-hidden text-[13px]">
@@ -269,7 +269,7 @@ function SlideSimulador() {
             <span className="text-[18px]">{item.icon}</span>
             <span>
               <span className="font-semibold text-ink-800">{item.label}</span>
-              <span className="text-ink-500"> — {item.desc}</span>
+              <span className="text-ink-500">: {item.desc}</span>
             </span>
           </div>
         ))}
@@ -301,12 +301,12 @@ function SlideInterpretar() {
           {
             icon: "💳",
             titulo: "Crédito de entrada",
-            desc: "Percentual do imposto que você recupera sobre o que compra para vender. Simples Nacional e MEI não geram crédito — o imposto já está embutido no DAS.",
+            desc: "Percentual do imposto que você recupera sobre o que compra para vender. Simples Nacional e MEI não geram crédito, pois o imposto já está embutido no DAS.",
           },
           {
             icon: "📅",
             titulo: "Alíquotas provisórias",
-            desc: "Os valores de 2027 em diante ainda são estimativas — a lei define as alíquotas definitivas ao longo da transição. O simulador avisa quando usar projeções.",
+            desc: "Os valores de 2027 em diante ainda são estimativas, pois a lei define as alíquotas definitivas ao longo da transição. O simulador avisa quando usar projeções.",
           },
         ].map((item) => (
           <div key={item.titulo} className="flex items-start gap-3 rounded-xl border border-ink-100 px-4 py-3.5">
