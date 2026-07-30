@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Setor, ComparadorResult, ComparativoRegime } from "./types";
 import { UFS, API } from "./types";
 import { useConfigOverrides } from "./ConfigOverridesContext";
@@ -28,6 +28,22 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   const [result, setResult] = useState<ComparadorResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+
+  // PDF modal state
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfGerado, setPdfGerado] = useState(false);
+  const [pdfCarregando, setPdfCarregando] = useState(false);
+  const [pdfErro, setPdfErro] = useState<string | null>(null);
+  const [pdfForm, setPdfForm] = useState({
+    razao_social: "",
+    cnpj: "",
+    premissas: "",
+    objetivos: "",
+    observacoes: "",
+    contador_nome: "",
+    contador_crc: "",
+  });
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const setor = setores.find((s) => s.id === setorId);
   const mostrarFatorR = setor?.anexo_simples === "FATOR_R";
@@ -68,6 +84,42 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
       setErro(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const gerarPDF = async () => {
+    if (!result) return;
+    setPdfCarregando(true);
+    setPdfErro(null);
+    try {
+      const payload = {
+        ...pdfForm,
+        faturamento_anual: parseBRL(faturamento),
+        despesas_mensais: despesasMensais ? parseBRL(despesasMensais) : null,
+        comparador: result,
+      };
+      const res = await fetch(`${API}/gerar-estudo-tributario`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || "Erro ao gerar PDF");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const nome = pdfForm.razao_social.replace(/\s+/g, "_").substring(0, 40) || "Empresa";
+      a.href = url;
+      a.download = `Estudo_Tributario_${nome}_${result.ano}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setPdfGerado(true);
+    } catch (e: unknown) {
+      setPdfErro(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setPdfCarregando(false);
     }
   };
 
@@ -299,7 +351,177 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                 </p>
               </div>
             </div>
+
+            {/* PDF button */}
+            <div className="rounded-2xl bg-white hairline px-6 lg:px-7 py-5 flex items-center justify-between gap-4">
+              <div>
+                <div className="font-semibold text-ink-900 text-[14px]">Estudo Tributário Completo</div>
+                <p className="text-[12.5px] text-ink-500 mt-0.5">
+                  Gere um relatório profissional em PDF com toda a análise comparativa, memórias de cálculo e conclusão.
+                </p>
+              </div>
+              <button
+                onClick={() => { setPdfModalOpen(true); setPdfGerado(false); setPdfErro(null); }}
+                className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-[13px] font-semibold transition-colors shadow-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                Gerar PDF
+              </button>
+            </div>
           </>
+        )}
+
+        {/* PDF Modal */}
+        {pdfModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-sm">
+            <div
+              ref={modalRef}
+              className="w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-ink-100">
+                <div>
+                  <div className="font-display font-bold text-[17px] text-ink-900">Estudo Tributário Completo</div>
+                  <div className="text-[12px] text-ink-500 mt-0.5">Preencha os dados da empresa para gerar o PDF</div>
+                </div>
+                <button
+                  onClick={() => setPdfModalOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal body */}
+              <div className="overflow-y-auto px-6 py-5 space-y-4 flex-1">
+                {pdfGerado && (
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[13px] text-emerald-800 font-medium flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    PDF gerado e baixado com sucesso.
+                  </div>
+                )}
+                {pdfErro && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700">{pdfErro}</div>
+                )}
+
+                <div>
+                  <FieldLabel>Razão Social <span className="text-red-500">*</span></FieldLabel>
+                  <input
+                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                    placeholder="Nome completo da empresa"
+                    value={pdfForm.razao_social}
+                    onChange={(e) => setPdfForm((f) => ({ ...f, razao_social: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>CNPJ <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                  <input
+                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                    placeholder="00.000.000/0001-00"
+                    value={pdfForm.cnpj}
+                    onChange={(e) => setPdfForm((f) => ({ ...f, cnpj: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>Premissas <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                  <textarea
+                    rows={3}
+                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
+                    placeholder="Ex: empresa do Simples Nacional, setor de serviços, regime atual ISS 5%..."
+                    value={pdfForm.premissas}
+                    onChange={(e) => setPdfForm((f) => ({ ...f, premissas: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>Objetivos do estudo <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                  <textarea
+                    rows={2}
+                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
+                    placeholder="Ex: avaliar viabilidade de mudança de regime antes de 2027..."
+                    value={pdfForm.objetivos}
+                    onChange={(e) => setPdfForm((f) => ({ ...f, objetivos: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>Observações adicionais <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                  <textarea
+                    rows={2}
+                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
+                    placeholder="Qualquer informação adicional relevante..."
+                    value={pdfForm.observacoes}
+                    onChange={(e) => setPdfForm((f) => ({ ...f, observacoes: e.target.value }))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FieldLabel>Nome do contador <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                    <input
+                      className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                      placeholder="Nome completo"
+                      value={pdfForm.contador_nome}
+                      onChange={(e) => setPdfForm((f) => ({ ...f, contador_nome: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel>CRC <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                    <input
+                      className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                      placeholder="000000/O-0"
+                      value={pdfForm.contador_crc}
+                      onChange={(e) => setPdfForm((f) => ({ ...f, contador_crc: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal footer */}
+              <div className="px-6 py-4 border-t border-ink-100 flex items-center justify-between gap-3 bg-ink-50/50">
+                <p className="text-[11px] text-ink-400 leading-tight max-w-xs">
+                  O PDF usa os dados do comparador já calculados. O campo Razão Social é obrigatório.
+                </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setPdfModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-[13px] font-medium text-ink-600 hover:bg-ink-100 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={gerarPDF}
+                    disabled={!pdfForm.razao_social.trim() || pdfCarregando}
+                    className="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:bg-ink-200 disabled:text-ink-400 text-white text-[13px] font-semibold transition-colors flex items-center gap-2"
+                  >
+                    {pdfCarregando ? (
+                      <>
+                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                        Gerando...
+                      </>
+                    ) : (
+                      "Baixar PDF"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </section>
     </div>
