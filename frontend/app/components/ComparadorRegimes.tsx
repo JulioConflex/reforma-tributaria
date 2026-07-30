@@ -127,6 +127,12 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   const disponiveis = result?.comparativo.filter((c) => c.disponivel) ?? [];
   const piorTotal = disponiveis.length ? Math.max(...disponiveis.map((c) => c.total_novo ?? 0)) : 1;
 
+  const podGerarPDF =
+    parseBRL(valor) > 0 &&
+    parseBRL(faturamento) > 0 &&
+    result !== null &&
+    disponiveis.length > 0;
+
   return (
     <div className="grid lg:grid-cols-[400px_1fr] gap-6 mt-7 lg:items-start">
       {/* ── Form ── */}
@@ -354,16 +360,33 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
             </div>
 
             {/* PDF button */}
-            <div className="rounded-2xl bg-white hairline px-6 lg:px-7 py-5 flex items-center justify-between gap-4">
+            <div className={`rounded-2xl px-6 lg:px-7 py-5 flex items-center justify-between gap-4 ${podGerarPDF ? "bg-white hairline" : "bg-ink-50 border border-ink-200"}`}>
               <div>
                 <div className="font-semibold text-ink-900 text-[14px]">Estudo Tributário Completo</div>
-                <p className="text-[12.5px] text-ink-500 mt-0.5">
-                  Gere um relatório profissional em PDF com toda a análise comparativa, memórias de cálculo e conclusão.
-                </p>
+                {podGerarPDF ? (
+                  <p className="text-[12.5px] text-ink-500 mt-0.5">
+                    Gere um relatório profissional em PDF com toda a análise comparativa e conclusão.
+                  </p>
+                ) : (
+                  <div className="mt-1.5 space-y-1">
+                    <p className="text-[12px] text-amber-700 font-medium">Preencha o comparador antes de gerar o PDF:</p>
+                    <ul className="text-[11.5px] text-amber-700 space-y-0.5">
+                      {parseBRL(valor) <= 0 && <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-amber-500 shrink-0" />Valor da operação típica</li>}
+                      {parseBRL(faturamento) <= 0 && <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-amber-500 shrink-0" />Faturamento anual</li>}
+                      {!result && parseBRL(valor) > 0 && parseBRL(faturamento) > 0 && <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-amber-500 shrink-0" />Aguardando cálculo...</li>}
+                    </ul>
+                  </div>
+                )}
               </div>
               <button
-                onClick={() => { setPdfModalOpen(true); setPdfGerado(false); setPdfErro(null); }}
-                className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-[13px] font-semibold transition-colors shadow-sm"
+                onClick={() => {
+                  if (!podGerarPDF) return;
+                  setPdfModalOpen(true);
+                  setPdfGerado(false);
+                  setPdfErro(null);
+                }}
+                disabled={!podGerarPDF}
+                className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-colors shadow-sm disabled:bg-ink-200 disabled:text-ink-400 disabled:shadow-none bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
