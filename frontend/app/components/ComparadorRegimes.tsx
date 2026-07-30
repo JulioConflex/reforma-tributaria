@@ -40,7 +40,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
     regime_atual: "",
     resultado_financeiro: "",
     perfil_clientes: "",
-    objetivo_estudo: "",
+    objetivo_estudo: [] as string[],
     contador_nome: "",
     contador_crc: "",
   });
@@ -520,23 +520,40 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                 {/* Objetivo */}
                 <div>
                   <FieldLabel>Objetivo do estudo</FieldLabel>
+                  <p className="text-[11px] text-ink-400 mb-1.5">Pode marcar mais de uma opção.</p>
                   <div className="flex flex-col gap-2 mt-1">
                     {[
                       { v: "comparar", l: "Comparar regimes disponíveis", d: "Análise neutra — qual regime paga menos?" },
                       { v: "mudanca", l: "Planejar mudança de regime", d: "Foco em viabilidade e timing de transição" },
                       { v: "reforma", l: "Avaliar impacto da Reforma Tributária", d: "Foco nos efeitos do CBS/IBS a partir de 2027" },
                     ].map(({ v, l, d }) => {
-                      const sel = pdfForm.objetivo_estudo === v;
+                      const sel = pdfForm.objetivo_estudo.includes(v);
                       return (
                         <button
                           key={v}
-                          onClick={() => setPdfForm((f) => ({ ...f, objetivo_estudo: f.objetivo_estudo === v ? "" : v }))}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl border transition-all ${
+                          onClick={() => setPdfForm((f) => ({
+                            ...f,
+                            objetivo_estudo: sel
+                              ? f.objetivo_estudo.filter((x) => x !== v)
+                              : [...f.objetivo_estudo, v],
+                          }))}
+                          className={`w-full text-left px-4 py-2.5 rounded-xl border transition-all flex items-start gap-3 ${
                             sel ? "bg-brand-50 border-brand-400 ring-1 ring-brand-200" : "bg-white border-ink-200 hover:border-brand-200"
                           }`}
                         >
-                          <div className={`text-[13px] font-semibold ${sel ? "text-brand-700" : "text-ink-800"}`}>{l}</div>
-                          <div className={`text-[11.5px] mt-0.5 ${sel ? "text-brand-500" : "text-ink-400"}`}>{d}</div>
+                          <span className={`mt-0.5 w-4 h-4 shrink-0 rounded flex items-center justify-center border-2 transition-all ${
+                            sel ? "bg-brand-500 border-brand-500" : "border-ink-300"
+                          }`}>
+                            {sel && (
+                              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </span>
+                          <div>
+                            <div className={`text-[13px] font-semibold ${sel ? "text-brand-700" : "text-ink-800"}`}>{l}</div>
+                            <div className={`text-[11.5px] mt-0.5 ${sel ? "text-brand-500" : "text-ink-400"}`}>{d}</div>
+                          </div>
                         </button>
                       );
                     })}

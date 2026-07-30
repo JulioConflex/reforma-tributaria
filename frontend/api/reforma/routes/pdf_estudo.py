@@ -131,7 +131,7 @@ class EstudoInput(BaseModel):
     regime_atual: str = ""          # mei | simples_nacional | lucro_presumido | lucro_real
     resultado_financeiro: str = ""  # lucrativa | equilibrio | prejuizo
     perfil_clientes: str = ""       # pf | pj | misto
-    objetivo_estudo: str = ""       # comparar | mudanca | reforma
+    objetivo_estudo: list[str] = []  # comparar | mudanca | reforma (multiplo)
     contador_nome: str = ""
     contador_crc: str = ""
     comparador: ComparadorData
@@ -217,8 +217,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         info_rows.append([Paragraph("<b>Perfil dos clientes</b>", ST["cell_bold"]),
                           Paragraph(_PERFIL_LABEL.get(inp.perfil_clientes, inp.perfil_clientes), ST["cell_l"])])
     if inp.objetivo_estudo:
+        obj_labels = ", ".join(_OBJETIVO_LABEL.get(o, o) for o in inp.objetivo_estudo)
         info_rows.append([Paragraph("<b>Objetivo do estudo</b>", ST["cell_bold"]),
-                          Paragraph(_OBJETIVO_LABEL.get(inp.objetivo_estudo, inp.objetivo_estudo), ST["cell_l"])])
+                          Paragraph(obj_labels, ST["cell_l"])])
 
     info_t = Table(info_rows, colWidths=[5.2 * cm, None])
     info_t.setStyle(TableStyle([
@@ -232,15 +233,25 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     story.append(info_t)
     story.append(Spacer(1, 14))
 
-    # Intro personalizada por objetivo
-    if inp.objetivo_estudo == "reforma":
+    # Intro personalizada por objetivos (pode haver multiplos)
+    objs = inp.objetivo_estudo
+    if "reforma" in objs and "mudanca" in objs:
+        regime_atual_nome = _REGIME_LABEL.get(inp.regime_atual, "regime atual") if inp.regime_atual else "regime atual"
+        intro = (
+            f"Este estudo avalia, para <b>{inp.razao_social}</b>, tanto a viabilidade de mudanca de regime "
+            f"(atualmente no <b>{regime_atual_nome}</b>) quanto o impacto da Reforma Tributaria (LC 214/2025) "
+            f"sobre a carga tributaria a partir de {comp.ano}. A analise cobre os quatro regimes disponiveis "
+            "no sistema atual e no novo sistema, identificando o regime mais vantajoso e os pontos de atencao "
+            "para a transicao com CBS e IBS."
+        )
+    elif "reforma" in objs:
         intro = (
             "Este estudo analisa o impacto da Reforma Tributaria (LC 214/2025) sobre a carga tributaria de "
             f"<b>{inp.razao_social}</b>, comparando o sistema atual com o novo sistema a partir de {comp.ano}. "
             "O foco e entender como o CBS e o IBS alteram os custos por regime e quais decisoes sao recomendadas "
             "para a transicao."
         )
-    elif inp.objetivo_estudo == "mudanca":
+    elif "mudanca" in objs:
         regime_atual_nome = _REGIME_LABEL.get(inp.regime_atual, "regime atual") if inp.regime_atual else "regime atual"
         intro = (
             f"Este estudo avalia a viabilidade de mudanca de regime tributario para <b>{inp.razao_social}</b>, "
@@ -527,7 +538,8 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     melhor_obj2 = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
 
-    if inp.objetivo_estudo == "mudanca" and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
+    objs = inp.objetivo_estudo
+    if "mudanca" in objs and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
         regime_atual_nome = _REGIME_LABEL.get(inp.regime_atual, inp.regime_atual)
         melhor_nome = melhor_obj2.nome if melhor_obj2 else melhor_key
         conclusao = (
@@ -545,7 +557,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             "do ano seguinte. Recomendamos acompanhar os resultados ao longo do segundo semestre "
             "para confirmar se a mudanca e vantajosa antes da comunicacao a Receita Federal."
         )
-    elif inp.objetivo_estudo == "reforma":
+        if "reforma" in objs:
+            conclusao += (
+                " Com relacao a Reforma Tributaria, o CBS substituira PIS/COFINS a partir de 2027 e o IBS "
+                "substituira ISS/ICMS progressivamente ate 2032. Os valores projetados sao estimativas — "
+                "recomendamos revisar esta analise anualmente conforme as aliquotas definitivas forem publicadas."
+            )
+    elif "reforma" in objs:
         if melhor_obj2:
             conclusao = (
                 f"Diante da Reforma Tributaria (LC 214/2025), o regime mais vantajoso para "
