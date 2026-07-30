@@ -205,6 +205,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
       <button class="nav-tab"         onclick="show('holdings',this)">Holdings</button>
       <button class="nav-tab"         onclick="show('simples',this)">Simples Nacional</button>
       <button class="nav-tab"         onclick="show('split',this)">Split Payment</button>
+      <button class="nav-tab"         onclick="show('cashback',this)">Cashback</button>
       <button class="nav-tab"         onclick="show('transicao',this)">Transição</button>
       <button class="nav-tab"         onclick="show('cgibs',this)">CGIBS</button>
       <button class="nav-tab"         onclick="show('itcmd',this)">ITCMD</button>
@@ -232,15 +233,15 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
   <div class="sec-sub">Cinco tributos extintos, três criados, sistema redesenhado do zero</div>
 
   <div class="card">
-    <div class="card-title">Tributos extintos e seus substitutos <span class="lei-tag">EC 132/2023, art. 1º</span></div>
+    <div class="card-title">Tributos extintos e seus substitutos <span class="lei-tag">EC 132/2023, art. 2º (ADCT, arts. 126 e 129)</span></div>
     <div class="table-wrap"><table>
       <thead><tr><th>Tributo extinto</th><th>Competência</th><th>Extinção</th><th>Substituído por</th></tr></thead>
       <tbody>
-        <tr><td><strong>PIS</strong></td><td>Federal</td><td>31/12/2026</td><td>CBS</td></tr>
-        <tr><td><strong>COFINS</strong></td><td>Federal</td><td>31/12/2026</td><td>CBS</td></tr>
-        <tr><td><strong>IPI</strong></td><td>Federal</td><td>31/12/2032 (exceto ZFM)</td><td>IS (parcial)</td></tr>
-        <tr><td><strong>ICMS</strong></td><td>Estadual</td><td>31/12/2032</td><td>IBS — parcela estadual</td></tr>
-        <tr><td><strong>ISS</strong></td><td>Municipal</td><td>31/12/2032</td><td>IBS — parcela municipal</td></tr>
+        <tr><td><strong>PIS</strong></td><td>Federal</td><td>A partir de 2027</td><td>CBS</td></tr>
+        <tr><td><strong>COFINS</strong></td><td>Federal</td><td>A partir de 2027</td><td>CBS</td></tr>
+        <tr><td><strong>IPI</strong></td><td>Federal</td><td><em>Não extinto</em> — alíquotas reduzidas a zero a partir de 2027 (ADCT, art. 126, III)</td><td>Mantido apenas para produtos que concorrem com a ZFM. Não é substituído pelo IS</td></tr>
+        <tr><td><strong>ICMS</strong></td><td>Estadual</td><td>A partir de 2033</td><td>IBS — parcela estadual</td></tr>
+        <tr><td><strong>ISS</strong></td><td>Municipal</td><td>A partir de 2033</td><td>IBS — parcela municipal</td></tr>
       </tbody>
     </table></div>
   </div>
@@ -250,6 +251,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
     <div class="mini-card"><div class="label">CBS estimada</div><div class="value">~8,8%</div><div class="sub">Federal. Substitui PIS e COFINS. Valor exato fixado com base na arrecadação de 2027.</div></div>
     <div class="mini-card"><div class="label">Carga combinada</div><div class="value">~26,5%</div><div class="sub">Incide sobre valor agregado com não cumulatividade plena — crédito de todas as aquisições tributadas.</div></div>
   </div>
+  <p class="footnote" style="margin:-4px 0 14px;">⚠ <strong>Valores estimados, não oficiais.</strong> Os percentuais de IBS (~17,7%), CBS (~8,8%) e carga combinada (~26,5%) são <strong>projeções do Ministério da Fazenda</strong> (estudo de 2024) e não constam da legislação. A <strong>alíquota de referência</strong> definitiva de cada tributo será fixada por <strong>Resolução do Senado Federal</strong>, calculada com base na arrecadação efetiva de 2027/2028 (EC 132/2023, ADCT, art. 130). Até lá, tratar como referência de trabalho, não como número oficial.</p>
 
   <div class="card">
     <div class="card-title">Os três pilares da reforma</div>
@@ -261,10 +263,10 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
   <div class="card">
     <div class="card-title">Linha do tempo</div>
     <div class="timeline">
-      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">CBS a <strong>0,9%</strong> e IBS a <strong>0,1%</strong>. Fase de testes. Impacto quase nulo — momento ideal para preparação.</div></div>
-      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena. Split payment começa. IBS ainda reduzido. PIS e COFINS extintos em 31/12/2026.</div></div>
+      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">IBS a <strong>0,1%</strong> e CBS a <strong>0,9%</strong> (total ~1%, compensável com PIS/COFINS). Fase de testes. Impacto quase nulo — momento ideal para preparação.</div></div>
+      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena (reduzida em 0,1 p.p.). Split payment começa. IBS a 0,1% (0,05% estadual + 0,05% municipal) em 2027–2028. PIS e COFINS extintos a partir de 2027 (último ano: 2026).</div></div>
       <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2029–2032 — Transição gradual</div><div class="tl-text">ICMS e ISS reduzidos em <strong>10% ao ano</strong>, IBS cresce proporcionalmente. Dois sistemas simultâneos.</div></div>
-      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS, ISS e IPI extintos.</strong> Somente IBS e CBS. Split payment integral. Saldos de ICMS compensados em 240 parcelas.</div></div>
+      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS e ISS extintos.</strong> Somente IBS e CBS (o IPI já está zerado desde 2027, mantido só para concorrentes da ZFM). Split payment integral. Saldos de ICMS compensados em 240 parcelas.</div></div>
     </div>
   </div>
 
@@ -278,7 +280,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
         <tr><td><strong>Serviços de saúde</strong></td><td>Redução de 60% na alíquota</td><td>~10,6%</td><td>Regime específico de planos</td></tr>
         <tr><td><strong>Educação</strong></td><td>Redução de 60% na alíquota</td><td>~10,6%</td><td>Vigilância nas atividades-meio</td></tr>
         <tr><td><strong>Profissões regulamentadas</strong></td><td>Redução de 30% na alíquota</td><td>~18,6%</td><td>Contadores, advogados, engenheiros PJ</td></tr>
-        <tr><td><strong>Indústria geral</strong></td><td>IPI extinto; CBS + IBS substituem PIS/COFINS + ICMS</td><td>Alíquota plena ~26,5%</td><td>Crédito pleno; ZFM mantida</td></tr>
+        <tr><td><strong>Indústria geral</strong></td><td>IPI zerado desde 2027 (exceto ZFM); CBS + IBS substituem PIS/COFINS + ICMS</td><td>Alíquota plena ~26,5%</td><td>Crédito pleno; ZFM mantida</td></tr>
         <tr><td><strong>Agronegócio</strong></td><td>Regime específico; crédito presumido</td><td>Redução 60% ou zero</td><td>Produtor rural PF tem opção</td></tr>
         <tr><td><strong>Imóveis</strong></td><td>Regime específico; redutor de ajuste</td><td>Alíquota plena com redutores</td><td>Mercado secondary tax</td></tr>
         <tr><td><strong>Holdings</strong></td><td>ITCMD progressivo obrigatório</td><td>Depende da lei estadual</td><td>Urgência no planejamento sucessório</td></tr>
@@ -301,6 +303,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
       <p><strong>Base de cálculo:</strong> valor da operação excluídos o próprio IBS e a CBS. Regras específicas para permuta, operações com partes relacionadas e fornecimentos não onerosos. LC 214/2025, art. 12 (redação LC 227/2026).</p>
       <p><strong>Não cumulatividade plena:</strong> crédito integral de todo IBS pago nas aquisições sem restrições — inclusive serviços, locações e energia. LC 214/2025, arts. 47 a 57.</p>
       <p><strong>Alíquota de referência:</strong> fixada pelo Senado com base nas receitas projetadas de 2027/2028 para manter a arrecadação equivalente ao ICMS e ISS históricos. Cada ente federativo pode fixar alíquota diferente da referência. Arts. 344 e 361–365 da LC 214/2025 (redação LC 227/2026).</p>
+      <p><strong>Transparência na nota fiscal:</strong> sempre que possível, o valor do IBS e da CBS deve ser informado de forma específica no documento fiscal (CF, art. 156-A, §1º, XIII).</p>
     </div>
   </div>
 
@@ -318,8 +321,9 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
     <div class="acc-body">
       <p>Federal, incide sobre bens e serviços <strong>prejudiciais à saúde ou ao meio ambiente</strong>. Não é recuperável como crédito — é custo definitivo.</p>
       <p><strong>Produtos sujeitos:</strong> cigarros e fumígenos; bebidas alcoólicas; bebidas açucaradas; veículos (carros, motos, aviões, embarcações); bens minerais extraídos; armas e munições.</p>
-      <p><strong>Alíquotas:</strong> escalonadas. Para fumígenos e bebidas, incorporam progressivamente de 2029 a 2033 o diferencial entre o ICMS histórico e as alíquotas modais do novo sistema. Bens minerais: máximo 0,25% sobre valor de mercado. Art. 422, §§2º e 5º (redação LC 227/2026).</p>
+      <p><strong>Alíquotas:</strong> escalonadas. Para fumígenos e bebidas, incorporam progressivamente de 2029 a 2033 o diferencial entre o ICMS histórico e as alíquotas modais do novo sistema. Bens minerais: 0,25% sobre o valor de mercado — percentual fixado pela LC 214 dentro do teto constitucional de 1% (CF, art. 153, §6º, VII). Art. 422, §§2º e 5º (redação LC 227/2026).</p>
       <p><strong>Não gera crédito:</strong> é tributo-custo, diferente do IBS e CBS.</p>
+      <p><strong>Não incide sobre:</strong> exportações e operações com energia elétrica e telecomunicações (CF, art. 153, §6º, I).</p>
     </div>
   </div>
 
@@ -474,7 +478,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
 
   <div class="card">
     <div class="card-title">O que muda para a indústria <span class="lei-tag">EC 132/2023 · LC 214/2025 · LC 227/2026</span></div>
-    <p>Para a indústria, a reforma traz a extinção do IPI (exceto para ZFM) e a substituição do trinômio PIS/COFINS + IPI + ICMS pelo par CBS + IBS. O impacto varia muito por segmento: indústrias com cadeias longas de produção se beneficiam da não cumulatividade plena; indústrias de bens sujeitos ao IS têm tributação adicional permanente.</p>
+    <p>Para a indústria, a reforma traz a redução a zero das alíquotas do IPI a partir de 2027 (exceto para produtos que concorrem com a ZFM, para os quais é mantido) e a substituição do trinômio PIS/COFINS + IPI + ICMS pelo par CBS + IBS. O impacto varia muito por segmento: indústrias com cadeias longas de produção se beneficiam da não cumulatividade plena; indústrias de bens sujeitos ao IS têm tributação adicional permanente.</p>
     <p><strong>Principal benefício:</strong> crédito pleno de todos os insumos — inclusive energia elétrica, serviços contratados, fretes e embalagens — sem as restrições atuais do ICMS e PIS/COFINS.</p>
     <p><strong>Principal desafio:</strong> o split payment na cobrança das vendas e o período de transição com dois sistemas simultâneos exigem adaptação dos sistemas ERP e da gestão de caixa.</p>
   </div>
@@ -503,7 +507,7 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
   <div class="seg-card red-border">
     <div class="seg-header"><div><div class="seg-title">Mineração — Imposto Seletivo específico</div><div class="seg-sub">LC 214/2025, art. 409 · art. 422, §2º (redação LC 227/2026)</div></div><span class="badge red">IS incide</span></div>
     <ul class="seg-list">
-      <li><span class="dot red"></span><div><strong>Imposto Seletivo sobre bens minerais extraídos:</strong> alíquota máxima de <strong>0,25%</strong> sobre o valor de mercado. É um custo adicional permanente, não recuperável como crédito.</div></li>
+      <li><span class="dot red"></span><div><strong>Imposto Seletivo sobre bens minerais extraídos:</strong> alíquota de <strong>0,25%</strong> sobre o valor de mercado, fixada pela LC 214 dentro do teto constitucional de 1% (CF, art. 153, §6º, VII). É um custo adicional permanente, não recuperável como crédito.</div></li>
       <li><span class="dot"></span><div><strong>Contribuinte do IS:</strong> o fabricante/extrator, no primeiro fornecimento do bem mineral. LC 214/2025, art. 424, inciso I (redação LC 227/2026).</div></li>
       <li><span class="dot green"></span><div><strong>IBS e CBS no regime regular:</strong> para as operações com minerais que não sejam o fato gerador do IS, incidem IBS e CBS normalmente com crédito pleno.</div></li>
     </ul>
@@ -714,6 +718,24 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
 </section>
 
 <!-- ═══════════════════════════════ TRANSIÇÃO -->
+<!-- CASHBACK -->
+<section id="cashback" class="section">
+  <div class="sec-title">Cashback — devolução de tributo</div>
+  <div class="sec-sub">Devolução de IBS e CBS a famílias de baixa renda · CF, art. 156-A, §5º, VIII · art. 195, §18</div>
+
+  <div class="card">
+    <div class="card-title">O que é o cashback da reforma <span class="lei-tag">EC 132/2023</span></div>
+    <p>Um dos pilares sociais da reforma: parte do IBS e da CBS pagos por famílias de baixa renda é <strong>devolvida</strong> a elas, com o objetivo expresso de <strong>reduzir as desigualdades de renda</strong>. A previsão é constitucional — IBS no art. 156-A, §5º, VIII, e CBS no art. 195, §18.</p>
+    <p><strong>Devolução obrigatória:</strong> a Constituição torna a devolução <em>obrigatória</em> nas operações de fornecimento de <strong>energia elétrica</strong> e de <strong>gás liquefeito de petróleo (gás de cozinha)</strong> ao consumidor de baixa renda. CF, art. 156-A, §13.</p>
+    <p><strong>Quem tem direito e quanto:</strong> os beneficiários (em regra, inscritos no CadÚnico), os percentuais devolvidos e a forma de operacionalização são definidos na LC 214/2025. O valor devolvido não é computado como receita para fins de repartição nem entra na base das alíquotas de referência (art. 156-A, §12; art. 195, §19).</p>
+  </div>
+
+  <div class="alert info">
+    <span class="alert-icon">ℹ</span>
+    <div><strong>Para o escritório:</strong> vale mapear clientes do comércio e de serviços que atendem público de baixa renda — o cashback altera a percepção de preço final e depende da emissão correta do documento fiscal para viabilizar a devolução ao consumidor.</div>
+  </div>
+</section>
+
 <section id="transicao" class="section">
   <div class="sec-title">Período de transição 2026–2033</div>
   <div class="sec-sub">Cronograma detalhado · Saldos credores de ICMS · LC 227/2026, arts. 132–145 e 361–365</div>
@@ -721,11 +743,11 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
   <div class="card">
     <div class="card-title">Cronograma completo <span class="lei-tag">EC 132/2023 · LC 214/2025 · LC 227/2026</span></div>
     <div class="timeline">
-      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">CBS a <strong>0,9%</strong> e IBS a <strong>0,1%</strong>. CGIBS em instalação (financiado pela União em até R$ 3,8 bilhões, art. 484 LC 214/2025). Impacto quase nulo. Momento de mapear prestadores, atualizar cadastros e preparar sistemas.</div></div>
-      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena. Split payment começa para CBS. IBS ainda reduzido. PIS e COFINS extintos. Alíquotas do IBS para 2029 calculadas com base nos dados de 2027 (art. 361).</div></div>
+      <div class="tl-item"><div class="tl-dot green"></div><div class="tl-year">2026 — Alíquotas-teste e instalação do CGIBS</div><div class="tl-text">IBS a <strong>0,1%</strong> e CBS a <strong>0,9%</strong> (total ~1%, compensável com PIS/COFINS). CGIBS em instalação (financiado pela União em até R$ 3,8 bilhões, art. 484 LC 214/2025). Impacto quase nulo. Momento de mapear prestadores, atualizar cadastros e preparar sistemas.</div></div>
+      <div class="tl-item"><div class="tl-dot blue"></div><div class="tl-year">2027 — CBS plena; PIS e COFINS extintos</div><div class="tl-text">CBS com alíquota plena (reduzida em 0,1 p.p. em 2027–2028). Split payment começa para CBS. IBS a 0,1% (0,05% estadual + 0,05% municipal). PIS e COFINS extintos. Alíquotas do IBS para 2029 calculadas com base nos dados de 2027 (art. 361).</div></div>
       <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2029 — ICMS/ISS reduzem 10%; IBS começa a crescer</div><div class="tl-text">Primeiro ano de coexistência real. ICMS e ISS reduzidos em 10%; IBS cresce equivalentemente. Três apurações simultâneas: IBS + ICMS/ISS residual + CBS. Saldos de ICMS começam a ser compensáveis.</div></div>
       <div class="tl-item"><div class="tl-dot amber"></div><div class="tl-year">2030–2032 — Redução progressiva: 20%, 30%, 40%</div><div class="tl-text">ICMS e ISS perdem mais 10 pontos percentuais por ano. Em 2032 representam apenas 60% do original. Complexidade contábil elevada. Saldos credores de ICMS acumulados até 31/12/2032.</div></div>
-      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS, ISS e IPI extintos em 31/12/2032.</strong> A partir de 01/01/2033 somente IBS e CBS. Split payment integral. Distribuição pelo princípio do destino. Saldos credores de ICMS compensados em 240 parcelas.</div></div>
+      <div class="tl-item"><div class="tl-dot red"></div><div class="tl-year">2033 — Regime pleno</div><div class="tl-text"><strong>ICMS e ISS extintos em 31/12/2032.</strong> A partir de 01/01/2033 somente IBS e CBS (o IPI teve suas alíquotas reduzidas a zero desde 2027 e é mantido apenas para produtos que concorrem com a ZFM). Split payment integral. Distribuição pelo princípio do destino. Saldos credores de ICMS compensados em 240 parcelas.</div></div>
     </div>
   </div>
 
@@ -746,6 +768,23 @@ td .lei-mini { font-size: 11px; color: var(--blue); display: block; margin-top: 
     <div class="acc-body">
       <p>Mercadorias em estoque em 31/12/2032 com ICMS-ST retido geram crédito especial. O contribuinte inventaria o estoque, apura o ICMS-ST correspondente e encaminha demonstrativo ao estado e ao CGIBS. O estado informa o valor a compensar em <strong>12 parcelas mensais</strong> com o IBS. Se o estado não responder em 60 dias, o CGIBS usa o valor do demonstrativo.</p>
       <p>Simples Nacional: solicita restituição diretamente ao estado. Não usa esse mecanismo de compensação com IBS.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Trava / teto de referência — proteção contra aumento de carga</div><div class="acc-sub">EC 132/2023, ADCT, art. 130</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p>Para evitar que a reforma eleve a carga tributária, a Constituição criou uma <strong>trava</strong>: a arrecadação com os novos tributos não pode superar a média histórica arrecadada, medida como percentual do PIB.</p>
+      <p><strong>Dois tetos (art. 130):</strong> o <strong>Teto de Referência da União</strong> (média da receita federal substituída — PIS, COFINS, IPI e IOF-seguros — de 2012 a 2021, em % do PIB) e o <strong>Teto de Referência Total</strong> (que soma também ICMS e ISS).</p>
+      <p><strong>Revisão automática:</strong> a arrecadação efetiva dos novos tributos é comparada com esses tetos ao longo da transição (arrecadação de 2027–2028 para o teto da União; de 2029–2033 para o teto total). Se ultrapassar, as <strong>alíquotas de referência são reduzidas</strong> proporcionalmente. É esse mecanismo que sustenta a alíquota estimada de ~26,5%.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-header" onclick="toggleAcc(this)"><div class="acc-left"><div class="acc-title">Fundos da transição — FNDR e compensação de benefícios</div><div class="acc-sub">EC 132/2023 · CF, art. 159-A · ADCT, art. 125</div></div><div class="acc-icon">+</div></div>
+    <div class="acc-body">
+      <p><strong>Fundo Nacional de Desenvolvimento Regional (FNDR):</strong> aportes crescentes da União aos estados e ao DF para reduzir desigualdades regionais — ocupa o espaço da antiga "guerra fiscal" do ICMS, agora inviável com a tributação no destino. Distribuição por critérios de população e do Fundo de Participação dos Estados (FPE). CF, art. 159-A.</p>
+      <p><strong>Fundo de Compensação de Benefícios Fiscais ou Financeiro-Fiscais:</strong> criado para compensar, até 31/12/2032, empresas titulares de benefícios onerosos de ICMS concedidos por prazo certo e sob condição. Financiado pela União. ADCT (art. 125, §3º, II, entre outros).</p>
     </div>
   </div>
 </section>
