@@ -917,7 +917,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 Paragraph(pis_txt, ST["cell_r"]),
                 Paragraph(c.get("descricao", ""), ST["cell_l"]),
             ])
-        t_cron = Table(cron_rows, colWidths=[1.2*cm, 1.4*cm, 1.4*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.7*cm, None])
+        t_cron = Table(cron_rows, colWidths=[1.6*cm, 1.4*cm, 1.4*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.7*cm, None])
         t_cron.setStyle(_table_style(BRAND))
         story.append(t_cron)
     except Exception:
