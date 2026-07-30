@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/py", tags=["pdf"])
 
 # ─── Palette ─────────────────────────────────────────────────────────────────
 BRAND     = colors.HexColor("#0070F3")
+NAVY      = colors.HexColor("#0D2340")
 EMERALD   = colors.HexColor("#10B981")
 AMBER     = colors.HexColor("#F59E0B")
 RED_C     = colors.HexColor("#EF4444")
@@ -55,6 +56,8 @@ def _styles() -> dict:
     return {
         "title":          s("T",    fontName="Helvetica-Bold",    fontSize=26, textColor=INK_900, leading=30, spaceAfter=4),
         "subtitle":       s("ST",   fontName="Helvetica",         fontSize=13, textColor=INK_600, leading=18, spaceAfter=2),
+        "title_inv":      s("TI",   fontName="Helvetica-Bold",    fontSize=22, textColor=WHITE,   leading=26, spaceAfter=4),
+        "subtitle_inv":   s("STI",  fontName="Helvetica",         fontSize=11, textColor=colors.HexColor("#A8C4E0"), leading=16, spaceAfter=0),
         "h1":             s("H1",   fontName="Helvetica-Bold",    fontSize=13, textColor=INK_900, leading=18, spaceBefore=14, spaceAfter=5),
         "h2":             s("H2",   fontName="Helvetica-Bold",    fontSize=11, textColor=INK_900, leading=15, spaceBefore=10, spaceAfter=4),
         "h3":             s("H3",   fontName="Helvetica-Bold",    fontSize=10, textColor=INK_700, leading=14, spaceBefore=8,  spaceAfter=3),
@@ -392,36 +395,34 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     story = []
 
     # ── CAPA ────────────────────────────────────────────────────────────────
-    story.append(ColorBar(BRAND, height=6))
-    story.append(Spacer(1, 18))
-
-    # Logo + título lado a lado
     _logo_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'conflex-logo.png'))
     _logo_cell: list = []
     if os.path.exists(_logo_path):
-        _logo = Image(_logo_path, width=4.8*cm, height=4.8*cm/4.15)
+        _logo = Image(_logo_path, width=5.2*cm, height=5.2*cm/4.15)
         _logo.hAlign = "RIGHT"
         _logo_cell = [_logo]
 
     _capa_hdr = Table(
         [[
-            [Paragraph("Estudo Tributário", ST["title"]),
-             Paragraph("Análise Comparativa de Regimes — Sistema Atual e Reforma Tributária (LC 214/2025)", ST["subtitle"])],
+            [Paragraph("Estudo Tributário", ST["title_inv"]),
+             Paragraph("Análise Comparativa de Regimes — Sistema Atual e Reforma Tributária (LC 214/2025)", ST["subtitle_inv"])],
             _logo_cell or [Paragraph("", ST["body"])],
         ]],
-        colWidths=[None, 5.2*cm],
+        colWidths=[None, 5.6*cm],
     )
     _capa_hdr.setStyle(TableStyle([
-        ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING",  (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-        ("TOPPADDING",   (0, 0), (-1, -1), 0),
-        ("BOTTOMPADDING",(0, 0), (-1, -1), 0),
-        ("ALIGN",        (1, 0), (1, 0), "RIGHT"),
+        ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING",   (0, 0), (0, 0),   18),
+        ("RIGHTPADDING",  (0, 0), (0, 0),   8),
+        ("TOPPADDING",    (0, 0), (-1, -1), 18),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
+        ("LEFTPADDING",   (1, 0), (1, 0),   8),
+        ("RIGHTPADDING",  (1, 0), (1, 0),   16),
+        ("ALIGN",         (1, 0), (1, 0),   "RIGHT"),
     ]))
     story.append(_capa_hdr)
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=12))
+    story.append(Spacer(1, 14))
 
     info_rows = [[Paragraph("<b>Empresa</b>", ST["cell_bold"]), Paragraph(inp.razao_social, ST["cell_l"])]]
     if inp.cnpj:
