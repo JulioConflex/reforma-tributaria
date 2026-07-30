@@ -224,7 +224,7 @@ def _memoria_regime_tables(
             Paragraph("Valor", ST["cell_header"]),
         ]]
         for d in res_atual.detalhes:
-            aliq_txt = f"{d.alíquota_aplicada:.2f}%" if d.alíquota_aplicada else "—"
+            aliq_txt = f"{d.aliquota_aplicada:.2f}%" if d.aliquota_aplicada else "—"
             formula_txt = d.formula or "—"
             row = [
                 Paragraph(d.nome, ST["mem_nome"]),
@@ -285,7 +285,7 @@ def _memoria_regime_tables(
             Paragraph("Valor", ST["cell_header"]),
         ]]
         for d in res_novo.detalhes:
-            aliq_txt = f"{d.alíquota_aplicada:.2f}%" if d.alíquota_aplicada else "—"
+            aliq_txt = f"{d.aliquota_aplicada:.2f}%" if d.aliquota_aplicada else "—"
             formula_txt = d.formula or "—"
             style = ST["mem_info"] if d.informativo else ST["mem_formula"]
             val_style = ST["mem_info"] if d.informativo else ST["mem_valor"]
@@ -1038,8 +1038,8 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
 
 # ─── Route ───────────────────────────────────────────────────────────────────
-@router.post("/gerar-estudo-tributário")
-def gerar_estudo_tributário(inp: EstudoInput):
+@router.post("/gerar-estudo-tributario")
+def gerar_estudo_tributario(inp: EstudoInput):
     pdf_bytes = _build_pdf(inp)
     nome = inp.razao_social.replace(" ", "_")[:40]
     filename = f"Estudo_Tributário_{nome}_{inp.comparador.ano}.pdf"
