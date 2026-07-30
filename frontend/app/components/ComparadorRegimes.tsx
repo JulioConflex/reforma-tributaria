@@ -37,9 +37,10 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   const [pdfForm, setPdfForm] = useState({
     razao_social: "",
     cnpj: "",
-    premissas: "",
-    objetivos: "",
-    observacoes: "",
+    regime_atual: "",
+    resultado_financeiro: "",
+    perfil_clientes: "",
+    objetivo_estudo: "",
     contador_nome: "",
     contador_crc: "",
   });
@@ -401,7 +402,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
               </div>
 
               {/* Modal body */}
-              <div className="overflow-y-auto px-6 py-5 space-y-4 flex-1">
+              <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
                 {pdfGerado && (
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[13px] text-emerald-800 font-medium flex items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -414,60 +415,136 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                   <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700">{pdfErro}</div>
                 )}
 
-                <div>
-                  <FieldLabel>Razão Social <span className="text-red-500">*</span></FieldLabel>
-                  <input
-                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
-                    placeholder="Nome completo da empresa"
-                    value={pdfForm.razao_social}
-                    onChange={(e) => setPdfForm((f) => ({ ...f, razao_social: e.target.value }))}
-                  />
+                {/* Identificação */}
+                <div className="grid grid-cols-[1fr_auto] gap-3">
+                  <div>
+                    <FieldLabel>Razão Social <span className="text-red-500">*</span></FieldLabel>
+                    <input
+                      className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                      placeholder="Nome completo da empresa"
+                      value={pdfForm.razao_social}
+                      onChange={(e) => setPdfForm((f) => ({ ...f, razao_social: e.target.value }))}
+                    />
+                  </div>
+                  <div className="w-44">
+                    <FieldLabel>CNPJ <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
+                    <input
+                      className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                      placeholder="00.000.000/0001-00"
+                      value={pdfForm.cnpj}
+                      onChange={(e) => setPdfForm((f) => ({ ...f, cnpj: e.target.value }))}
+                    />
+                  </div>
                 </div>
 
+                {/* Regime atual */}
                 <div>
-                  <FieldLabel>CNPJ <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
-                  <input
-                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
-                    placeholder="00.000.000/0001-00"
-                    value={pdfForm.cnpj}
-                    onChange={(e) => setPdfForm((f) => ({ ...f, cnpj: e.target.value }))}
-                  />
+                  <FieldLabel>Regime tributário atual</FieldLabel>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {[
+                      { v: "mei", l: "MEI" },
+                      { v: "simples_nacional", l: "Simples Nacional" },
+                      { v: "lucro_presumido", l: "Lucro Presumido" },
+                      { v: "lucro_real", l: "Lucro Real" },
+                    ].map(({ v, l }) => (
+                      <button
+                        key={v}
+                        onClick={() => setPdfForm((f) => ({ ...f, regime_atual: f.regime_atual === v ? "" : v }))}
+                        className={`px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all ${
+                          pdfForm.regime_atual === v
+                            ? "bg-brand-500 text-white border-brand-500"
+                            : "bg-white text-ink-600 border-ink-200 hover:border-brand-300 hover:text-brand-600"
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
+                {/* Resultado financeiro */}
                 <div>
-                  <FieldLabel>Premissas <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
-                  <textarea
-                    rows={3}
-                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
-                    placeholder="Ex: empresa do Simples Nacional, setor de serviços, regime atual ISS 5%..."
-                    value={pdfForm.premissas}
-                    onChange={(e) => setPdfForm((f) => ({ ...f, premissas: e.target.value }))}
-                  />
+                  <FieldLabel>Resultado financeiro atual</FieldLabel>
+                  <div className="flex gap-2 mt-1">
+                    {[
+                      { v: "lucrativa", l: "Lucrativa", cor: "emerald" },
+                      { v: "equilibrio", l: "Em equilíbrio", cor: "amber" },
+                      { v: "prejuizo", l: "Em prejuízo", cor: "red" },
+                    ].map(({ v, l, cor }) => {
+                      const sel = pdfForm.resultado_financeiro === v;
+                      const paleta: Record<string, string> = {
+                        emerald: sel ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-ink-600 border-ink-200 hover:border-emerald-300 hover:text-emerald-700",
+                        amber:   sel ? "bg-amber-400 text-white border-amber-400"   : "bg-white text-ink-600 border-ink-200 hover:border-amber-300 hover:text-amber-700",
+                        red:     sel ? "bg-red-500 text-white border-red-500"       : "bg-white text-ink-600 border-ink-200 hover:border-red-300 hover:text-red-600",
+                      };
+                      return (
+                        <button
+                          key={v}
+                          onClick={() => setPdfForm((f) => ({ ...f, resultado_financeiro: f.resultado_financeiro === v ? "" : v }))}
+                          className={`flex-1 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all ${paleta[cor]}`}
+                        >
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
+                {/* Perfil de clientes */}
                 <div>
-                  <FieldLabel>Objetivos do estudo <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
-                  <textarea
-                    rows={2}
-                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
-                    placeholder="Ex: avaliar viabilidade de mudança de regime antes de 2027..."
-                    value={pdfForm.objetivos}
-                    onChange={(e) => setPdfForm((f) => ({ ...f, objetivos: e.target.value }))}
-                  />
+                  <FieldLabel>Perfil dos clientes</FieldLabel>
+                  <p className="text-[11px] text-ink-400 mb-1.5">Impacta a análise de crédito CBS/IBS cedido ao cliente.</p>
+                  <div className="flex gap-2 mt-1">
+                    {[
+                      { v: "pf", l: "Maioria Pessoa Física", sub: "B2C" },
+                      { v: "pj", l: "Maioria Pessoa Jurídica", sub: "B2B" },
+                      { v: "misto", l: "Misto", sub: "PF + PJ" },
+                    ].map(({ v, l, sub }) => {
+                      const sel = pdfForm.perfil_clientes === v;
+                      return (
+                        <button
+                          key={v}
+                          onClick={() => setPdfForm((f) => ({ ...f, perfil_clientes: f.perfil_clientes === v ? "" : v }))}
+                          className={`flex-1 py-2 rounded-lg text-[12px] font-medium border transition-all flex flex-col items-center gap-0.5 ${
+                            sel ? "bg-brand-500 text-white border-brand-500" : "bg-white text-ink-600 border-ink-200 hover:border-brand-300 hover:text-brand-600"
+                          }`}
+                        >
+                          <span>{l}</span>
+                          <span className={`text-[10px] font-normal ${sel ? "text-brand-100" : "text-ink-400"}`}>{sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
+                {/* Objetivo */}
                 <div>
-                  <FieldLabel>Observações adicionais <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
-                  <textarea
-                    rows={2}
-                    className="w-full border border-ink-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
-                    placeholder="Qualquer informação adicional relevante..."
-                    value={pdfForm.observacoes}
-                    onChange={(e) => setPdfForm((f) => ({ ...f, observacoes: e.target.value }))}
-                  />
+                  <FieldLabel>Objetivo do estudo</FieldLabel>
+                  <div className="flex flex-col gap-2 mt-1">
+                    {[
+                      { v: "comparar", l: "Comparar regimes disponíveis", d: "Análise neutra — qual regime paga menos?" },
+                      { v: "mudanca", l: "Planejar mudança de regime", d: "Foco em viabilidade e timing de transição" },
+                      { v: "reforma", l: "Avaliar impacto da Reforma Tributária", d: "Foco nos efeitos do CBS/IBS a partir de 2027" },
+                    ].map(({ v, l, d }) => {
+                      const sel = pdfForm.objetivo_estudo === v;
+                      return (
+                        <button
+                          key={v}
+                          onClick={() => setPdfForm((f) => ({ ...f, objetivo_estudo: f.objetivo_estudo === v ? "" : v }))}
+                          className={`w-full text-left px-4 py-2.5 rounded-xl border transition-all ${
+                            sel ? "bg-brand-50 border-brand-400 ring-1 ring-brand-200" : "bg-white border-ink-200 hover:border-brand-200"
+                          }`}
+                        >
+                          <div className={`text-[13px] font-semibold ${sel ? "text-brand-700" : "text-ink-800"}`}>{l}</div>
+                          <div className={`text-[11.5px] mt-0.5 ${sel ? "text-brand-500" : "text-ink-400"}`}>{d}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Contador */}
+                <div className="grid grid-cols-2 gap-3 pt-1 border-t border-ink-100">
                   <div>
                     <FieldLabel>Nome do contador <span className="text-ink-400 font-normal">(opcional)</span></FieldLabel>
                     <input
@@ -492,7 +569,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
               {/* Modal footer */}
               <div className="px-6 py-4 border-t border-ink-100 flex items-center justify-between gap-3 bg-ink-50/50">
                 <p className="text-[11px] text-ink-400 leading-tight max-w-xs">
-                  O PDF usa os dados do comparador já calculados. O campo Razão Social é obrigatório.
+                  Os dados do comparador já estão incluídos. Apenas a Razão Social é obrigatória.
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
