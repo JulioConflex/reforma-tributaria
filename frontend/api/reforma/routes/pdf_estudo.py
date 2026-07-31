@@ -378,12 +378,51 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     def on_page(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(BRAND)
+        fh = 42          # altura do rodapé em pontos
+        lw = 135         # alcance horizontal de cada aba diagonal
+
+        # barra azul no topo
+        canvas.setFillColor(NAVY)
         canvas.rect(0, H - 8, W, 8, fill=1, stroke=0)
+
+        # linha separadora acima do rodapé
+        canvas.setStrokeColor(INK_400)
+        canvas.setLineWidth(0.35)
+        canvas.line(0, fh, W, fh)
+
+        # aba esquerda
+        canvas.setFillColor(NAVY)
+        p = canvas.beginPath()
+        p.moveTo(0, 0)
+        p.lineTo(0, fh)
+        p.lineTo(lw - 24, fh)
+        p.lineTo(lw, 0)
+        p.close()
+        canvas.drawPath(p, fill=1, stroke=0)
+
+        # aba direita
+        p = canvas.beginPath()
+        p.moveTo(W, 0)
+        p.lineTo(W, fh)
+        p.lineTo(W - lw + 24, fh)
+        p.lineTo(W - lw, 0)
+        p.close()
+        canvas.drawPath(p, fill=1, stroke=0)
+
+        # número da página (branco, dentro da aba direita)
+        canvas.setFont("Helvetica-Bold", 8.5)
+        canvas.setFillColor(WHITE)
+        canvas.drawCentredString(W - lw / 2 - 4, fh / 2 - 4, str(doc.page))
+
+        # endereço centralizado entre as abas
         canvas.setFont("Helvetica", 7.5)
-        canvas.setFillColor(INK_400)
-        canvas.drawCentredString(W/2, 14, "Conflex Contabilidade — Rua XV de novembro, 1155, 10 Andar, Curitiba/PR — (41) 3277-1313")
-        canvas.drawRightString(W - margin, 14, f"Pag. {doc.page}")
+        canvas.setFillColor(INK_600)
+        canvas.drawCentredString(
+            W / 2, fh / 2 + 5,
+            "Rua XV de novembro, 1155, 10º Andar – Centro | Curitiba | Paraná | www.conflex.com.br",
+        )
+        canvas.drawCentredString(W / 2, fh / 2 - 8, "Telefone – (41) 3277-1313")
+
         canvas.restoreState()
 
     doc = SimpleDocTemplate(
