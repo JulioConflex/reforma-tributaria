@@ -16,6 +16,7 @@ from reportlab.platypus import (
     HRFlowable, PageBreak, KeepTogether, Image,
 )
 from reportlab.platypus.flowables import Flowable
+from reportlab.platypus.frames import Frame as PDFFrame
 
 from ..engine.calculadora import (
     calcular_sistema_atual, calcular_sistema_novo, _irpj_csll_por_operacao,
@@ -40,6 +41,17 @@ WHITE     = colors.white
 EMRLD_50  = colors.HexColor("#ECFDF5")
 EMRLD_100 = colors.HexColor("#D1FAE5")
 EMRLD_200 = colors.HexColor("#A7F3D0")
+
+_FOOTER_STYLE = ParagraphStyle(
+    "footer_addr",
+    fontName="Helvetica",
+    fontSize=7.5,
+    textColor=INK_600,
+    alignment=TA_CENTER,
+    leading=11,
+    spaceAfter=0,
+    spaceBefore=0,
+)
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 def brl(value: float) -> str:
@@ -419,14 +431,23 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         canvas.setFillColor(WHITE)
         canvas.drawCentredString(W - lw / 2 - 4, fh / 2 - 4, str(doc.page))
 
-        # endereco centralizado entre as abas (somente ASCII-safe + Latin-1)
-        canvas.setFont("Helvetica", 7.5)
-        canvas.setFillColor(INK_600)
-        canvas.drawCentredString(
-            W / 2, fh / 2 + 5,
-            "Rua XV de novembro, 1155, 10\xba Andar | Centro | Curitiba | Paran\xe1 | www.conflex.com.br",
+        # endereco via Paragraph para suporte completo a Unicode (en-dash, etc.)
+        footer_paras = [
+            Paragraph(
+                "Rua XV de novembro, 1155, 10º Andar – Centro"
+                " | Curitiba | Paraná | www.conflex.com.br",
+                _FOOTER_STYLE,
+            ),
+            Paragraph("Telefone – 3277-1313", _FOOTER_STYLE),
+        ]
+        text_x = lw + 10
+        text_w = W - 2.0 * lw - 20
+        text_frame = PDFFrame(
+            text_x, 0, text_w, fh,
+            leftPadding=0, rightPadding=0, topPadding=8, bottomPadding=4,
+            showBoundary=False,
         )
-        canvas.drawCentredString(W / 2, fh / 2 - 8, "Telefone: (41) 3277-1313")
+        text_frame.addFromList(footer_paras, canvas)
 
         canvas.restoreState()
 
@@ -584,10 +605,12 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         sec += 1
 
     # ── 2. COMPARATIVO — SISTEMA ATUAL ───────────────────────────────────────
-    story.append(Paragraph(f"{sec}. Sistema Atual — Carga por Regime", ST["h1"]))
-    story.append(Paragraph(
-        f"Carga tributária por operação de {brl(comp.valor_base)}, incluindo IRPJ/CSLL atribuivel.",
-        ST["body"]))
+    story.append(KeepTogether([
+        Paragraph(f"{sec}. Sistema Atual — Carga por Regime", ST["h1"]),
+        Paragraph(
+            f"Carga tributária por operação de {brl(comp.valor_base)}, incluindo IRPJ/CSLL atribuivel.",
+            ST["body"]),
+    ]))
 
     hdr_a = [Paragraph("Regime", ST["cell_header_l"]),
               Paragraph("Carga Total", ST["cell_header"]),
@@ -608,7 +631,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         else:
             rows_a.append([nome_p, Paragraph("--", ST["cell_r"]),
                            Paragraph("--", ST["cell_r"]), Paragraph("Vedado", ST["badge_no"])])
-    t_a = Table(rows_a, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm])
+    t_a = Table(rows_a, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm], repeatRows=1)
     t_a.setStyle(_table_style())
     story.append(t_a)
     sec += 1
@@ -640,14 +663,17 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         else:
             rows_n.append([nome_p, Paragraph("--", ST["cell_r"]),
                            Paragraph("--", ST["cell_r"]), Paragraph("Vedado", ST["badge_no"])])
-    t_n = Table(rows_n, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm])
+    t_n = Table(rows_n, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm], repeatRows=1)
     t_n.setStyle(_table_style(EMERALD))
     story.append(t_n)
     sec += 1
 
     # ── 4. VARIACAO ───────────────────────────────────────────────────────────
-    story.append(Spacer(1, 14))
-    story.append(Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]))
+    story.append(KeepTogether([
+        Spacer(1, 14),
+        Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
+        Spacer(1, 4),
+    ]))
     hdr_v = [Paragraph("Regime", ST["cell_header_l"]),
               Paragraph("Atual", ST["cell_header"]),
               Paragraph("Novo", ST["cell_header"]),
@@ -675,7 +701,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                            Paragraph(brl(eco), eco_s)])
         else:
             rows_v.append([nome_p] + [Paragraph("--", ST["cell_r"])] * 5)
-    t_v = Table(rows_v, colWidths=[5.0*cm, 3.0*cm, 3.0*cm, 3.0*cm, 2.5*cm, 3.5*cm])
+    t_v = Table(rows_v, colWidths=[5.0*cm, 3.0*cm, 3.0*cm, 3.0*cm, 2.5*cm, 3.5*cm], repeatRows=1)
     t_v.setStyle(_table_style(INK_600))
     story.append(t_v)
     sec += 1
@@ -730,8 +756,11 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         sec += 1
 
     # ── CONCLUSAO E RECOMENDACAO (pagina 2) ──────────────────────────────────
-    story.append(Spacer(1, 14))
-    story.append(Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]))
+    story.append(KeepTogether([
+        Spacer(1, 14),
+        Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]),
+        Spacer(1, 4),
+    ]))
     melhor_obj2 = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
 
     if "mudanca" in objs and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
@@ -888,7 +917,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         rows_brl.append(var_row)
 
         col_w = [3.8*cm] + [1.65*cm] * 8
-        t_brl = Table(rows_brl, colWidths=col_w)
+        t_brl = Table(rows_brl, colWidths=col_w, repeatRows=1)
         tbl_style_ano = TableStyle([
             ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
             ("ROWBACKGROUNDS",(0, 1), (-1, -2), [WHITE, INK_50]),
@@ -904,8 +933,10 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("BACKGROUND",    (ref_col, 1), (ref_col, -2), EMRLD_50),
         ])
         t_brl.setStyle(tbl_style_ano)
-        story.append(Paragraph("Valor total dos tributos por operação (R$, sem centavos)", ST["label"]))
-        story.append(Spacer(1, 3))
+        story.append(KeepTogether([
+            Paragraph("Valor total dos tributos por operação (R$, sem centavos)", ST["label"]),
+            Spacer(1, 3),
+        ]))
         story.append(t_brl)
         story.append(Spacer(1, 3))
         story.append(Paragraph(
@@ -937,7 +968,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                     pct_row.append(Paragraph("--", ST["cell_r"]))
             rows_pct.append(pct_row)
 
-        t_pct = Table(rows_pct, colWidths=col_w)
+        t_pct = Table(rows_pct, colWidths=col_w, repeatRows=1)
         tbl_style_pct = TableStyle([
             ("BACKGROUND",    (0, 0), (-1, 0), INK_600),
             ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
@@ -951,8 +982,10 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("BACKGROUND",    (ref_col, 1), (ref_col, -1), EMRLD_50),
         ])
         t_pct.setStyle(tbl_style_pct)
-        story.append(Paragraph("Carga tributária como % do valor da operação", ST["label"]))
-        story.append(Spacer(1, 3))
+        story.append(KeepTogether([
+            Paragraph("Carga tributária como % do valor da operação", ST["label"]),
+            Spacer(1, 3),
+        ]))
         story.append(t_pct)
         story.append(Spacer(1, 3))
         story.append(Paragraph(
@@ -967,13 +1000,15 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── 7. MEMORIA DE CALCULO ────────────────────────────────────────────────
     story.append(PageBreak())
-    story.append(Paragraph(f"{sec}. Memória de Cálculo — Detalhamento por Tributo e por Regime", ST["h1"]))
-    story.append(Paragraph(
-        f"Detalhamento completo de cada tributo nas duas fases (sistema atual e novo sistema em {comp.ano}), "
-        f"para uma operação de {brl(comp.valor_base)} no setor {comp.setor}, UF {comp.uf}. "
-        "Fórmulas com base legal citada. Valores de IRPJ/CSLL estimados proporcionalmente por operação.",
-        ST["body_j"]))
-    story.append(Spacer(1, 6))
+    story.append(KeepTogether([
+        Paragraph(f"{sec}. Memória de Cálculo — Detalhamento por Tributo e por Regime", ST["h1"]),
+        Paragraph(
+            f"Detalhamento completo de cada tributo nas duas fases (sistema atual e novo sistema em {comp.ano}), "
+            f"para uma operação de {brl(comp.valor_base)} no setor {comp.setor}, UF {comp.uf}. "
+            "Fórmulas com base legal citada. Valores de IRPJ/CSLL estimados proporcionalmente por operação.",
+            ST["body_j"]),
+        Spacer(1, 6),
+    ]))
 
     if setor_obj is not None and cron_obj is not None:
         for r in comp.comparativo:
@@ -1011,11 +1046,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── 7. CRONOGRAMA DE TRANSICAO ────────────────────────────────────────────
-    story.append(Spacer(1, 14))
-    story.append(Paragraph(f"{sec}. Cronograma da Transição Tributária (2026-2033)", ST["h1"]))
-    story.append(Paragraph(
-        "Evolucao das alíquotas de CBS, IBS e dos fatores de transição conforme LC 214/2025.",
-        ST["body"]))
+    story.append(KeepTogether([
+        Spacer(1, 14),
+        Paragraph(f"{sec}. Cronograma da Transição Tributária (2026-2033)", ST["h1"]),
+        Paragraph(
+            "Evolucao das alíquotas de CBS, IBS e dos fatores de transição conforme LC 214/2025.",
+            ST["body"]),
+    ]))
 
     try:
         cron_rows = [[
@@ -1041,7 +1078,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 Paragraph(pis_txt, ST["cell_r"]),
                 Paragraph(c.get("descricao", ""), ST["cell_l"]),
             ])
-        t_cron = Table(cron_rows, colWidths=[1.6*cm, 1.4*cm, 1.4*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.7*cm, None])
+        t_cron = Table(cron_rows, colWidths=[1.6*cm, 1.4*cm, 1.4*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.7*cm, None], repeatRows=1)
         t_cron.setStyle(_table_style(BRAND))
         story.append(t_cron)
     except Exception:
@@ -1049,8 +1086,11 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── 8. REFORMA TRIBUTARIA ─────────────────────────────────────────────────
-    story.append(Spacer(1, 14))
-    story.append(Paragraph(f"{sec}. O que Muda com a Reforma Tributária", ST["h1"]))
+    story.append(KeepTogether([
+        Spacer(1, 14),
+        Paragraph(f"{sec}. O que Muda com a Reforma Tributária", ST["h1"]),
+        Spacer(1, 4),
+    ]))
     for titulo, texto in [
         ("A partir de 2027", "criacao da CBS, tributo federal que substitui o PIS e a COFINS."),
         ("A partir de 2029", "criacao do IBS, que substitui o ISS e o ICMS, com transição progressiva até 2032."),
