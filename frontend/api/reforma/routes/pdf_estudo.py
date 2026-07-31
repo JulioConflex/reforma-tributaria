@@ -435,7 +435,6 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         buf, pagesize=A4,
         leftMargin=margin, rightMargin=margin,
         topMargin=margin + 4, bottomMargin=margin,
-        onFirstPage=on_page, onLaterPages=on_page,
     )
     story = []
 
@@ -1100,7 +1099,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         story.append(Paragraph("Conflex Contabilidade", ST["body"]))
         story.append(Paragraph(f"Data: {today}", ST["small"]))
 
-    doc.build(story)
+    doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
     return buf.getvalue()
 
 
