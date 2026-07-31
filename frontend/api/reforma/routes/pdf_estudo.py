@@ -434,7 +434,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
         leftMargin=margin, rightMargin=margin,
-        topMargin=margin + 4, bottomMargin=margin,
+        topMargin=margin + 4, bottomMargin=margin + 10,
     )
     story = []
 
@@ -584,13 +584,6 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         sec += 1
 
     # ── 2. COMPARATIVO — SISTEMA ATUAL ───────────────────────────────────────
-    story.append(KeepTogether([
-        Paragraph(f"{sec}. Sistema Atual — Carga por Regime", ST["h1"]),
-        Paragraph(
-            f"Carga tributária por operação de {brl(comp.valor_base)}, incluindo IRPJ/CSLL atribuivel.",
-            ST["body"]),
-    ]))
-
     hdr_a = [Paragraph("Regime", ST["cell_header_l"]),
               Paragraph("Carga Total", ST["cell_header"]),
               Paragraph("% s/ Operação", ST["cell_header"]),
@@ -612,12 +605,17 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                            Paragraph("--", ST["cell_r"]), Paragraph("Vedado", ST["badge_no"])])
     t_a = Table(rows_a, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm], repeatRows=1)
     t_a.setStyle(_table_style())
-    story.append(t_a)
+    story.append(KeepTogether([
+        Paragraph(f"{sec}. Sistema Atual — Carga por Regime", ST["h1"]),
+        Paragraph(
+            f"Carga tributária por operação de {brl(comp.valor_base)}, incluindo IRPJ/CSLL atribuivel.",
+            ST["body"]),
+        t_a,
+    ]))
     sec += 1
 
     # ── 3. COMPARATIVO — NOVO SISTEMA ────────────────────────────────────────
     story.append(PageBreak())
-    story.append(Paragraph(f"{sec}. Novo Sistema ({comp.ano}) — Carga por Regime", ST["h1"]))
     sorted_disp = sorted(disponiveis, key=lambda x: x.total_novo or 0)
     ranking = {r.regime: i + 1 for i, r in enumerate(sorted_disp)}
 
@@ -644,15 +642,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                            Paragraph("--", ST["cell_r"]), Paragraph("Vedado", ST["badge_no"])])
     t_n = Table(rows_n, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm], repeatRows=1)
     t_n.setStyle(_table_style(EMERALD))
-    story.append(t_n)
+    story.append(KeepTogether([
+        Paragraph(f"{sec}. Novo Sistema ({comp.ano}) — Carga por Regime", ST["h1"]),
+        t_n,
+    ]))
     sec += 1
 
     # ── 4. VARIACAO ───────────────────────────────────────────────────────────
-    story.append(KeepTogether([
-        Spacer(1, 8),
-        Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
-        Spacer(1, 3),
-    ]))
     hdr_v = [Paragraph("Regime", ST["cell_header_l"]),
               Paragraph("Atual", ST["cell_header"]),
               Paragraph("Novo", ST["cell_header"]),
@@ -682,7 +678,12 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             rows_v.append([nome_p] + [Paragraph("--", ST["cell_r"])] * 5)
     t_v = Table(rows_v, colWidths=[5.0*cm, 3.0*cm, 3.0*cm, 3.0*cm, 2.5*cm, 3.5*cm], repeatRows=1)
     t_v.setStyle(_table_style(INK_600))
-    story.append(t_v)
+    story.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
+        Spacer(1, 3),
+        t_v,
+    ]))
     sec += 1
 
     # ── 5. DESTAQUE DO MELHOR REGIME ─────────────────────────────────────────
