@@ -401,6 +401,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         p.lineTo(lw - 24, fh)
         p.lineTo(lw, 0)
         p.close()
+        canvas.setFillColor(NAVY)
         canvas.drawPath(p, fill=1, stroke=0)
 
         # aba direita
@@ -410,21 +411,22 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         p.lineTo(W - lw + 24, fh)
         p.lineTo(W - lw, 0)
         p.close()
+        canvas.setFillColor(NAVY)
         canvas.drawPath(p, fill=1, stroke=0)
 
-        # número da página (branco, dentro da aba direita)
+        # numero da pagina (branco, dentro da aba direita)
         canvas.setFont("Helvetica-Bold", 8.5)
         canvas.setFillColor(WHITE)
         canvas.drawCentredString(W - lw / 2 - 4, fh / 2 - 4, str(doc.page))
 
-        # endereço centralizado entre as abas
+        # endereco centralizado entre as abas (somente ASCII-safe + Latin-1)
         canvas.setFont("Helvetica", 7.5)
         canvas.setFillColor(INK_600)
         canvas.drawCentredString(
             W / 2, fh / 2 + 5,
-            "Rua XV de novembro, 1155, 10º Andar – Centro | Curitiba | Paraná | www.conflex.com.br",
+            "Rua XV de novembro, 1155, 10\xba Andar | Centro | Curitiba | Paran\xe1 | www.conflex.com.br",
         )
-        canvas.drawCentredString(W / 2, fh / 2 - 8, "Telefone – (41) 3277-1313")
+        canvas.drawCentredString(W / 2, fh / 2 - 8, "Telefone: (41) 3277-1313")
 
         canvas.restoreState()
 
@@ -450,7 +452,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
              Paragraph("Análise Comparativa de Regimes — Sistema Atual e Reforma Tributária (LC 214/2025)", ST["subtitle_inv"])],
             _logo_cell or [Paragraph("", ST["body"])],
         ]],
-        colWidths=[None, 5.6*cm],
+        colWidths=[W - 2 * margin - 5.6 * cm, 5.6 * cm],
     )
     _capa_hdr.setStyle(TableStyle([
         ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
