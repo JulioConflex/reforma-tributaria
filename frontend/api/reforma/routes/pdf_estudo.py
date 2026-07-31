@@ -59,9 +59,9 @@ def _styles() -> dict:
         "subtitle":       s("ST",   fontName="Helvetica",         fontSize=13, textColor=INK_600, leading=18, spaceAfter=2),
         "title_inv":      s("TI",   fontName="Helvetica-Bold",    fontSize=22, textColor=WHITE,   leading=26, spaceAfter=4),
         "subtitle_inv":   s("STI",  fontName="Helvetica",         fontSize=11, textColor=colors.HexColor("#A8C4E0"), leading=16, spaceAfter=0),
-        "h1":             s("H1",   fontName="Helvetica-Bold",    fontSize=13, textColor=INK_900, leading=18, spaceBefore=14, spaceAfter=5),
-        "h2":             s("H2",   fontName="Helvetica-Bold",    fontSize=11, textColor=INK_900, leading=15, spaceBefore=10, spaceAfter=4),
-        "h3":             s("H3",   fontName="Helvetica-Bold",    fontSize=10, textColor=INK_700, leading=14, spaceBefore=8,  spaceAfter=3),
+        "h1":             s("H1",   fontName="Helvetica-Bold",    fontSize=13, textColor=INK_900, leading=18, spaceBefore=4,  spaceAfter=4),
+        "h2":             s("H2",   fontName="Helvetica-Bold",    fontSize=11, textColor=INK_900, leading=15, spaceBefore=5,  spaceAfter=3),
+        "h3":             s("H3",   fontName="Helvetica-Bold",    fontSize=10, textColor=INK_700, leading=14, spaceBefore=4,  spaceAfter=2),
         "label":          s("LBL",  fontName="Helvetica-Bold",    fontSize=9,  textColor=INK_600, leading=12, spaceAfter=1),
         "body":           s("BD",   fontName="Helvetica",         fontSize=10, textColor=INK_600, leading=15, spaceAfter=4),
         "body_j":         s("BDJ",  fontName="Helvetica",         fontSize=10, textColor=INK_600, leading=15, spaceAfter=4, alignment=TA_JUSTIFY),
@@ -353,7 +353,7 @@ def _memoria_regime_tables(
     except Exception:
         elements.append(Paragraph("Dados insuficientes para calcular novo sistema.", ST["small"]))
 
-    elements.append(Spacer(1, 14))
+    elements.append(Spacer(1, 8))
     return elements
 
 
@@ -466,7 +466,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         ("ALIGN",         (1, 0), (1, 0),   "RIGHT"),
     ]))
     story.append(_capa_hdr)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 8))
 
     info_rows = [[Paragraph("<b>Empresa</b>", ST["cell_bold"]), Paragraph(inp.razao_social, ST["cell_l"])]]
     if inp.cnpj:
@@ -507,7 +507,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         ("LINEBELOW", (0, 0), (-1, -2), 0.3, INK_100),
     ]))
     story.append(info_t)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 8))
 
     # Intro
     objs = inp.objetivo_estudo
@@ -649,9 +649,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── 4. VARIACAO ───────────────────────────────────────────────────────────
     story.append(KeepTogether([
-        Spacer(1, 14),
+        Spacer(1, 8),
         Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
-        Spacer(1, 4),
+        Spacer(1, 3),
     ]))
     hdr_v = [Paragraph("Regime", ST["cell_header_l"]),
               Paragraph("Atual", ST["cell_header"]),
@@ -688,10 +688,10 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     # ── 5. DESTAQUE DO MELHOR REGIME ─────────────────────────────────────────
     melhor_obj = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
     if melhor_obj:
-        story.append(Spacer(1, 14))
+        story.append(Spacer(1, 8))
         story.append(KeepTogether([
             Paragraph(f"{sec}. Regime Mais Vantajoso para o Novo Sistema", ST["h1"]),
-            ColorBar(EMERALD, height=3), Spacer(1, 8),
+            ColorBar(EMERALD, height=3), Spacer(1, 5),
         ]))
         pior = max(disponiveis, key=lambda x: x.total_novo or 0)
         eco_op = (pior.total_novo or 0) - (melhor_obj.total_novo or 0)
@@ -736,9 +736,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── CONCLUSAO E RECOMENDACAO (pagina 2) ──────────────────────────────────
     story.append(KeepTogether([
-        Spacer(1, 14),
+        Spacer(1, 8),
         Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]),
-        Spacer(1, 4),
+        Spacer(1, 3),
     ]))
     melhor_obj2 = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
 
@@ -904,7 +904,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             f"Coluna destacada em verde = ano de referencia ({comp.ano}). Valores sem R$ para melhor leitura. Inclui IRPJ/CSLL estimado.",
             ST["small"]))
 
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 6))
 
         # Tabela de percentual sobre valor da operação
         hdr_pct = [Paragraph("Regime", ST["cell_header_l"])]
@@ -1008,7 +1008,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── 7. CRONOGRAMA DE TRANSICAO ────────────────────────────────────────────
     story.append(KeepTogether([
-        Spacer(1, 14),
+        Spacer(1, 8),
         Paragraph(f"{sec}. Cronograma da Transição Tributária (2026-2033)", ST["h1"]),
         Paragraph(
             "Evolucao das alíquotas de CBS, IBS e dos fatores de transição conforme LC 214/2025.",
@@ -1048,9 +1048,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── 8. REFORMA TRIBUTARIA ─────────────────────────────────────────────────
     story.append(KeepTogether([
-        Spacer(1, 14),
+        Spacer(1, 8),
         Paragraph(f"{sec}. O que Muda com a Reforma Tributária", ST["h1"]),
-        Spacer(1, 4),
+        Spacer(1, 3),
     ]))
     for titulo, texto in [
         ("A partir de 2027", "criacao da CBS, tributo federal que substitui o PIS e a COFINS."),
@@ -1081,15 +1081,15 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── ASSINATURA — sempre ao final de tudo ────────────────────────────────
-    story.append(Spacer(1, 24))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=10))
+    story.append(Spacer(1, 14))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=8))
     story.append(Paragraph(
         "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
         "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
         "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
         "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
         ST["disclaimer"]))
-    story.append(Spacer(1, 24))
+    story.append(Spacer(1, 14))
     story.append(Paragraph("______________________________", ST["body"]))
     if inp.contador_nome:
         story.append(Paragraph(inp.contador_nome, ST["body"]))
