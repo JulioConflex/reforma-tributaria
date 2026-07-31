@@ -222,7 +222,9 @@
       "is_aplicavel": false,
       "icms_padrao": null,
       "iss_padrao": 0.02,
-      "obs": "Redução de 60% conforme LC 214/2025, Art. 128, II e Art. 130 – serviços de saúde (Anexo III): hospitais, clínicas com internação, laboratórios. Simples Nacional: Anexo III. MEI incompatível com esta escala operacional."
+      "presuncao_irpj": 0.08,
+      "presuncao_csll": 0.12,
+      "obs": "Redução de 60% conforme LC 214/2025, Art. 128, II e Art. 130 – serviços de saúde (Anexo III): hospitais, clínicas com internação, laboratórios. IRPJ/CSLL: presunção hospitalar 8%/12% (RIR/2018 Art. 15, §1º, III e Solução de Consulta COSIT 21/2014). Simples Nacional: Anexo III. MEI incompatível com esta escala operacional."
     },
     {
       "id": "operadoras_planos_saude_odontologicos",
@@ -339,7 +341,9 @@
       "is_aplicavel": false,
       "icms_padrao": null,
       "iss_padrao": 0.025,
-      "obs": "Alíquota cheia. A redução de 60% do transporte coletivo de passageiros NÃO se aplica ao transporte de cargas. Simples Nacional: Anexo III. Transportador autônomo (TAC) pode ser MEI."
+      "presuncao_irpj": 0.08,
+      "presuncao_csll": 0.12,
+      "obs": "Alíquota cheia. A redução de 60% do transporte coletivo de passageiros NÃO se aplica ao transporte de cargas. IRPJ/CSLL: presunção de transporte de cargas 8%/12% (Lei 9.249/1995, Art. 15, §1º, II e Lei 9.430/1996). Simples Nacional: Anexo III. Transportador autônomo (TAC) pode ser MEI."
     },
     {
       "id": "construcao_civil",
@@ -353,7 +357,9 @@
       "is_aplicavel": false,
       "icms_padrao": null,
       "iss_padrao": 0.03,
-      "obs": "Alíquota cheia (regimes específicos de imóveis/incorporação têm regras próprias — ver setor imobiliário). Simples Nacional: Anexo IV — CPP não incluso no DAS; pago separadamente via GPS (20% da folha). MEI permitido para pedreiro, eletricista, pintor, encanador e outros oficiais da construção."
+      "presuncao_irpj": 0.08,
+      "presuncao_csll": 0.12,
+      "obs": "Alíquota cheia (regimes específicos de imóveis/incorporação têm regras próprias — ver setor imobiliário). IRPJ/CSLL: empreitada total (material + mão de obra) usa presunção 8%/12% (Lei 9.249/1995, Art. 15, §1º, I); empreitada só de mão de obra usa 32%/32% — aplicado 8%/12% como padrão. Simples Nacional: Anexo IV — CPP não incluso no DAS; pago separadamente via GPS (20% da folha). MEI permitido para pedreiro, eletricista, pintor, encanador e outros oficiais da construção."
     },
     {
       "id": "tabaco_cigarro",

@@ -240,9 +240,12 @@ def _memoria_regime_tables(
         if irpj_csll > 0:
             if regime_key == "lucro_presumido":
                 tipo = setor_obj.get("tipo", "servico")
-                pres = 0.08 if tipo == "produto" else 0.32
-                pres_csll = 0.12 if tipo == "produto" else 0.32
-                irpj_formula = f"Presunção {int(pres*100)}% fat. × 15% (IRPJ) + {int(pres_csll*100)}% fat. × 9% (CSLL)"
+                pres = setor_obj.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
+                pres_csll = setor_obj.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32)
+                irpj_formula = (
+                    f"Pres. IRPJ {int(pres*100)}% × fat. × 15% "
+                    f"+ Pres. CSLL {int(pres_csll*100)}% × fat. × 9%"
+                )
             elif regime_key == "lucro_real":
                 if despesas_mensais is not None:
                     lucro = faturamento_anual - despesas_mensais * 12

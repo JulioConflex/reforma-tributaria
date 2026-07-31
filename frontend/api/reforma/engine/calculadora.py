@@ -720,14 +720,18 @@ def _calcular_irpj_csll_info(
             ),
         )
 
-    # Lucro Presumido: estimativa baseada na presunção padrão
+    # Lucro Presumido: presunção legal por tipo/setor (Lei 9.249/1995, Art. 15 e RIR/2018)
     tipo = setor.get("tipo", "servico")
-    if tipo == "produto":
-        pres_irpj, pres_csll = 0.08, 0.12   # comércio / indústria
-        tipo_label = "comércio/indústria"
+    _def_irpj  = 0.08 if tipo == "produto" else 0.32
+    _def_csll  = 0.12 if tipo == "produto" else 0.32
+    pres_irpj  = setor.get("presuncao_irpj", _def_irpj)
+    pres_csll  = setor.get("presuncao_csll", _def_csll)
+    if pres_irpj <= 0.08:
+        tipo_label = "comércio/indústria/serv. hospitalares/transp. cargas"
+    elif pres_irpj <= 0.16:
+        tipo_label = "transporte de passageiros"
     else:
-        pres_irpj, pres_csll = 0.32, 0.32   # serviços
-        tipo_label = "serviços"
+        tipo_label = "serviços em geral"
 
     irpj_pct  = pres_irpj * 0.15            # alíquota IRPJ 15%
     csll_pct  = pres_csll * 0.09            # alíquota CSLL 9%
@@ -784,10 +788,8 @@ def _irpj_csll_por_operacao(
 
     tipo = setor.get("tipo", "servico")
     if regime == "lucro_presumido":
-        if tipo == "produto":
-            pres_irpj, pres_csll = 0.08, 0.12
-        else:
-            pres_irpj, pres_csll = 0.32, 0.32
+        pres_irpj = setor.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
+        pres_csll  = setor.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32)
         lucro_irpj = faturamento_anual * pres_irpj
         lucro_csll = faturamento_anual * pres_csll
         irpj_anual = lucro_irpj * 0.15 + max(0.0, lucro_irpj - 240_000.0) * 0.10
