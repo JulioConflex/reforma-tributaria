@@ -41,6 +41,18 @@ function TooltipCadeado({ visivel }: { visivel: boolean }) {
   );
 }
 
+function TooltipHover({ texto, subtexto }: { texto: string; subtexto?: string }) {
+  return (
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+      <div className="bg-ink-900 text-white text-[11.5px] rounded-xl px-3.5 py-2.5 shadow-xl text-center whitespace-nowrap leading-snug">
+        <div className="font-semibold mb-0.5">{texto}</div>
+        {subtexto && <div className="text-ink-400 text-[11px]">{subtexto}</div>}
+      </div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-ink-900" />
+    </div>
+  );
+}
+
 export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
   const { papel, modulos, sair } = useAuth();
   const [cadeadoAtivo, setCadeadoAtivo] = useState<string | null>(null);
@@ -114,23 +126,19 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
               {aba === "calculadora_dl" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
 
-            {/* Split Payment — sempre visível; cadeado se não tiver acesso */}
-            <div className="relative">
+            {/* Split Payment — bloqueado: aguardando regulamentação da Receita Federal */}
+            <div className="relative group">
               <button
-                onClick={() => clicarNavTop("split_payment", "split_payment")}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
-                  modulos.includes("split_payment")
-                    ? aba === "split_payment" ? "text-white" : "text-ink-300 hover:text-white"
-                    : "text-ink-500 cursor-default"
-                }`}
+                disabled
+                className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-ink-500 cursor-not-allowed opacity-60"
               >
-                {!modulos.includes("split_payment") && <IconCadeado />}
+                <IconCadeado />
                 Split Payment
-                {aba === "split_payment" && modulos.includes("split_payment") && (
-                  <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />
-                )}
               </button>
-              <TooltipCadeado visivel={cadeadoAtivo === "split_payment"} />
+              <TooltipHover
+                texto="Aguardando regulamentação"
+                subtexto="A Receita Federal ainda não publicou as regras"
+              />
             </div>
           </nav>
 
