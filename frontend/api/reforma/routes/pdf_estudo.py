@@ -801,15 +801,17 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── 6. VARIACAO ANO A ANO (2026-2033) ────────────────────────────────────
-    story.append(PageBreak())
-    story.append(Paragraph(f"{sec}. Evolução da Carga Tributária — Ano a Ano (2026-2033)", ST["h1"]))
-    story.append(Paragraph(
-        f"Projeção da carga tributária por operação de {brl(comp.valor_base)}, para cada regime "
-        "disponível, ao longo da transição da Reforma Tributária. A redução do PIS/COFINS e "
-        "ICMS/ISS e compensada pelo crescimento progressivo do CBS e IBS conforme o cronograma "
-        "da LC 214/2025. Os valores incluem IRPJ/CSLL estimado atribuivel a operação.",
-        ST["body_j"]))
-    story.append(Spacer(1, 8))
+    story.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Evolução da Carga Tributária — Ano a Ano (2026-2033)", ST["h1"]),
+        Paragraph(
+            f"Projeção da carga tributária por operação de {brl(comp.valor_base)}, para cada regime "
+            "disponível, ao longo da transição da Reforma Tributária. A redução do PIS/COFINS e "
+            "ICMS/ISS e compensada pelo crescimento progressivo do CBS e IBS conforme o cronograma "
+            "da LC 214/2025. Os valores incluem IRPJ/CSLL estimado atribuivel a operação.",
+            ST["body_j"]),
+        Spacer(1, 6),
+    ]))
 
     ANOS = list(range(2026, 2034))
 
@@ -961,8 +963,8 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── 7. MEMORIA DE CALCULO ────────────────────────────────────────────────
-    story.append(PageBreak())
     story.append(KeepTogether([
+        Spacer(1, 8),
         Paragraph(f"{sec}. Memória de Cálculo — Detalhamento por Tributo e por Regime", ST["h1"]),
         Paragraph(
             f"Detalhamento completo de cada tributo nas duas fases (sistema atual e novo sistema em {comp.ano}), "
