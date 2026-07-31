@@ -16,7 +16,6 @@ from reportlab.platypus import (
     HRFlowable, PageBreak, KeepTogether, Image,
 )
 from reportlab.platypus.flowables import Flowable
-from reportlab.platypus.frames import Frame as PDFFrame
 
 from ..engine.calculadora import (
     calcular_sistema_atual, calcular_sistema_novo, _irpj_csll_por_operacao,
@@ -42,16 +41,6 @@ EMRLD_50  = colors.HexColor("#ECFDF5")
 EMRLD_100 = colors.HexColor("#D1FAE5")
 EMRLD_200 = colors.HexColor("#A7F3D0")
 
-_FOOTER_STYLE = ParagraphStyle(
-    "footer_addr",
-    fontName="Helvetica",
-    fontSize=7.5,
-    textColor=INK_600,
-    alignment=TA_CENTER,
-    leading=11,
-    spaceAfter=0,
-    spaceBefore=0,
-)
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 def brl(value: float) -> str:
@@ -431,23 +420,14 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         canvas.setFillColor(WHITE)
         canvas.drawCentredString(W - lw / 2 - 4, fh / 2 - 4, str(doc.page))
 
-        # endereco via Paragraph para suporte completo a Unicode (en-dash, etc.)
-        footer_paras = [
-            Paragraph(
-                "Rua XV de novembro, 1155, 10º Andar – Centro"
-                " | Curitiba | Paraná | www.conflex.com.br",
-                _FOOTER_STYLE,
-            ),
-            Paragraph("Telefone – 3277-1313", _FOOTER_STYLE),
-        ]
-        text_x = lw + 10
-        text_w = W - 2.0 * lw - 20
-        text_frame = PDFFrame(
-            text_x, 0, text_w, fh,
-            leftPadding=0, rightPadding=0, topPadding=8, bottomPadding=4,
-            showBoundary=False,
+        # endereco centralizado (Latin-1 seguro: \xba = º, \xe1 = á)
+        canvas.setFont("Helvetica", 7.5)
+        canvas.setFillColor(INK_600)
+        canvas.drawCentredString(
+            W / 2, fh / 2 + 5,
+            "Rua XV de novembro, 1155, 10\xba Andar | Centro | Curitiba | Paran\xe1 | www.conflex.com.br",
         )
-        text_frame.addFromList(footer_paras, canvas)
+        canvas.drawCentredString(W / 2, fh / 2 - 7, "Telefone: (41) 3277-1313")
 
         canvas.restoreState()
 
@@ -818,24 +798,6 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         "faturamento, lucro e estrutura de despesas do período.",
         ST["body_j"]))
 
-    story.append(Spacer(1, 16))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=10))
-    story.append(Paragraph(
-        "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
-        "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
-        "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
-        "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
-        ST["disclaimer"]))
-
-    story.append(Spacer(1, 24))
-    story.append(Paragraph("______________________________", ST["body"]))
-    if inp.contador_nome:
-        story.append(Paragraph(inp.contador_nome, ST["body"]))
-        if inp.contador_crc:
-            story.append(Paragraph(f"CRC {inp.contador_crc}", ST["small"]))
-    else:
-        story.append(Paragraph("Conflex Contabilidade", ST["body"]))
-        story.append(Paragraph(f"Data: {today}", ST["small"]))
     sec += 1
 
     # ── 6. VARIACAO ANO A ANO (2026-2033) ────────────────────────────────────
@@ -1118,6 +1080,25 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         )
     story.append(Paragraph(cred_txt, ST["body_j"]))
     sec += 1
+
+    # ── ASSINATURA — sempre ao final de tudo ────────────────────────────────
+    story.append(Spacer(1, 24))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=10))
+    story.append(Paragraph(
+        "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
+        "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
+        "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
+        "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
+        ST["disclaimer"]))
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("______________________________", ST["body"]))
+    if inp.contador_nome:
+        story.append(Paragraph(inp.contador_nome, ST["body"]))
+        if inp.contador_crc:
+            story.append(Paragraph(f"CRC {inp.contador_crc}", ST["small"]))
+    else:
+        story.append(Paragraph("Conflex Contabilidade", ST["body"]))
+        story.append(Paragraph(f"Data: {today}", ST["small"]))
 
     doc.build(story)
     return buf.getvalue()
