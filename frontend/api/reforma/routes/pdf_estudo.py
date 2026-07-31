@@ -614,7 +614,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     sec += 1
 
     # ── 3. COMPARATIVO — NOVO SISTEMA ────────────────────────────────────────
-    story.append(Spacer(1, 14))
+    story.append(PageBreak())
     story.append(Paragraph(f"{sec}. Novo Sistema ({comp.ano}) — Carga por Regime", ST["h1"]))
     sorted_disp = sorted(disponiveis, key=lambda x: x.total_novo or 0)
     ranking = {r.regime: i + 1 for i, r in enumerate(sorted_disp)}
@@ -728,6 +728,86 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         ]))
         story.append(dest_t)
         sec += 1
+
+    # ── CONCLUSAO E RECOMENDACAO (pagina 2) ──────────────────────────────────
+    story.append(Spacer(1, 14))
+    story.append(Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]))
+    melhor_obj2 = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
+
+    if "mudanca" in objs and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
+        regime_atual_nome = _REGIME_LABEL.get(inp.regime_atual, inp.regime_atual)
+        melhor_nome = melhor_obj2.nome if melhor_obj2 else melhor_key
+        conclusao = (
+            f"Com base na análise realizada, a empresa <b>{inp.razao_social}</b> pode se beneficiar "
+            f"de uma mudanca do <b>{regime_atual_nome}</b> para o <b>{melhor_nome}</b>, "
+            f"que representa a menor carga tributária no novo sistema para o ano {comp.ano}. "
+        )
+        if melhor_obj2:
+            conclusao += (
+                f"A carga estimada no {melhor_nome} seria de <b>{brl(melhor_obj2.total_novo or 0)}</b> "
+                f"por operação de {brl(comp.valor_base)} ({pct(melhor_obj2.percentual_novo or 0)} sobre o valor). "
+            )
+        conclusao += (
+            "A saida do regime atual por escolha propria geralmente vale a partir de 1 de janeiro "
+            "do ano seguinte. Recomendamos acompanhar os resultados ao longo do segundo semestre "
+            "para confirmar se a mudanca e vantajosa antes da comunicacao a Receita Federal."
+        )
+        if "reforma" in objs:
+            conclusao += (
+                " Quanto a Reforma Tributária, o CBS substituira PIS/COFINS a partir de 2027 e o IBS "
+                "substituira ISS/ICMS progressivamente ate 2032. Os valores projetados sao estimativas "
+                "recomendamos revisar esta análise anualmente conforme as alíquotas definitivas forem publicadas."
+            )
+    elif "reforma" in objs:
+        if melhor_obj2:
+            conclusao = (
+                f"Diante da Reforma Tributária (LC 214/2025), o regime mais vantajoso para "
+                f"<b>{inp.razao_social}</b> em {comp.ano} e o <b>{melhor_obj2.nome}</b>, "
+                f"com carga de <b>{brl(melhor_obj2.total_novo or 0)}</b> por operação de {brl(comp.valor_base)}. "
+                "O CBS substituira PIS/COFINS a partir de 2027 e o IBS substituira ISS/ICMS progressivamente "
+                "ate 2032. Os valores apresentados sao estimativas, recomendamos revisar anualmente."
+            )
+        else:
+            conclusao = "A Reforma Tributária introduz mudancas relevantes que devem ser acompanhadas anualmente."
+    else:
+        if melhor_obj2:
+            conclusao = (
+                f"Com base nos dados analisados, o regime mais vantajoso para "
+                f"<b>{inp.razao_social}</b> no novo sistema tributário ({comp.ano}) "
+                f"e o <b>{melhor_obj2.nome}</b>, com carga de "
+                f"<b>{brl(melhor_obj2.total_novo or 0)}</b> por operação de "
+                f"{brl(comp.valor_base)} ({pct(melhor_obj2.percentual_novo or 0)} sobre o valor)."
+            )
+        else:
+            conclusao = "Nenhum regime disponível foi identificado para os parâmetros informados."
+
+    story.append(Paragraph(conclusao, ST["body_j"]))
+    story.append(Spacer(1, 6))
+    story.append(Paragraph(
+        "Recomendamos revisar esta análise anualmente, ao fechar o balanco, "
+        "para confirmar se o regime continua sendo a melhor opcao a luz do "
+        "faturamento, lucro e estrutura de despesas do período.",
+        ST["body_j"]))
+
+    story.append(Spacer(1, 16))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=10))
+    story.append(Paragraph(
+        "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
+        "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
+        "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
+        "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
+        ST["disclaimer"]))
+
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("______________________________", ST["body"]))
+    if inp.contador_nome:
+        story.append(Paragraph(inp.contador_nome, ST["body"]))
+        if inp.contador_crc:
+            story.append(Paragraph(f"CRC {inp.contador_crc}", ST["small"]))
+    else:
+        story.append(Paragraph("Conflex Contabilidade", ST["body"]))
+        story.append(Paragraph(f"Data: {today}", ST["small"]))
+    sec += 1
 
     # ── 6. VARIACAO ANO A ANO (2026-2033) ────────────────────────────────────
     story.append(PageBreak())
@@ -998,85 +1078,6 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         )
     story.append(Paragraph(cred_txt, ST["body_j"]))
     sec += 1
-
-    # ── 9. CONCLUSAO ─────────────────────────────────────────────────────────
-    story.append(PageBreak())
-    story.append(Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]))
-    melhor_obj2 = next((r for r in disponiveis if r.regime == melhor_key), None) if melhor_key else None
-
-    if "mudanca" in objs and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
-        regime_atual_nome = _REGIME_LABEL.get(inp.regime_atual, inp.regime_atual)
-        melhor_nome = melhor_obj2.nome if melhor_obj2 else melhor_key
-        conclusao = (
-            f"Com base na análise realizada, a empresa <b>{inp.razao_social}</b> pode se beneficiar "
-            f"de uma mudanca do <b>{regime_atual_nome}</b> para o <b>{melhor_nome}</b>, "
-            f"que representa a menor carga tributária no novo sistema para o ano {comp.ano}. "
-        )
-        if melhor_obj2:
-            conclusao += (
-                f"A carga estimada no {melhor_nome} seria de <b>{brl(melhor_obj2.total_novo or 0)}</b> "
-                f"por operação de {brl(comp.valor_base)} ({pct(melhor_obj2.percentual_novo or 0)} sobre o valor). "
-            )
-        conclusao += (
-            "A saida do regime atual por escolha propria geralmente vale a partir de 1 de janeiro "
-            "do ano seguinte. Recomendamos acompanhar os resultados ao longo do segundo semestre "
-            "para confirmar se a mudanca e vantajosa antes da comunicacao a Receita Federal."
-        )
-        if "reforma" in objs:
-            conclusao += (
-                " Quanto a Reforma Tributária, o CBS substituira PIS/COFINS a partir de 2027 e o IBS "
-                "substituira ISS/ICMS progressivamente até 2032. Os valores projetados sao estimativas — "
-                "recomendamos revisar esta análise anualmente conforme as alíquotas definitivas forem publicadas."
-            )
-    elif "reforma" in objs:
-        if melhor_obj2:
-            conclusao = (
-                f"Diante da Reforma Tributária (LC 214/2025), o regime mais vantajoso para "
-                f"<b>{inp.razao_social}</b> em {comp.ano} e o <b>{melhor_obj2.nome}</b>, "
-                f"com carga de <b>{brl(melhor_obj2.total_novo or 0)}</b> por operação de {brl(comp.valor_base)}. "
-                "O CBS substituira PIS/COFINS a partir de 2027 e o IBS substituira ISS/ICMS progressivamente "
-                "até 2032. Os valores apresentados sao estimativas — recomendamos revisar anualmente."
-            )
-        else:
-            conclusao = "A Reforma Tributária introduz mudancas relevantes que devem ser acompanhadas anualmente."
-    else:
-        if melhor_obj2:
-            conclusao = (
-                f"Com base nos dados analisados, o regime mais vantajoso para "
-                f"<b>{inp.razao_social}</b> no novo sistema tributário ({comp.ano}) "
-                f"e o <b>{melhor_obj2.nome}</b>, com carga de "
-                f"<b>{brl(melhor_obj2.total_novo or 0)}</b> por operação de "
-                f"{brl(comp.valor_base)} ({pct(melhor_obj2.percentual_novo or 0)} sobre o valor)."
-            )
-        else:
-            conclusao = "Nenhum regime disponível foi identificado para os parâmetros informados."
-
-    story.append(Paragraph(conclusao, ST["body_j"]))
-    story.append(Spacer(1, 6))
-    story.append(Paragraph(
-        "Recomendamos revisar esta análise anualmente, ao fechar o balanco, "
-        "para confirmar se o regime continua sendo a melhor opcao a luz do "
-        "faturamento, lucro e estrutura de despesas do período.",
-        ST["body_j"]))
-
-    story.append(Spacer(1, 16))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=INK_100, spaceAfter=10))
-    story.append(Paragraph(
-        "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
-        "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
-        "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
-        "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
-        ST["disclaimer"]))
-
-    story.append(Spacer(1, 24))
-    story.append(Paragraph("______________________________", ST["body"]))
-    if inp.contador_nome:
-        story.append(Paragraph(inp.contador_nome, ST["body"]))
-        if inp.contador_crc:
-            story.append(Paragraph(f"CRC {inp.contador_crc}", ST["small"]))
-    else:
-        story.append(Paragraph("Conflex Contabilidade", ST["body"]))
-        story.append(Paragraph(f"Data: {today}", ST["small"]))
 
     doc.build(story)
     return buf.getvalue()
