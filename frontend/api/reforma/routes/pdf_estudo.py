@@ -100,8 +100,8 @@ def _table_style(header_color=BRAND, stripe=True) -> TableStyle:
         ("LINEBELOW",     (0, 1), (-1, -2), 0.3, INK_100),
     ])
 
-def _mem_table_style(header_color=INK_700) -> TableStyle:
-    return TableStyle([
+def _mem_table_style(header_color=INK_700, sep_rows=None) -> TableStyle:
+    cmds = [
         ("BACKGROUND",    (0, 0), (-1, 0), header_color),
         ("ROWBACKGROUNDS",(0, 1), (-1, -2), [WHITE, INK_50]),
         ("BACKGROUND",    (0, -1), (-1, -1), INK_100),
@@ -112,7 +112,16 @@ def _mem_table_style(header_color=INK_700) -> TableStyle:
         ("RIGHTPADDING",  (0, 0), (-1, -1), 7),
         ("LINEBELOW",     (0, 0), (-1, -2), 0.25, INK_100),
         ("LINEABOVE",     (0, -1), (-1, -1), 0.5, INK_400),
-    ])
+    ]
+    for r in (sep_rows or []):
+        cmds.extend([
+            ("BACKGROUND",   (0, r), (-1, r), colors.HexColor("#DBEAFE")),
+            ("FONTNAME",     (0, r), (0, r),  "Helvetica-Bold"),
+            ("TEXTCOLOR",    (0, r), (-1, r), colors.HexColor("#1E40AF")),
+            ("LINEABOVE",    (0, r), (-1, r), 0.5, colors.HexColor("#93C5FD")),
+            ("LINEBELOW",    (0, r), (-1, r), 0.5, colors.HexColor("#93C5FD")),
+        ])
+    return TableStyle(cmds)
 
 class ColorBar(Flowable):
     def __init__(self, color=BRAND, height=4, width=None):
@@ -291,18 +300,33 @@ def _memoria_regime_tables(
             Paragraph("Fórmula de cálculo", ST["cell_header_l"]),
             Paragraph("Valor", ST["cell_header"]),
         ]]
+        sep_rows_n: list[int] = []
         for d in res_novo.detalhes:
+            row_idx = len(detalhe_rows_n)
             aliq_txt = f"{d.aliquota_aplicada:.2f}%" if d.aliquota_aplicada else "—"
             formula_txt = d.formula or "—"
-            style = ST["mem_info"] if d.informativo else ST["mem_formula"]
-            val_style = ST["mem_info"] if d.informativo else ST["mem_valor"]
-            info_suffix = " [informativo]" if d.informativo else ""
-            row = [
-                Paragraph(d.nome + info_suffix, ST["mem_nome"]),
-                Paragraph(aliq_txt, ST["mem_aliq"]),
-                Paragraph(formula_txt, style),
-                Paragraph(brl(d.valor), val_style),
-            ]
+            if getattr(d, "separador", False):
+                sep_rows_n.append(row_idx)
+                row = [
+                    Paragraph(f"= {d.nome}", ST["mem_nome"]),
+                    Paragraph("—", ST["mem_aliq"]),
+                    Paragraph(formula_txt, ST["mem_formula"]),
+                    Paragraph(brl(d.valor), ST["mem_valor"]),
+                ]
+            elif d.informativo:
+                row = [
+                    Paragraph(d.nome + " [informativo]", ST["mem_info"]),
+                    Paragraph(aliq_txt, ST["mem_aliq"]),
+                    Paragraph(formula_txt, ST["mem_info"]),
+                    Paragraph(brl(d.valor), ST["mem_info"]),
+                ]
+            else:
+                row = [
+                    Paragraph(d.nome, ST["mem_nome"]),
+                    Paragraph(aliq_txt, ST["mem_aliq"]),
+                    Paragraph(formula_txt, ST["mem_formula"]),
+                    Paragraph(brl(d.valor), ST["mem_valor"]),
+                ]
             detalhe_rows_n.append(row)
         if irpj_csll > 0:
             detalhe_rows_n.append([
@@ -319,7 +343,7 @@ def _memoria_regime_tables(
             Paragraph(brl(total_novo), ST["mem_total"]),
         ])
         t_n = Table(detalhe_rows_n, colWidths=[4.2*cm, 1.8*cm, 8.5*cm, 2.5*cm])
-        t_n.setStyle(_mem_table_style(colors.HexColor("#059669")))
+        t_n.setStyle(_mem_table_style(colors.HexColor("#059669"), sep_rows=sep_rows_n))
         elements.append(Paragraph(f"Sistema Novo ({ano})", ST["label"]))
         elements.append(Spacer(1, 2))
         elements.append(t_n)

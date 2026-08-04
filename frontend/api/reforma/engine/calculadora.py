@@ -25,7 +25,7 @@ def _br(x: float) -> str:
 
 def _detalhe(
     nome: str, aliquota: float, valor: float, base_legal: str,
-    formula: str | None = None, informativo: bool = False,
+    formula: str | None = None, informativo: bool = False, separador: bool = False,
 ) -> DetalheTributo:
     return DetalheTributo(
         nome=nome,
@@ -34,6 +34,7 @@ def _detalhe(
         base_legal=base_legal,
         formula=formula,
         informativo=informativo,
+        separador=separador,
     )
 
 
@@ -291,6 +292,21 @@ def calcular_sistema_novo(
     simbolico = (ano == 2026)
     nota_simb = " — simbólico em 2026 (compensado), não somado à carga" if simbolico else ""
 
+    # Ordem lógica: deduções da base primeiro, para que o cliente veja como a base foi formada
+    # antes de ver os tributos que incidem sobre ela.
+    detalhes.extend(det_antigos)
+    if det_antigos:
+        partes = " − ".join(f"R$ {_br(d.valor)}" for d in det_antigos)
+        detalhes.append(_detalhe(
+            "Base de cálculo CBS/IBS",
+            0.0,
+            base_consumo,
+            "LC 214/2025, Art. 9.º — base por fora = valor da operação menos tributos que saem da base",
+            formula=f"R$ {_br(valor)} (operação) − {partes} = R$ {base_fmt}",
+            informativo=True,
+            separador=True,
+        ))
+
     # 3) CBS e IBS — calculados sobre a base "por fora".
     if cron["cbs_percentual"] > 0:
         cbs_bruto = cron["cbs_percentual"] * fator_reducao
@@ -330,10 +346,7 @@ def calcular_sistema_novo(
             informativo=simbolico,
         ))
 
-    # 4) Tributos atuais ainda vigentes (exibidos após CBS/IBS).
-    detalhes.extend(det_antigos)
-
-    # 5) Imposto Seletivo (a partir de 2027, quando a CBS entra cheia).
+    # 4) Imposto Seletivo (a partir de 2027, quando a CBS entra cheia).
     if setor.get("is_aplicavel") and cron["cbs_percentual"] >= 0.08:
         is_rate = setor.get("is_estimado", 0.0)
         is_valor = valor * is_rate

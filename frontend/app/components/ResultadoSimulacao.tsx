@@ -266,7 +266,17 @@ function BreakdownColumn({
       </div>
 
       <ul className="mt-5 space-y-3">
-        {detalhes.map((d, i) => (
+        {detalhes.map((d, i) => d.separador ? (
+          <li key={i} className="rounded-lg bg-brand-50 border border-brand-100 px-3 py-2">
+            <div className="flex items-baseline justify-between gap-3 text-[13px]">
+              <span className="text-brand-700 font-semibold">= {nomeFriendly(d.nome)}</span>
+              <span className="font-bold text-brand-800 tab-num">{brl(d.valor)}</span>
+            </div>
+            {showLegal && d.formula && (
+              <div className="mt-1 text-[10.5px] text-brand-600/80 font-mono leading-snug">{d.formula}</div>
+            )}
+          </li>
+        ) : (
           <li key={i} className={d.informativo ? "opacity-60" : ""}>
             <div className="flex items-baseline justify-between gap-3 text-[13px]">
               <span className="text-ink-700">
@@ -321,7 +331,17 @@ function MemoSteps({ title, detalhes, accent, showFormulas }: { title: string; d
     <div>
       <div className={`text-[11px] uppercase tracking-[0.08em] font-semibold mb-2 ${accent ? "text-brand-600" : "text-ink-400"}`}>{title}</div>
       <ul className="divide-y divide-ink-100/70 rounded-xl border border-ink-100 overflow-hidden">
-        {detalhes.map((d, i) => (
+        {detalhes.map((d, i) => d.separador ? (
+          <li key={i} className="px-4 py-3 bg-brand-50/80 border-l-4 border-brand-400">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[13px] font-bold text-brand-800">= {nomeFriendly(d.nome)}</span>
+              <span className="text-[13px] font-bold text-brand-900 tab-num">{brl(d.valor)}</span>
+            </div>
+            {showFormulas && d.formula && (
+              <div className="mt-1.5 text-[10.5px] text-brand-600/80 font-mono leading-relaxed">{d.formula}</div>
+            )}
+          </li>
+        ) : (
           <li key={i} className={`px-4 py-3 ${d.informativo ? "opacity-60" : ""}`}>
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-[13px] font-semibold text-ink-800">{nomeFriendly(d.nome)}</span>

@@ -87,6 +87,7 @@ class DetalheTributo(BaseModel):
     base_legal: str
     formula: Optional[str] = None  # memória de cálculo: como o valor foi obtido
     informativo: bool = False      # True = exibido mas NÃO somado ao total (ex.: CBS/IBS simbólicos em 2026)
+    separador: bool = False        # True = linha de subtotal/contexto (base de cálculo), não é tributo
 
 
 class ResultadoSistema(BaseModel):

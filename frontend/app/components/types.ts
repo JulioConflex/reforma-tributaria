@@ -22,6 +22,7 @@ export interface DetalheTributo {
   base_legal: string;
   formula?: string | null;
   informativo?: boolean;  // exibido mas não somado ao total (ex.: CBS/IBS simbólicos em 2026)
+  separador?: boolean;    // linha de subtotal/contexto (base de cálculo), não é tributo
 }
 
 export interface ResultadoSistema {
