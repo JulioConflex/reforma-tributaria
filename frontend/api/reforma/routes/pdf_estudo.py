@@ -13,7 +13,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, PageBreak, KeepTogether, Image,
+    HRFlowable, PageBreak, KeepTogether, Image, TableOfContents,
 )
 from reportlab.platypus.flowables import Flowable
 
@@ -88,6 +88,9 @@ def _styles() -> dict:
         "mem_info":       s("MI",   fontName="Helvetica-Oblique", fontSize=8,  textColor=INK_400, leading=11),
         "metric":         s("MT",   fontName="Helvetica-Bold",    fontSize=12, textColor=BRAND,   leading=16, alignment=TA_CENTER),
         "metric_lbl":     s("ML",   fontName="Helvetica",         fontSize=8,  textColor=INK_400, leading=11, alignment=TA_CENTER),
+        "toc_title":      s("TCT",  fontName="Helvetica-Bold",    fontSize=16, textColor=BRAND,   leading=22, spaceAfter=12),
+        "toc0":           s("TC0",  fontName="Helvetica-Bold",    fontSize=10, textColor=INK_700, leading=16, leftIndent=0,  spaceAfter=3),
+        "toc1":           s("TC1",  fontName="Helvetica",         fontSize=9,  textColor=INK_400, leading=14, leftIndent=14, spaceAfter=2),
     }
 
 def _table_style(header_color=BRAND, stripe=True) -> TableStyle:
@@ -818,6 +821,19 @@ def _analise_regimes_section(
     return elements
 
 
+# ─── Template customizado para TOC ───────────────────────────────────────────
+class _EstudoDoc(SimpleDocTemplate):
+    """SimpleDocTemplate que emite notificacoes de TOC para nossos estilos H1."""
+
+    def afterFlowable(self, flowable):
+        if isinstance(flowable, Paragraph):
+            sn = flowable.style.name
+            if sn == "H1":
+                self.notify("TOCEntry", (0, flowable.getPlainText(), self.page, None))
+            elif sn in ("H2", "H3"):
+                self.notify("TOCEntry", (1, flowable.getPlainText(), self.page, None))
+
+
 # ─── PDF builder ─────────────────────────────────────────────────────────────
 def _build_pdf(inp: EstudoInput) -> bytes:
     buf = BytesIO()
@@ -892,7 +908,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
         canvas.restoreState()
 
-    doc = SimpleDocTemplate(
+    doc = _EstudoDoc(
         buf, pagesize=A4,
         leftMargin=margin, rightMargin=margin,
         topMargin=margin + 4, bottomMargin=margin + 10,
@@ -1003,6 +1019,17 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("LINEABOVE",     (2, 0), (2, 0),   3, EMERALD),
         ]))
         story.append(_mc)
+
+    # ── SUMÁRIO ──────────────────────────────────────────────────────────────
+    toc = TableOfContents()
+    toc.levelStyles = [ST["toc0"], ST["toc1"]]
+    toc.dotsMinLevel = 0
+    story.append(PageBreak())
+    story.append(Paragraph("Sumário", ST["toc_title"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=BRAND, spaceAfter=8))
+    story.append(toc)
+    story.append(PageBreak())
+
     story.append(Spacer(1, 8))
 
     # Intro
@@ -1731,7 +1758,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         story.append(Paragraph("Conflex Contabilidade", ST["body"]))
         story.append(Paragraph(f"Data: {today}", ST["small"]))
 
-    doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
+    doc.multiBuild(story, onFirstPage=on_page, onLaterPages=on_page)
     return buf.getvalue()
 
 
