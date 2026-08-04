@@ -57,7 +57,7 @@ def _get_pis_cofins(setor: dict, regime: str, pis_cofins_regime: str | None = No
     if efetivo is None:
         efetivo = "cumulativo" if regime == "lucro_presumido" else "nao_cumulativo"
     if efetivo == "cumulativo":
-        return 0.0065, "Lei 9.718/1998", 0.030, "Lei 9.718/1998"
+        return 0.0065, "Lei 9.715/1998", 0.030, "Lei 9.718/1998"
     return 0.0165, "Lei 10.637/2002", 0.076, "Lei 10.833/2003"
 
 
@@ -257,12 +257,16 @@ def calcular_sistema_novo(
 
     if cron["pis_cofins_ativo"]:
         pis_r, _, cof_r, _ = _get_pis_cofins(setor, regime, pis_cofins_regime)
-        pis    = valor * pis_r * (1 - percentual_credito)
-        cofins = valor * cof_r * (1 - percentual_credito)
+        # LP é cumulativo: sem crédito. LR não-cumulativo: aplica percentual_credito.
+        _pis_cum = ("pis_aliquota_especial" in setor) or (regime == "lucro_presumido") or (pis_cofins_regime == "cumulativo")
+        _pis_cred = 0.0 if _pis_cum else percentual_credito
+        pis    = valor * pis_r * (1 - _pis_cred)
+        cofins = valor * cof_r * (1 - _pis_cred)
+        _cred_txt_pis = "" if _pis_cum else f" × (1 − {_pis_cred*100:.0f}% créd.)"
         det_antigos.append(_detalhe("PIS (em coexistência 2026)",    pis_r, pis,    "Vigente até extinção em 2027",
-            formula=f"R$ {_br(valor)} × {pis_r*100:.2f}%{cred_txt} = R$ {_br(pis)}"))
+            formula=f"R$ {_br(valor)} × {pis_r*100:.2f}%{_cred_txt_pis} = R$ {_br(pis)}"))
         det_antigos.append(_detalhe("COFINS (em coexistência 2026)", cof_r, cofins, "Vigente até extinção em 2027",
-            formula=f"R$ {_br(valor)} × {cof_r*100:.2f}%{cred_txt} = R$ {_br(cofins)}"))
+            formula=f"R$ {_br(valor)} × {cof_r*100:.2f}%{_cred_txt_pis} = R$ {_br(cofins)}"))
 
     if cron["icms_fator"] > 0 and tipo == "produto":
         icms_efetivo = icms_uf * cron["icms_fator"]
