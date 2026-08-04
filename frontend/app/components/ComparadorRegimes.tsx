@@ -675,7 +675,7 @@ function RegimeRow({ c, melhor, ano }: { c: ComparativoRegime; melhor: boolean; 
             <div className={`text-[14px] font-semibold ${melhor ? "text-emerald-700" : "text-ink-900"}`}>{c.nome}</div>
             <div className="text-[11.5px] text-ink-500 mt-0.5">{c.descricao}</div>
             {ano >= 2027 && (c.regime === "simples_nacional" || c.regime === "mei") && (
-              <div className="text-[10.5px] text-amber-700 mt-0.5 font-medium">EST · regime híbrido estimado</div>
+              <div className="text-[10.5px] text-amber-700 mt-0.5 font-medium">Estimativa · regime híbrido</div>
             )}
           </div>
         </div>

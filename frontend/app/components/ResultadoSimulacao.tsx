@@ -613,7 +613,7 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
                 >
                   <td className="py-2.5 px-2 tab-num">
                     <span className={ativo ? "text-brand-700" : "text-ink-700"}>{p.ano}</span>
-                    {p.ano >= 2027 && <sup className="ml-0.5 text-amber-500 text-[9px] font-bold">EST</sup>}
+                    {p.ano >= 2027 && <sup className="ml-0.5 text-amber-500 text-[9px] font-bold">Estimativa</sup>}
                     {ativo && <span className="ml-1.5 text-brand-400">●</span>}
                   </td>
                   <td className="py-2.5 px-2 text-ink-500 hidden sm:table-cell">{p.descricao}</td>
@@ -629,7 +629,7 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
         </table>
       </div>
       <p className="text-xs text-ink-400 mt-3 pt-3 border-t border-ink-100">
-        <span className="font-semibold text-amber-600">EST</span> Anos 2027–2033: valores estimados com alíquotas de referência provisórias
+        <span className="font-semibold text-amber-600">Estimativa</span> Anos 2027–2033: valores estimados com alíquotas de referência provisórias
         (CBS ~9,3% + IBS ~18,7%), sujeitas a confirmação pelo Senado Federal.
         Cronograma: LC 214/2025, Arts. 350–357.
       </p>
