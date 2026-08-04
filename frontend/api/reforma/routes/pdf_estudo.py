@@ -506,6 +506,167 @@ def _base_legal_section(
     return elements
 
 
+# ─── DRE Simulada ────────────────────────────────────────────────────────────
+def _dre_section(
+    ST: dict,
+    sec: int,
+    regime_key: str,
+    regime_nome: str,
+    setor_obj: dict,
+    uf: str,
+    ano: int,
+    valor_base: float,
+    faturamento_anual: float,
+    despesas_mensais: Optional[float],
+    irpj_csll_estimado: float,
+    credito_entrada: float,
+    folha_pagamento_mensal: Optional[float],
+    cron_obj: dict,
+    icms_uf: float,
+) -> list:
+    """DRE simplificada comparando sistema atual vs novo sistema."""
+    elements = []
+    if valor_base <= 0 or faturamento_anual <= 0:
+        return elements
+
+    scaling = faturamento_anual / valor_base
+    fat_arg = faturamento_anual if regime_key in ("mei", "simples_nacional") else None
+
+    try:
+        res_a = calcular_sistema_atual(
+            valor_base, regime_key, setor_obj, uf, fat_arg,
+            folha_pagamento_mensal, credito_entrada, _icms_uf=icms_uf,
+        )
+        res_n = calcular_sistema_novo(
+            valor_base, regime_key, setor_obj, uf, ano,
+            credito_entrada, fat_arg, folha_pagamento_mensal,
+            _cron=cron_obj, _icms_uf=icms_uf,
+        )
+    except Exception:
+        return elements
+
+    # Separar CBS/IBS (por fora) do residual por dentro no novo sistema
+    cbs_ibs_op = sum(
+        d.valor for d in res_n.detalhes
+        if not d.informativo
+        and not getattr(d, "separador", False)
+        and (d.nome.startswith("CBS") or d.nome.startswith("IBS"))
+    )
+    residual_op = res_n.total - cbs_ibs_op
+
+    # Valores anuais
+    tributos_atuais_anual = res_a.total * scaling
+    cbs_ibs_anual         = cbs_ibs_op   * scaling
+    residual_anual        = residual_op   * scaling
+    irpj_csll_anual       = irpj_csll_estimado * scaling
+    custos_anuais         = despesas_mensais * 12 if despesas_mensais is not None else None
+
+    receita_bruta      = faturamento_anual
+    receita_liq_atual  = receita_bruta - tributos_atuais_anual
+    receita_liq_nova   = receita_bruta - residual_anual   # CBS/IBS sao por fora
+
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Demonstração do Resultado — Impacto da Reforma", ST["h1"]),
+        Paragraph(
+            f"DRE simplificada para o <b>{regime_nome}</b> com faturamento anual de "
+            f"<b>{brl(faturamento_anual)}</b>. No novo sistema, CBS e IBS sao cobrados por fora "
+            f"(Art. 9.o, LC 214/2025): nao reduzem a Receita Líquida, mas representam "
+            "uma obrigacao tributária separada paga via Split Payment.",
+            ST["body_j"]),
+        Spacer(1, 4),
+    ]))
+
+    def _fmtv(v: float | None) -> str:
+        if v is None:
+            return "—"
+        if v < 0:
+            return f"({brl(-v)})"
+        return brl(v)
+
+    BLUE_BG = colors.HexColor("#EFF6FF")
+    dre_data: list = [[
+        Paragraph("Item", ST["cell_header_l"]),
+        Paragraph("Sistema Atual", ST["cell_header"]),
+        Paragraph(f"Novo Sistema ({ano})", ST["cell_header"]),
+    ]]
+    sub_rows: list[int] = []
+
+    def _add(label: str, val_a: float | None, val_n: float | None,
+             is_sub: bool = False, indent: bool = False) -> None:
+        if is_sub:
+            sub_rows.append(len(dre_data))
+        pfx = "    " if indent else ""
+        sl = ST["cell_bold"] if is_sub else ST["cell_l"]
+        sv = ST["cell_bold_r"] if is_sub else ST["cell_r"]
+        dre_data.append([
+            Paragraph(pfx + label, sl),
+            Paragraph(_fmtv(val_a), sv),
+            Paragraph(_fmtv(val_n), sv),
+        ])
+
+    _add("(+) Receita Bruta de Servicos / Vendas", receita_bruta, receita_bruta)
+    _add(f"(-) Tributos sobre Receita (por dentro)", tributos_atuais_anual, residual_anual)
+    _add("(=) Receita Líquida", receita_liq_atual, receita_liq_nova, is_sub=True)
+
+    if cbs_ibs_anual > 0.01:
+        _add(f"(-) CBS + IBS (por fora — Split Payment)", 0.0, cbs_ibs_anual)
+
+    if custos_anuais is not None:
+        _add("(-) Custos e Despesas Operacionais (est.)", custos_anuais, custos_anuais)
+        lajir_a = receita_liq_atual - custos_anuais
+        lajir_n = receita_liq_nova - cbs_ibs_anual - custos_anuais
+        _add("(=) LAJIR — antes de IRPJ/CSLL (est.)", lajir_a, lajir_n, is_sub=True)
+        if irpj_csll_anual > 0:
+            _add("(-) IRPJ + CSLL (estimado)", irpj_csll_anual, irpj_csll_anual)
+        _add("(=) Resultado Líquido Estimado",
+             lajir_a - irpj_csll_anual,
+             lajir_n - irpj_csll_anual, is_sub=True)
+    else:
+        if irpj_csll_anual > 0:
+            _add("(-) IRPJ + CSLL (estimado)", irpj_csll_anual, irpj_csll_anual)
+        _add("(=) Resultado antes de Despesas (est.)",
+             receita_liq_atual - irpj_csll_anual,
+             receita_liq_nova - cbs_ibs_anual - irpj_csll_anual, is_sub=True)
+
+    cmds = [
+        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING",    (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+        ("LINEBELOW",     (0, 0), (-1, -1), 0.3, INK_100),
+        ("BOX",           (0, 0), (-1, -1), 0.5, INK_400),
+    ]
+    for r in sub_rows:
+        cmds.extend([
+            ("BACKGROUND", (0, r), (-1, r), BLUE_BG),
+            ("FONTNAME",   (0, r), (-1, r), "Helvetica-Bold"),
+            ("LINEABOVE",  (0, r), (-1, r), 0.6, BRAND),
+            ("LINEBELOW",  (0, r), (-1, r), 0.6, BRAND),
+        ])
+
+    t_dre = Table(dre_data, colWidths=[9.0*cm, 3.75*cm, 3.75*cm])
+    t_dre.setStyle(TableStyle(cmds))
+    elements.append(t_dre)
+
+    elements.append(Spacer(1, 4))
+    if despesas_mensais is None:
+        elements.append(Paragraph(
+            "Informe as despesas mensais no formulário para exibir LAJIR e Resultado Líquido.",
+            ST["small"]))
+    elements.append(Paragraph(
+        "<b>Nota:</b> No novo sistema, CBS e IBS sao recolhidos via Split Payment — o banco debita "
+        "automaticamente no recebimento e repassa ao governo. A Receita Líquida aumenta (ISS, ICMS, "
+        "PIS e COFINS deixam de incidir), mas o fluxo de caixa deve considerar a obrigacao de CBS+IBS. "
+        "IRPJ e CSLL nao sao alterados pela Reforma Tributária. Valores estimados.",
+        ST["small_j"]))
+
+    return elements
+
+
 # ─── PDF builder ─────────────────────────────────────────────────────────────
 def _build_pdf(inp: EstudoInput) -> bytes:
     buf = BytesIO()
@@ -945,7 +1106,25 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         story.append(dest_t)
         sec += 1
 
-    # ── CONCLUSAO E RECOMENDACAO (pagina 2) ──────────────────────────────────
+    # ── DRE SIMULADA ────────────────────────────────────────────────────────
+    _dre_regime_key = melhor_key or inp.regime_atual
+    if _dre_regime_key and setor_obj is not None and cron_obj is not None:
+        _dre_r = next((r for r in disponiveis if r.regime == _dre_regime_key), None)
+        if _dre_r:
+            dre_els = _dre_section(
+                ST, sec,
+                _dre_regime_key, _dre_r.nome,
+                setor_obj, comp.uf, comp.ano,
+                comp.valor_base, inp.faturamento_anual,
+                inp.despesas_mensais, _dre_r.irpj_csll_estimado or 0.0,
+                inp.credito_entrada, inp.folha_pagamento_mensal,
+                cron_obj, icms_uf,
+            )
+            if dre_els:
+                story.extend(dre_els)
+                sec += 1
+
+    # ── CONCLUSAO E RECOMENDACAO ─────────────────────────────────────────────
     story.append(KeepTogether([
         Spacer(1, 8),
         Paragraph(f"{sec}. Conclusão e Recomendação", ST["h1"]),
