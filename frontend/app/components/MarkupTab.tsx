@@ -389,28 +389,53 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 {/* 3. Com reforma */}
                 <div className="p-6 lg:p-7 bg-brand-50/40">
                   <div className="text-[10.5px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-3">
-                    Com reforma · {ano} — você deve cobrar
+                    Com reforma · {ano}
                   </div>
+                  {/* Preço de venda (o que você recebe) */}
+                  <div className="text-[11px] text-brand-500 font-semibold uppercase tracking-wide mb-0.5">Você recebe</div>
                   <div className="font-display text-[40px] leading-none font-bold text-brand-800 tab-num">
                     <NumberTicker value={result.preco_venda_sistema_novo} />
                   </div>
-                  <div className="text-[12px] text-ink-500 mt-2">
+                  <div className="text-[12px] text-ink-500 mt-1.5">
                     Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>
                     {" · "}carga <span className="tab-num">{result.carga_tributaria_nova_percentual.toFixed(2)}%</span>
                   </div>
-                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
-                    <div className="mt-2 text-[11.5px] text-brand-600 leading-snug">
-                      + {brl(result.cbs_ibs_sobre_preco_novo!)} CBS/IBS por fora (pago pelo comprador)
+
+                  {/* Total ao comprador (quando há CBS/IBS por fora) */}
+                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 ? (
+                    <div className="mt-3 rounded-lg bg-brand-100/60 border border-brand-200/60 px-3 py-2 space-y-1">
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-ink-600">+ CBS/IBS por fora</span>
+                        <span className="tab-num font-semibold text-brand-700">{brl(result.cbs_ibs_sobre_preco_novo!)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[13px] border-t border-brand-200/60 pt-1">
+                        <span className="font-bold text-ink-800">Total ao comprador</span>
+                        <span className="tab-num font-bold text-brand-800">{brl(result.preco_venda_sistema_novo + result.cbs_ibs_sobre_preco_novo!)}</span>
+                      </div>
+                      <div className="text-[10.5px] text-brand-600 leading-snug">
+                        O banco separa CBS/IBS automaticamente via Split Payment.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
+                        ${Math.abs(aumentoPct) < 1
+                          ? "text-amber-700 bg-amber-50"
+                          : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
+                        {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
+                      </span>
                     </div>
                   )}
-                  <div className="mt-3">
-                    <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
-                      ${Math.abs(aumentoPct) < 1
-                        ? "text-amber-700 bg-amber-50"
-                        : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
-                      {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
-                    </span>
-                  </div>
+                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
+                    <div className="mt-2">
+                      <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
+                        ${Math.abs(aumentoPct) < 1
+                          ? "text-amber-700 bg-amber-50"
+                          : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
+                        {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -449,10 +474,9 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                   </h3>
                   <p className="text-[14px] leading-relaxed max-w-xl text-ink-200">
                     O comprador paga <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo + (result.cbs_ibs_sobre_preco_novo ?? 0))}</strong>{" "}
-                    (preço {brl(result.preco_venda_sistema_novo)} + CBS/IBS {brl(result.cbs_ibs_sobre_preco_novo ?? 0)} por fora).
-                    O banco separa automaticamente{" "}
+                    no total. O banco separa automaticamente{" "}
                     <strong className="text-brand-300 tab-num">{brl(result.cbs_ibs_sobre_preco_novo ?? 0)}</strong>{" "}
-                    para o governo via Split Payment. Você recebe{" "}
+                    de CBS/IBS para o governo. Você recebe{" "}
                     <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo)}</strong>{" "}
                     — provisione seu <TooltipGlossario termo="capital_de_giro">capital de giro</TooltipGlossario>.
                   </p>
@@ -496,15 +520,19 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
   const carga = result.carga_tributaria_nova_percentual;
   const margem = result.margem_desejada;
   const despesas = result.despesas_fixas_percentual;
-  // CBS/IBS são por fora — o divisor usa apenas a carga residual (por dentro)
-  const cbsIbsPct = pv > 0 ? ((result.cbs_ibs_sobre_preco_novo ?? 0) / pv) * 100 : 0;
+
+  // CBS/IBS são por fora — não entram no divisor do PV
+  const cbsIbsPorFora = result.cbs_ibs_sobre_preco_novo ?? 0;
+  const cbsIbsPct = pv > 0 ? (cbsIbsPorFora / pv) * 100 : 0;
   const cargaPorDentro = carga - cbsIbsPct;
   const divisor = 100 - margem - despesas - cargaPorDentro;
 
-  const totalTributos = result.detalhes_novo.reduce((s, d) => s + d.valor, 0);
+  // Tributos por dentro (excluindo CBS/IBS que são por fora)
+  const totalTributosPorDentro = result.detalhes_novo.reduce((s, d) => s + d.valor, 0) - cbsIbsPorFora;
   const valorDespesas = pv * (despesas / 100);
   const valorMargem = pv * (margem / 100);
-  const soma = result.custo + totalTributos + valorDespesas + valorMargem;
+  // soma deve fechar exatamente com pv (CBS/IBS por fora são separados)
+  const soma = result.custo + totalTributosPorDentro + valorDespesas + valorMargem;
 
   return (
     <div className="rounded-2xl bg-white hairline overflow-hidden">
@@ -545,7 +573,7 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
           {/* Decomposição do PV */}
           <div className="mt-5">
             <div className="text-[11px] uppercase tracking-[0.07em] text-ink-400 font-semibold mb-3">
-              Decomposição do preço de venda ({brl(pv)})
+              Decomposição do preço de venda — o que você recebe ({brl(pv)})
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
@@ -562,20 +590,24 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
                     <td className="py-2 pr-4 text-right tab-num text-ink-500">{((result.custo / pv) * 100).toFixed(2)}%</td>
                     <td className="py-2 text-right tab-num font-semibold text-ink-800">{brl(result.custo)}</td>
                   </tr>
-                  {result.detalhes_novo.map((d) => (
-                    <tr key={d.nome}>
-                      <td className="py-2 pr-4 text-ink-600 text-[12.5px]">{d.nome}</td>
-                      <td className="py-2 pr-4 text-right tab-num text-ink-400 text-[12px]">{d.aliquota_aplicada.toFixed(2)}%</td>
-                      <td className="py-2 text-right tab-num text-ink-600">{brl(d.valor)}</td>
+                  {result.detalhes_novo
+                    .filter((d) => !d.nome.startsWith("CBS") && !d.nome.startsWith("IBS"))
+                    .map((d) => (
+                      <tr key={d.nome}>
+                        <td className="py-2 pr-4 text-ink-600 text-[12.5px]">{d.nome}</td>
+                        <td className="py-2 pr-4 text-right tab-num text-ink-400 text-[12px]">{d.aliquota_aplicada.toFixed(2)}%</td>
+                        <td className="py-2 text-right tab-num text-ink-600">{brl(d.valor)}</td>
+                      </tr>
+                    ))}
+                  {totalTributosPorDentro > 0.005 && (
+                    <tr className="bg-ink-50/60">
+                      <td className="py-2 pr-4 font-medium text-ink-700">Subtotal tributos (por dentro)</td>
+                      <td className="py-2 pr-4 text-right tab-num text-ink-500">{cargaPorDentro.toFixed(2)}%</td>
+                      <td className="py-2 text-right tab-num font-semibold text-amber-700">{brl(totalTributosPorDentro)}</td>
                     </tr>
-                  ))}
-                  <tr className="bg-ink-50/60">
-                    <td className="py-2 pr-4 font-medium text-ink-700">Subtotal tributos</td>
-                    <td className="py-2 pr-4 text-right tab-num text-ink-500">{carga.toFixed(2)}%</td>
-                    <td className="py-2 text-right tab-num font-semibold text-amber-700">{brl(totalTributos)}</td>
-                  </tr>
+                  )}
                   <tr>
-                    <td className="py-2 pr-4 text-ink-600">Despesas fixas</td>
+                    <td className="py-2 pr-4 text-ink-600">Despesas variáveis</td>
                     <td className="py-2 pr-4 text-right tab-num text-ink-400">{despesas.toFixed(1)}%</td>
                     <td className="py-2 text-right tab-num text-ink-600">{brl(valorDespesas)}</td>
                   </tr>
@@ -585,15 +617,35 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
                     <td className="py-2 text-right tab-num font-bold text-emerald-700">{brl(valorMargem)}</td>
                   </tr>
                   <tr className="border-t-2 border-ink-200">
-                    <td className="pt-3 pr-4 font-bold text-ink-900">Total (PV)</td>
+                    <td className="pt-3 pr-4 font-bold text-ink-900">Preço de venda (você recebe)</td>
                     <td className="pt-3 pr-4 text-right tab-num font-bold text-ink-700">100%</td>
                     <td className="pt-3 text-right tab-num font-bold text-brand-700">{brl(soma)}</td>
                   </tr>
+                  {cbsIbsPorFora > 0.005 && (
+                    <>
+                      <tr className="bg-brand-50/60">
+                        <td className="py-2.5 pr-4 text-brand-700 text-[12.5px]">
+                          + CBS e IBS por fora{" "}
+                          <span className="text-[11px] text-brand-500 font-normal">(pago pelo comprador, repassado ao governo via Split Payment)</span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-right tab-num text-brand-500">{cbsIbsPct.toFixed(2)}%</td>
+                        <td className="py-2.5 text-right tab-num font-semibold text-brand-700">{brl(cbsIbsPorFora)}</td>
+                      </tr>
+                      <tr className="bg-brand-100/40 border-t border-brand-200/60">
+                        <td className="pt-2.5 pb-3 pr-4 font-bold text-brand-900">= Total ao comprador</td>
+                        <td className="pt-2.5 pb-3 pr-4 text-right tab-num font-bold text-brand-700"></td>
+                        <td className="pt-2.5 pb-3 text-right tab-num font-bold text-brand-800">{brl(soma + cbsIbsPorFora)}</td>
+                      </tr>
+                    </>
+                  )}
                 </tbody>
               </table>
             </div>
             <div className="mt-3 text-[11.5px] text-ink-400 leading-snug">
-              ✓ Custo ({brl(result.custo)}) + Tributos ({brl(totalTributos)}) + Despesas ({brl(valorDespesas)}) + Margem ({brl(valorMargem)}) = {brl(soma)}
+              ✓ Custo ({brl(result.custo)}) + Tributos por dentro ({brl(totalTributosPorDentro)}) + Despesas ({brl(valorDespesas)}) + Margem ({brl(valorMargem)}) = <strong className="text-ink-600">{brl(soma)}</strong> (preço de venda)
+              {cbsIbsPorFora > 0.005 && (
+                <> + CBS/IBS por fora ({brl(cbsIbsPorFora)}) = <strong className="text-brand-700">{brl(soma + cbsIbsPorFora)}</strong> (total ao comprador)</>
+              )}
             </div>
           </div>
         </div>
