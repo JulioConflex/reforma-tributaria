@@ -1187,19 +1187,28 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
     )
     carga_nova = novo.total
 
-    # Markup divisor (fórmula padrão de formação de preço):
-    #   PV = Custo ÷ (1 − Margem% − DespesasVariáveis% − CargaTributária%)
-    # Todas as porcentagens são sobre o PV (por dentro).
+    # CBS e IBS são "por fora" (LC 214/2025, Art. 9.º): não entram no divisor do markup.
+    # O vendedor forma o preço sem incluí-los; o comprador os paga separadamente via Split Payment.
+    cbs_ibs_total = sum(
+        d.valor for d in novo.detalhes
+        if not d.informativo and (d.nome.startswith("CBS") or d.nome.startswith("IBS"))
+    )
+    carga_nova_por_dentro = carga_nova - cbs_ibs_total
+
+    # Markup divisor (formação de preço):
+    #   PV = Custo ÷ (1 − Margem% − Despesas% − Tributos_por_dentro%)
     # "Despesas variáveis" = taxa maquininha, comissão, etc. — NÃO inclui aluguel/salários.
     soma_sem_tributos = inp.margem_desejada + inp.despesas_fixas_percentual
     divisor_sem_tributo = 1.0 - soma_sem_tributos
     divisor_atual = 1.0 - soma_sem_tributos - carga_atual
-    divisor_novo  = 1.0 - soma_sem_tributos - carga_nova
+    divisor_novo  = 1.0 - soma_sem_tributos - carga_nova_por_dentro
     aviso_impossivel = divisor_atual <= 0 or divisor_novo <= 0
 
     pv_sem_tributo = inp.custo / divisor_sem_tributo if divisor_sem_tributo > 0 else 0.0
     pv_atual = inp.custo / divisor_atual if divisor_atual > 0 else 0.0
     pv_novo  = inp.custo / divisor_novo  if divisor_novo  > 0 else 0.0
+    # CBS/IBS escalam linearmente com pv_novo (demonstração matemática no plano)
+    cbs_ibs_sobre_pv_novo = round(cbs_ibs_total * pv_novo, 2)
 
     markup_sem_tributo = pv_sem_tributo / inp.custo if inp.custo > 0 and pv_sem_tributo > 0 else 0.0
     markup_atual = pv_atual / inp.custo if inp.custo > 0 and pv_atual > 0 else 0.0
@@ -1246,4 +1255,5 @@ def calcular_markup(inp: MarkupInput) -> MarkupOutput:
         preco_sem_tributo=round(pv_sem_tributo, 2),
         markup_sem_tributo=round(markup_sem_tributo, 4),
         valores_projetados=valores_projetados,
+        cbs_ibs_sobre_preco_novo=cbs_ibs_sobre_pv_novo,
     )

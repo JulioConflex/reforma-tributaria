@@ -262,3 +262,4 @@ class MarkupOutput(BaseModel):
     preco_sem_tributo: float = 0.0
     markup_sem_tributo: float = 0.0
     valores_projetados: bool = False
+    cbs_ibs_sobre_preco_novo: float = 0.0   # CBS+IBS por fora (Art. 9.º) — pago pelo comprador via Split Payment

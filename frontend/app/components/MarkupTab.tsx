@@ -398,6 +398,11 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                     Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>
                     {" · "}carga <span className="tab-num">{result.carga_tributaria_nova_percentual.toFixed(2)}%</span>
                   </div>
+                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
+                    <div className="mt-2 text-[11.5px] text-brand-600 leading-snug">
+                      + {brl(result.cbs_ibs_sobre_preco_novo!)} CBS/IBS por fora (pago pelo comprador)
+                    </div>
+                  )}
                   <div className="mt-3">
                     <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
                       ${Math.abs(aumentoPct) < 1
@@ -421,7 +426,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                     max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} highlight />
                 </div>
                 <div className="mt-4 text-[11.5px] text-ink-500 leading-relaxed">
-                  Cálculo &quot;por dentro&quot; — PV = Custo ÷ (1 − Margem − Despesas − Carga).
+                  PV = Custo ÷ (1 − Margem − Despesas − Tributos residuais).
+                  CBS e IBS incidem por fora (Art. 9.º) e são cobrados do comprador via Split Payment.
                 </div>
               </div>
             </div>
@@ -442,11 +448,12 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                     <TooltipGlossario termo="split_payment">Split Payment</TooltipGlossario> retém o imposto na hora
                   </h3>
                   <p className="text-[14px] leading-relaxed max-w-xl text-ink-200">
-                    Quando o cliente te pagar <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo)}</strong>,
-                    o banco separa automaticamente{" "}
-                    <strong className="text-brand-300 tab-num">{brl(result.preco_venda_sistema_novo * result.aliquota_efetiva_nova / 100)}</strong>{" "}
-                    para o governo. Você recebe{" "}
-                    <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo * (1 - result.aliquota_efetiva_nova / 100))}</strong>{" "}
+                    O comprador paga <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo + (result.cbs_ibs_sobre_preco_novo ?? 0))}</strong>{" "}
+                    (preço {brl(result.preco_venda_sistema_novo)} + CBS/IBS {brl(result.cbs_ibs_sobre_preco_novo ?? 0)} por fora).
+                    O banco separa automaticamente{" "}
+                    <strong className="text-brand-300 tab-num">{brl(result.cbs_ibs_sobre_preco_novo ?? 0)}</strong>{" "}
+                    para o governo via Split Payment. Você recebe{" "}
+                    <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo)}</strong>{" "}
                     — provisione seu <TooltipGlossario termo="capital_de_giro">capital de giro</TooltipGlossario>.
                   </p>
                 </div>
@@ -489,7 +496,10 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
   const carga = result.carga_tributaria_nova_percentual;
   const margem = result.margem_desejada;
   const despesas = result.despesas_fixas_percentual;
-  const divisor = 100 - margem - despesas - carga;
+  // CBS/IBS são por fora — o divisor usa apenas a carga residual (por dentro)
+  const cbsIbsPct = pv > 0 ? ((result.cbs_ibs_sobre_preco_novo ?? 0) / pv) * 100 : 0;
+  const cargaPorDentro = carga - cbsIbsPct;
+  const divisor = 100 - margem - despesas - cargaPorDentro;
 
   const totalTributos = result.detalhes_novo.reduce((s, d) => s + d.valor, 0);
   const valorDespesas = pv * (despesas / 100);
@@ -517,14 +527,19 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
           <div className="mt-5 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3.5">
             <div className="text-[11px] uppercase tracking-[0.07em] text-brand-600 font-semibold mb-2">Fórmula aplicada</div>
             <div className="font-mono text-[13px] text-ink-800 leading-relaxed">
-              PV = Custo ÷ (1 − Margem% − Despesas% − Carga%)
+              PV = Custo ÷ (1 − Margem% − Despesas% − Tributos residuais%)
             </div>
             <div className="font-mono text-[13px] text-brand-700 font-semibold mt-1.5 leading-relaxed">
               PV = {brl(result.custo)} ÷ {(divisor / 100).toFixed(4)} = {brl(pv)}
             </div>
             <div className="text-[11.5px] text-ink-500 mt-2 leading-snug">
-              Divisor = 1 − {margem.toFixed(1)}% (margem) − {despesas.toFixed(1)}% (despesas) − {carga.toFixed(2)}% (tributos) = {divisor.toFixed(2)}%
+              Divisor = 1 − {margem.toFixed(1)}% (margem) − {despesas.toFixed(1)}% (despesas) − {cargaPorDentro.toFixed(2)}% (tributos residuais) = {divisor.toFixed(2)}%
             </div>
+            {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
+              <div className="text-[11.5px] text-brand-700 mt-2 leading-snug">
+                + CBS/IBS por fora (Art. 9.º): {brl(result.cbs_ibs_sobre_preco_novo!)} — pago pelo comprador, repassado via Split Payment
+              </div>
+            )}
           </div>
 
           {/* Decomposição do PV */}

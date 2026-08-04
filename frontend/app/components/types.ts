@@ -187,6 +187,7 @@ export interface MarkupResult {
   preco_sem_tributo?: number;
   markup_sem_tributo?: number;
   valores_projetados?: boolean;
+  cbs_ibs_sobre_preco_novo?: number;
 }
 
 export const REGIMES = [
