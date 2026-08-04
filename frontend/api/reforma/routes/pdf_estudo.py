@@ -687,6 +687,137 @@ def _dre_section(
     return elements
 
 
+# ─── Análise por Regime ───────────────────────────────────────────────────────
+def _analise_regimes_section(
+    ST: dict,
+    sec: int,
+    comp,
+    setor_obj: dict,
+    inp,
+) -> list:
+    """Seção de análise narrativa por regime, do mais ao menos vantajoso."""
+    elements = []
+    tipo = setor_obj.get("tipo", "servico")
+    reducao = setor_obj.get("reducao_aliquota", 1.0)
+    red_pct = int(round((1 - reducao) * 100))
+    tipo_trib = "ISS" if tipo == "servico" else "ICMS"
+
+    try:
+        c33 = get_cronograma(2033)
+        cbs_ef = round(c33.get("cbs_percentual", 0.088) * reducao * 100, 2)
+        ibs_ef = round(c33.get("ibs_percentual", 0.192) * reducao * 100, 2)
+    except Exception:
+        cbs_ef, ibs_ef = 8.8, 19.2
+
+    disponiveis = [r for r in comp.comparativo if r.disponivel]
+    melhor_key  = comp.regime_mais_vantajoso
+    sorted_disp = sorted(disponiveis, key=lambda x: x.total_novo or float("inf"))
+
+    if not sorted_disp:
+        return elements
+
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Análise por Regime Tributário", ST["h1"]),
+        Paragraph(
+            f"Avaliação das características e do impacto da reforma para cada regime disponível "
+            f"aplicado ao setor <b>{comp.setor}</b> ({comp.uf}), ordenados do mais ao menos "
+            f"vantajoso no novo sistema em {comp.ano}.",
+            ST["body_j"]),
+        Spacer(1, 4),
+    ]))
+
+    for i, r in enumerate(sorted_disp):
+        is_best = r.regime == melhor_key
+        diff = r.diferenca or 0
+        diff_prefix = "+" if diff > 0 else ""
+        diff_sty = ST["cell_red_r"] if diff > 0 else ST["cell_green_r"]
+        val_sty = ST["cell_green_r"] if is_best else ST["cell_bold_r"]
+
+        kpi_rows = [
+            [Paragraph("Sistema Atual", ST["label"]),
+             Paragraph(f"Novo Sistema ({comp.ano})", ST["label"]),
+             Paragraph("Variação", ST["label"])],
+            [Paragraph(brl(r.total_atual or 0), ST["cell_bold_r"]),
+             Paragraph(brl(r.total_novo  or 0), val_sty),
+             Paragraph(f"{diff_prefix}{brl(diff)}", diff_sty)],
+        ]
+        kpi_t = Table(kpi_rows, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
+        kpi_t.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, 0), INK_100),
+            ("BACKGROUND",    (0, 1), (-1, 1), WHITE),
+            ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+            ("LINEBELOW",     (0, 0), (-1, 0), 0.3, INK_400),
+            ("LINEAFTER",     (0, 0), (1, -1), 0.3, INK_100),
+            ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
+        ]))
+
+        # Narrativa especifica por regime
+        pres_irpj = setor_obj.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
+        cbs_ibs_total = f"CBS {cbs_ef}% + IBS {ibs_ef}%"
+        red_nota = f" (reducao setorial de {red_pct}% aplicada)" if red_pct > 0 else ""
+
+        if r.regime == "lucro_presumido":
+            narrativa = (
+                f"No Lucro Presumido, PIS/COFINS incidem no regime cumulativo (3,65%) sem aproveitamento "
+                f"de créditos, e {tipo_trib} compoe a carga atual de {pct(r.percentual_atual or 0)} sobre "
+                f"a operacao. IRPJ e CSLL sao estimados sobre presuncao de {int(pres_irpj*100)}% da receita. "
+                f"Com a reforma, {tipo_trib}, PIS e COFINS sao substituídos progressivamente por CBS e IBS. "
+                f"Em 2033, a alíquota efetiva neste setor sera {cbs_ibs_total}{red_nota}, "
+                "cobrados por fora via Split Payment."
+            )
+        elif r.regime == "lucro_real":
+            narrativa = (
+                f"No Lucro Real, PIS/COFINS sao nao cumulativos (9,25%), com crédito integral de insumos. "
+                f"IRPJ e CSLL incidem somente sobre o lucro apurado — zerados em cenário de prejuízo. "
+                f"Com a reforma, o Lucro Real mantem o aproveitamento de créditos de CBS/IBS "
+                f"(regime nao cumulativo por natureza). Em 2033, alíquotas efetivas: {cbs_ibs_total}{red_nota}. "
+                f"O crédito de entrada informado de {int(inp.credito_entrada*100)}% reduz a carga líquida de CBS/IBS."
+            )
+        elif r.regime == "simples_nacional":
+            narrativa = (
+                f"No Simples Nacional, todos os tributos sao recolhidos em DAS único, com alíquota "
+                f"determinada pela faixa de faturamento ({brl(inp.faturamento_anual)}/ano). "
+                "Com a reforma, as regras de CBS/IBS no Simples serao definidas pelo Comitê Gestor do IBS. "
+                "O Simples Híbrido — opcional — permite destacar CBS/IBS na nota para gerar crédito a clientes PJ, "
+                "ao custo de maior carga tributária."
+            )
+        elif r.regime == "mei":
+            over_limit = inp.faturamento_anual > 81_000
+            faturamento_note = (
+                f"O faturamento informado ({brl(inp.faturamento_anual)}) supera o limite do MEI "
+                "(R$ 81.000/ano) — a migracão para Simples Nacional ou Lucro Presumido é obrigatória."
+                if over_limit else
+                f"O faturamento informado ({brl(inp.faturamento_anual)}) está dentro do limite do MEI (R$ 81.000/ano)."
+            )
+            narrativa = (
+                f"O MEI recolhe tributos em valor fixo mensal (DAS-MEI). {faturamento_note} "
+                "Com a reforma, as regras de CBS/IBS para o MEI ainda serao definidas pelo CG-IBS."
+            )
+        else:
+            narrativa = (
+                f"Carga atual: {pct(r.percentual_atual or 0)} | "
+                f"Carga no novo sistema ({comp.ano}): {pct(r.percentual_novo or 0)}."
+            )
+
+        block = [
+            Spacer(1, 8 if i > 0 else 2),
+            Paragraph(f"<b>{r.nome}</b>", ST["h3"]),
+        ]
+        if is_best:
+            block.append(Paragraph("Regime recomendado no novo sistema", ST["badge_ok"]))
+        block += [Spacer(1, 3), kpi_t]
+        elements.append(KeepTogether(block))
+        elements.append(Spacer(1, 4))
+        elements.append(Paragraph(narrativa, ST["body_j"]))
+
+    return elements
+
+
 # ─── PDF builder ─────────────────────────────────────────────────────────────
 def _build_pdf(inp: EstudoInput) -> bytes:
     buf = BytesIO()
@@ -1200,6 +1331,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             if dre_els:
                 story.extend(dre_els)
                 sec += 1
+
+    # ── ANALISE POR REGIME ───────────────────────────────────────────────────
+    if setor_obj is not None and len(disponiveis) > 1:
+        _ar_els = _analise_regimes_section(ST, sec, comp, setor_obj, inp)
+        if _ar_els:
+            story.extend(_ar_els)
+            sec += 1
 
     # ── CONCLUSAO E RECOMENDACAO ─────────────────────────────────────────────
     story.append(KeepTogether([
