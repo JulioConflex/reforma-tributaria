@@ -835,6 +835,309 @@ class _EstudoDoc(SimpleDocTemplate):
                 self.notify("TOCEntry", (1, flowable.getPlainText(), self.page, None))
 
 
+# ─── Direito a Credito ───────────────────────────────────────────────────────
+def _direito_credito_section(
+    ST: dict,
+    sec: int,
+    setor_obj: dict | None,
+    inp,
+    icms_uf: float,
+) -> list:
+    elements = []
+    so = setor_obj or {}
+    tipo     = so.get("tipo", "servico")
+    reducao  = so.get("reducao_aliquota", 1.0)
+    setor_id = so.get("id", "")
+    setor_nome = so.get("nome", inp.razao_social)
+    regime   = inp.regime_atual or ""
+
+    CBS33, IBS33 = 0.088, 0.192
+    cbs_ef_dec = CBS33 * reducao
+    ibs_ef_dec = IBS33 * reducao
+    cbs_ef_pct = round(cbs_ef_dec * 100, 2)
+    ibs_ef_pct = round(ibs_ef_dec * 100, 2)
+    total_ef_pct = round((cbs_ef_dec + ibs_ef_dec) * 100, 2)
+
+    fat_mensal = inp.faturamento_anual / 12
+    cred_pct   = inp.credito_entrada  # 0-1
+
+    # Situacao atual do credito por regime
+    if regime == "lucro_presumido":
+        sit_atual = (
+            f"Atualmente, no <b>Lucro Presumido</b>, praticamente nao ha creditos de PIS e COFINS — "
+            f"o regime e cumulativo (0,65% + 3%), sem deducao de entradas. "
+            f"Com a CBS e o IBS, passa a vigorar a <b>nao cumulatividade ampla</b>: "
+            f"os tributos pagos nas aquisicoes de bens e servicos ligados a atividade "
+            f"podem ser abatidos do CBS/IBS devido nas vendas, observadas as restricoes da LC 214/2025."
+        )
+    elif regime == "lucro_real":
+        sit_atual = (
+            f"No <b>Lucro Real</b>, PIS (1,65%) e COFINS (7,6%) ja sao nao cumulativos: "
+            f"a empresa ja deduz o PIS/COFINS pago nas entradas. "
+            f"Com a CBS e o IBS, essa logica e <b>preservada e ampliada</b>: "
+            f"o creditamento se torna mais abrangente e beneficia mais categorias de despesas, "
+            f"com potencial de reducao da carga tributaria liquida."
+        )
+    elif regime == "simples_nacional":
+        sit_atual = (
+            f"No <b>Simples Nacional</b>, PIS e COFINS estao incorporados ao DAS sem creditamento separado. "
+            f"As regras de creditamento de CBS/IBS para o Simples ainda serao definidas pelo CG-IBS. "
+            f"O <b>Simples Hibrido</b> (opcional) permite destacar CBS/IBS nas notas para gerar credito ao "
+            f"comprador PJ — o que pode ser relevante para empresas com clientela B2B predominante."
+        )
+    else:
+        sit_atual = (
+            f"Com a CBS e o IBS, passa a vigorar a <b>nao cumulatividade ampla</b>: "
+            f"os tributos pagos nas aquisicoes de bens e servicos ligados a atividade "
+            f"podem ser abatidos do CBS/IBS devido nas vendas, nos termos da LC 214/2025."
+        )
+
+    # Itens que geram credito — personalizados por setor
+    _is_saude = any(k in setor_id for k in (
+        "clinica", "medic", "saude", "hospital", "laboratorio", "fisio",
+        "odonto", "farmac", "diagnostico", "reabilitacao",
+    ))
+    _is_comercio = tipo in ("produto", "comercio")
+
+    if _is_saude:
+        itens_credito = [
+            "Medicamentos, insumos e materiais medico-hospitalares",
+            "Equipamentos de diagnostico, procedimentos e aparelhos medicos",
+            "Contratos de manutencao, calibracao e assistencia tecnica de equipamentos",
+            "Energia eletrica consumida no estabelecimento de saude",
+            "Aluguel do imovel utilizado na atividade",
+            "Softwares de gestao, prontuario eletronico e sistemas de agendamento",
+            "Servicos terceirizados (limpeza, seguranca, TI e contabilidade)",
+            "Reformas e benfeitorias realizadas por empresas tributadas pelo IBS e CBS",
+        ]
+    elif _is_comercio:
+        itens_credito = [
+            "Mercadorias para revenda adquiridas de contribuintes sujeitos ao CBS/IBS",
+            "Embalagens e materiais de acondicionamento",
+            "Fretes e servicos de transporte quando tributados pelo IBS/CBS",
+            "Energia eletrica consumida na atividade comercial",
+            "Softwares de gestao (ERP, PDV, e-commerce)",
+            "Servicos terceirizados (limpeza, seguranca, TI e contabilidade)",
+            "Reformas e benfeitorias realizadas por empresas tributadas",
+        ]
+    else:
+        itens_credito = [
+            "Insumos e materiais diretamente utilizados na prestacao dos servicos",
+            "Servicos terceirizados ligados a atividade (TI, contabilidade, limpeza, seguranca)",
+            "Energia eletrica consumida no estabelecimento",
+            "Aluguel do imovel utilizado na atividade",
+            "Softwares de gestao e sistemas operacionais",
+            "Equipamentos utilizados na operacao da empresa",
+            "Reformas e benfeitorias realizadas por empresas tributadas pelo IBS e CBS",
+        ]
+
+    itens_nao_credito = [
+        "Despesas pessoais, beneficios de socios e diretores",
+        "Aquisicoes junto ao Simples Nacional (exceto no Simples Hibrido)",
+        "Operacoes isentas ou nao tributadas pelo CBS/IBS na saida",
+        "Gastos com alimentacao, vestuario e lazer pessoal",
+        "Multas, juros e encargos financeiros",
+    ]
+
+    # Cabecalho da secao
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Direito a Credito de CBS e IBS", ST["h1"]),
+        Spacer(1, 3),
+        Paragraph(sit_atual, ST["body_j"]),
+        Spacer(1, 6),
+    ]))
+
+    # Tabela: o que gera x nao gera credito
+    elements.append(KeepTogether([
+        Paragraph("O que gera e o que nao gera credito", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    _col_h = ParagraphStyle("_dch", fontName="Helvetica-Bold", fontSize=9,
+                            textColor=WHITE, leading=12, alignment=TA_CENTER)
+    _col_ok = ParagraphStyle("_dcok", fontName="Helvetica", fontSize=9,
+                             textColor=INK_700, leading=12)
+    _col_no = ParagraphStyle("_dcno", fontName="Helvetica", fontSize=9,
+                             textColor=colors.HexColor("#B91C1C"), leading=12)
+
+    # Intercalar linhas das duas colunas ate o maximo
+    n = max(len(itens_credito), len(itens_nao_credito))
+    cred_rows = [
+        [Paragraph("Gera credito de CBS/IBS", _col_h),
+         Paragraph("NAO gera credito", _col_h)],
+    ]
+    for i in range(n):
+        c_txt = f"✓  {itens_credito[i]}" if i < len(itens_credito) else ""
+        n_txt = f"✗  {itens_nao_credito[i]}" if i < len(itens_nao_credito) else ""
+        cred_rows.append([
+            Paragraph(c_txt, _col_ok),
+            Paragraph(n_txt, _col_no),
+        ])
+
+    t_cred = Table(cred_rows, colWidths=[8.4*cm, 8.0*cm])
+    t_cred.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (0, 0), EMERALD),
+        ("BACKGROUND",    (1, 0), (1, 0), colors.HexColor("#DC2626")),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
+        ("LINEBELOW",     (0, 0), (-1, -1), 0.3, INK_100),
+        ("LINEBETWEEN",   (0, 0), (0, -1), 0.4, INK_100),
+        ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 7),
+    ]))
+    elements.append(t_cred)
+    elements.append(Spacer(1, 3))
+    elements.append(Paragraph(
+        "Base legal: LC 214/2025, Arts. 28-67 (creditos de CBS) e Arts. 130-148 (creditos de IBS). "
+        "Vedacoes: Art. 60 (LC 214/2025).",
+        ST["small_j"]))
+
+    # Calculo estimado do credito — so se nao for Simples/MEI
+    if regime not in ("simples_nacional", "mei") and cred_pct > 0:
+        elements.append(KeepTogether([
+            Spacer(1, 8),
+            Paragraph("Estimativa de Credito Mensal (2033 — sistema pleno)", ST["h3"]),
+            Spacer(1, 3),
+        ]))
+
+        cbs_bruto_m  = fat_mensal * cbs_ef_dec
+        ibs_bruto_m  = fat_mensal * ibs_ef_dec
+        bruto_m      = cbs_bruto_m + ibs_bruto_m
+        cred_m       = bruto_m * cred_pct
+        liquido_m    = bruto_m - cred_m
+
+        calc_rows = [
+            [Paragraph("Faturamento mensal estimado", ST["cell_l"]),
+             Paragraph(brl(fat_mensal), ST["cell_bold_r"])],
+            [Paragraph(f"CBS bruto sobre vendas ({cbs_ef_pct}%)", ST["cell_l"]),
+             Paragraph(brl(cbs_bruto_m), ST["cell_r"])],
+            [Paragraph(f"IBS bruto sobre vendas ({ibs_ef_pct}%)", ST["cell_l"]),
+             Paragraph(brl(ibs_bruto_m), ST["cell_r"])],
+            [Paragraph(f"Total CBS + IBS bruto", ST["cell_l"]),
+             Paragraph(brl(bruto_m), ST["cell_r"])],
+            [Paragraph(f"(-) Credito de entrada estimado ({int(cred_pct*100)}% das aquisicoes)",
+                       ST["cell_l"]),
+             Paragraph(f"({brl(cred_m)})", ST["cell_green_r"])],
+            [Paragraph("<b>CBS + IBS liquido a recolher (mensal)</b>", ST["cell_bold"]),
+             Paragraph(f"<b>{brl(liquido_m)}</b>", ST["cell_bold_r"])],
+        ]
+        t_calc = Table(calc_rows, colWidths=[12.0*cm, 4.5*cm])
+        t_calc.setStyle(TableStyle([
+            ("LINEBELOW",     (0, 0), (-1, -2), 0.3, INK_100),
+            ("LINEABOVE",     (0, -1), (-1, -1), 0.5, INK_400),
+            ("BACKGROUND",    (0, -1), (-1, -1), INK_50),
+            ("BACKGROUND",    (0, 3),  (-1, 3),  colors.HexColor("#FFFBEB")),
+            ("BACKGROUND",    (0, 4),  (-1, 4),  EMRLD_50),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
+            ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
+        ]))
+        elements.append(t_calc)
+        elements.append(Spacer(1, 3))
+        elements.append(Paragraph(
+            f"(*) Estimativa para 2033 (sistema pleno). O credito de entrada de {int(cred_pct*100)}% "
+            f"representa a parcela das aquisicoes que geram CBS/IBS aproveitavel. "
+            f"Aliquotas de referencia sujeitas a confirmacao pelo Senado Federal.",
+            ST["small_j"]))
+
+        # Tabela ano a ano do credito (2027, 2029, 2031, 2033)
+        anos_tabela = [2027, 2029, 2031, 2033]
+        cbs_yr = {2027: 0.088, 2029: 0.088, 2031: 0.088, 2033: 0.088}
+        ibs_yr = {2027: 0.001, 2029: 0.192*0.1, 2031: 0.192*0.3, 2033: 0.192}
+
+        elements.append(KeepTogether([
+            Spacer(1, 8),
+            Paragraph("Progressao do Credito ao Longo da Transicao", ST["h3"]),
+            Spacer(1, 3),
+        ]))
+
+        yr_rows = [[
+            Paragraph("Ano", ST["cell_header"]),
+            Paragraph("CBS ef.(%)", ST["cell_header"]),
+            Paragraph("IBS ef.(%)", ST["cell_header"]),
+            Paragraph("CBS+IBS bruto/mes", ST["cell_header"]),
+            Paragraph(f"Credito ({int(cred_pct*100)}%)/mes", ST["cell_header"]),
+            Paragraph("Liquido/mes", ST["cell_header"]),
+        ]]
+        for yr in anos_tabela:
+            c = round(cbs_yr[yr] * reducao, 4)
+            ib = round(ibs_yr[yr] * reducao, 4)
+            bruto = fat_mensal * (c + ib)
+            cred  = bruto * cred_pct
+            liq   = bruto - cred
+            yr_rows.append([
+                Paragraph(str(yr), ST["cell_bold"]),
+                Paragraph(f"{c*100:.2f}%", ST["cell_r"]),
+                Paragraph(f"{ib*100:.2f}%", ST["cell_r"]),
+                Paragraph(brl(bruto), ST["cell_r"]),
+                Paragraph(f"({brl(cred)})", ST["cell_green_r"]),
+                Paragraph(brl(liq), ST["cell_bold_r"]),
+            ])
+        t_yr = Table(yr_rows, colWidths=[1.4*cm, 2.0*cm, 2.0*cm, 3.5*cm, 3.5*cm, 3.5*cm])
+        t_yr.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
+            ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50, WHITE, INK_50]),
+            ("LINEBELOW",     (0, 0), (-1, -1), 0.3, INK_100),
+            ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(t_yr)
+        elements.append(Spacer(1, 3))
+        elements.append(Paragraph(
+            "2027: apenas CBS plena + IBS 0,1% (teste). "
+            "2029: IBS a 10% da referencia. "
+            "2031: IBS a 30% da referencia. "
+            "2033: sistema pleno.",
+            ST["small_j"]))
+
+    elif regime in ("simples_nacional", "mei"):
+        elements.append(Spacer(1, 6))
+        elements.append(_insight_box(
+            ST,
+            f"No <b>{_REGIME_LABEL.get(regime, regime)}</b>, as regras de creditamento de CBS/IBS ainda "
+            f"serao definidas pelo CG-IBS. A expectativa e incorporacao ao DAS de forma simplificada, "
+            f"sem creditamento individual por padrao. O <b>Simples Hibrido</b> (opcional) permite destacar "
+            f"CBS/IBS para clientes PJ aproveitarem o credito — avalie com o contador.",
+            AMBER, colors.HexColor("#FFFBEB"),
+        ))
+
+    elif cred_pct == 0:
+        elements.append(Spacer(1, 6))
+        elements.append(_insight_box(
+            ST,
+            f"O credito de entrada informado e <b>0%</b>. Isso significa que nenhum credito de "
+            f"CBS/IBS foi estimado sobre as aquisicoes. Caso a empresa realize compras de bens e "
+            f"servicos tributados pelo CBS/IBS, o aproveitamento de credito pode reduzir "
+            f"significativamente a carga liquida. Recomendamos revisar esse percentual com o contador.",
+            AMBER, colors.HexColor("#FFFBEB"),
+        ))
+
+    # Caixa de destaque final (para LP com credito)
+    if regime == "lucro_presumido" and cred_pct > 0:
+        bruto_a = fat_mensal * (cbs_ef_dec + ibs_ef_dec) * 12
+        cred_a  = bruto_a * cred_pct
+        elements.append(Spacer(1, 6))
+        elements.append(_insight_box(
+            ST,
+            f"Para {setor_nome}, a migracao do regime cumulativo (PIS/COFINS sem credito) para "
+            f"o sistema nao cumulativo (CBS/IBS com credito) representa um <b>credito estimado de "
+            f"{brl(cred_a)} por ano</b> sobre as aquisicoes ({int(cred_pct*100)}% das entradas). "
+            f"Esse credito abate diretamente o CBS/IBS a recolher, reduzindo a carga tributaria liquida.",
+            EMERALD, EMRLD_50,
+        ))
+
+    return elements
+
+
 # ─── Cronograma Timeline ──────────────────────────────────────────────────────
 def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icms_uf: float) -> list:
     elements = []
@@ -2220,6 +2523,10 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     # ── 8. O QUE MUDA COM A REFORMA ──────────────────────────────────────────
     story.extend(_reforma_section(ST, sec, comp, setor_obj, inp, melhor_key, icms_uf))
+    sec += 1
+
+    # ── 9. DIREITO A CREDITO DE CBS E IBS ────────────────────────────────────
+    story.extend(_direito_credito_section(ST, sec, setor_obj, inp, icms_uf))
     sec += 1
 
     # ── ASSINATURA — sempre ao final de tudo ────────────────────────────────
