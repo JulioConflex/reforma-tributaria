@@ -1046,9 +1046,10 @@ def _direito_credito_section(
             ST["small_j"]))
 
         # Tabela ano a ano do credito (2027, 2029, 2031, 2033)
+        # IBS: inexistente em 2027; fases 10%/20%/30%/40% em 2029-2032; pleno 2033
         anos_tabela = [2027, 2029, 2031, 2033]
         cbs_yr = {2027: 0.088, 2029: 0.088, 2031: 0.088, 2033: 0.088}
-        ibs_yr = {2027: 0.001, 2029: 0.192*0.1, 2031: 0.192*0.3, 2033: 0.192}
+        ibs_yr = {2027: 0.0,   2029: 0.192*0.1, 2031: 0.192*0.3, 2033: 0.192}
 
         elements.append(KeepTogether([
             Spacer(1, 8),
