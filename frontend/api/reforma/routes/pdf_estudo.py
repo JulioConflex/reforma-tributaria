@@ -13,8 +13,9 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, PageBreak, KeepTogether, Image, TableOfContents,
+    HRFlowable, PageBreak, KeepTogether, Image,
 )
+from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.flowables import Flowable
 
 from ..engine.calculadora import (
