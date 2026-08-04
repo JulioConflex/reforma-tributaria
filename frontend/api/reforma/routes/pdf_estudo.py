@@ -381,6 +381,131 @@ def _memoria_regime_tables(
     return elements
 
 
+# ─── Seção Base Legal ─────────────────────────────────────────────────────────
+def _base_legal_section(
+    ST: dict,
+    sec: int,
+    setor_obj: dict,
+    setor_nome: str,
+    regime_key: str,
+    uf: str,
+    icms_uf: float,
+) -> list:
+    """Gera a seção de Base Legal adaptada ao setor e regime."""
+    elements = []
+    tipo = setor_obj.get("tipo", "servico")
+    reducao = setor_obj.get("reducao_aliquota", 1.0)
+
+    try:
+        cron_2033 = get_cronograma(2033)
+    except Exception:
+        cron_2033 = {}
+    cbs_ref = cron_2033.get("cbs_percentual", 0.088)
+    ibs_ref = cron_2033.get("ibs_percentual", 0.192)
+
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. Base Legal", ST["h1"]),
+        Paragraph(
+            f"Fundamentos legais dos tributos analisados neste estudo, com as alíquotas aplicáveis "
+            f"ao setor <b>{setor_nome}</b> e à UF <b>{uf}</b>.",
+            ST["body_j"]),
+        Spacer(1, 4),
+    ]))
+
+    rows_bl = [[
+        Paragraph("Tributo", ST["cell_header_l"]),
+        Paragraph("Legislação", ST["cell_header_l"]),
+        Paragraph("Alíquota / Observação", ST["cell_header_l"]),
+    ]]
+
+    if tipo == "servico":
+        rows_bl.append([
+            Paragraph("<b>ISS</b>\nImposto Sobre Servicos de Qualquer Natureza", ST["cell_l"]),
+            Paragraph("LC 116/2003\nLei municipal", ST["cell_l"]),
+            Paragraph(
+                "Alíquota entre 2% e 5%, fixada por lei do município do prestador. "
+                "Calculado por dentro (integra o preco). Substituído progressivamente pelo IBS a partir de 2029.",
+                ST["cell_l"]),
+        ])
+    else:
+        rows_bl.append([
+            Paragraph("<b>ICMS</b>\nImposto sobre Circulacao de Mercadorias e Servicos", ST["cell_l"]),
+            Paragraph(f"CF/1988, Art. 155\nLC 87/1996\nLeg. estadual ({uf})", ST["cell_l"]),
+            Paragraph(
+                f"Alíquota interna {uf}: {pct(icms_uf*100, 0)}. Operacoes interestaduais: 7% ou 12%. "
+                "Calculado por dentro (integra o preco). Substituído progressivamente pelo IBS a partir de 2029.",
+                ST["cell_l"]),
+        ])
+
+    rows_bl.append([
+        Paragraph("<b>PIS / COFINS</b>\nContribuicoes sobre a Receita Bruta", ST["cell_l"]),
+        Paragraph("Lei 10.637/2002\nLei 10.833/2003", ST["cell_l"]),
+        Paragraph(
+            "Regime cumulativo (Lucro Presumido, Simples*): PIS 0,65% + COFINS 3,00% = 3,65% sobre receita.\n"
+            "Regime nao cumulativo (Lucro Real): PIS 1,65% + COFINS 7,60%, com crédito de insumos.\n"
+            "(*) No Simples Nacional, incluídos no DAS. Substituídos pela CBS a partir de 2027.",
+            ST["cell_l"]),
+    ])
+
+    pres_irpj = setor_obj.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
+    pres_csll = setor_obj.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32)
+    if regime_key in ("lucro_presumido", "lucro_real"):
+        if regime_key == "lucro_presumido":
+            irpj_txt = (
+                f"Lucro Presumido: base presumida de {pct(pres_irpj*100, 0)} (IRPJ) e "
+                f"{pct(pres_csll*100, 0)} (CSLL) da receita bruta.\n"
+                "IRPJ: 15% + adicional de 10% sobre lucro > R$ 240.000/ano.\n"
+                "CSLL: 9% sobre a base de cálculo presumida."
+            )
+        else:
+            irpj_txt = (
+                "Lucro Real: IRPJ 15% + adicional 10% sobre o lucro real apurado.\n"
+                "CSLL: 9% sobre o lucro real. Permite compensacao de prejuízos (limite de 30% ao período).\n"
+                f"Presuncao de referencia para estimativas: {pct(pres_irpj*100, 0)} (IRPJ), {pct(pres_csll*100, 0)} (CSLL)."
+            )
+    else:
+        irpj_txt = "Incluído no DAS (Simples Nacional / MEI). Nao incide separadamente sobre o faturamento."
+
+    rows_bl.append([
+        Paragraph("<b>IRPJ / CSLL</b>\nImpostos sobre o Lucro", ST["cell_l"]),
+        Paragraph("Decreto 9.580/2018\n(RIR/2018)\nLei 7.689/1988", ST["cell_l"]),
+        Paragraph(irpj_txt, ST["cell_l"]),
+    ])
+
+    cbs_ef_pct = round(cbs_ref * reducao * 100, 2)
+    ibs_ef_pct = round(ibs_ref * reducao * 100, 2)
+    red_pct = int(round((1 - reducao) * 100))
+    cbs_ibs_txt = (
+        f"CBS substitui PIS/COFINS — vigencia plena a partir de 2027.\n"
+        f"IBS substitui ISS/ICMS — transicao progressiva 2029 a 2032, vigencia plena em 2033.\n"
+        f"Alíquotas de referencia (plenas, 2033): CBS {round(cbs_ref*100, 1)}%, IBS {round(ibs_ref*100, 1)}%.\n"
+        f"Reducao setorial — {setor_nome}: {red_pct}%.\n"
+        f"Alíquotas efetivas para este setor: CBS {cbs_ef_pct}%, IBS {ibs_ef_pct}%.\n"
+        "Cobrados por fora (Art. 9.o, LC 214/2025): nao integram o preco da operacao."
+    )
+    rows_bl.append([
+        Paragraph("<b>CBS / IBS</b>\nNovos Tributos — Reforma Tributária", ST["cell_l"]),
+        Paragraph("EC 132/2023\nLC 214/2025\nArt. 9.o (por fora)", ST["cell_l"]),
+        Paragraph(cbs_ibs_txt, ST["cell_l"]),
+    ])
+
+    t_bl = Table(rows_bl, colWidths=[4.2*cm, 3.8*cm, None])
+    t_bl.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
+        ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING",    (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+        ("LINEBELOW",     (0, 0), (-1, -2), 0.3, INK_100),
+        ("BOX",           (0, 0), (-1, -1), 0.5, INK_400),
+    ]))
+    elements.append(t_bl)
+    return elements
+
+
 # ─── PDF builder ─────────────────────────────────────────────────────────────
 def _build_pdf(inp: EstudoInput) -> bytes:
     buf = BytesIO()
@@ -573,8 +698,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             "sao estimativas sujeitas a alteracao.",
             ST["small"]))
 
-    # ── 1. PERFIL FINANCEIRO ─────────────────────────────────────────────────
+    # ── BASE LEGAL ───────────────────────────────────────────────────────────
     sec = 1
+    if setor_obj is not None:
+        story.extend(_base_legal_section(ST, sec, setor_obj, comp.setor, inp.regime_atual or "", comp.uf, icms_uf))
+        sec += 1
+
+    # ── PERFIL FINANCEIRO ────────────────────────────────────────────────────
     if inp.resultado_financeiro or inp.despesas_mensais is not None:
         story.append(Paragraph(f"{sec}. Perfil Financeiro da Empresa", ST["h1"]))
         if inp.resultado_financeiro:
@@ -634,6 +764,23 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         f"Carga tributária por operação de {brl(comp.valor_base)}, incluindo IRPJ/CSLL atribuivel.",
         ST["body"]))
     story.append(t_a)
+    if disponiveis:
+        _melhor_atual = min(disponiveis, key=lambda x: x.total_atual or float("inf"))
+        _narra_a = (
+            f"Entre os regimes disponíveis, o <b>{_melhor_atual.nome}</b> apresenta a menor carga "
+            f"tributária no sistema atual: <b>{brl(_melhor_atual.total_atual or 0)}</b> "
+            f"({pct(_melhor_atual.percentual_atual or 0)} sobre a operacao de {brl(comp.valor_base)}). "
+        )
+        _atual_r = next((r for r in disponiveis if r.regime == inp.regime_atual), None)
+        if _atual_r and _atual_r.regime != _melhor_atual.regime:
+            _dif_a = (_atual_r.total_atual or 0) - (_melhor_atual.total_atual or 0)
+            _narra_a += (
+                f"O regime atual da empresa ({_atual_r.nome}) apresenta carga de "
+                f"{brl(_atual_r.total_atual or 0)} ({pct(_atual_r.percentual_atual or 0)}), "
+                f"com diferenca de {brl(_dif_a)} em relacao ao mais vantajoso."
+            )
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(_narra_a, ST["body_j"]))
     sec += 1
 
     # ── 3. COMPARATIVO — NOVO SISTEMA ────────────────────────────────────────
@@ -668,6 +815,31 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         Paragraph(f"{sec}. Novo Sistema ({comp.ano}) — Carga por Regime", ST["h1"]),
     ]))
     story.append(t_n)
+    if disponiveis and setor_obj is not None:
+        _red_setor = setor_obj.get("reducao_aliquota", 1.0)
+        _red_pct_n = int(round((1 - _red_setor) * 100))
+        _melhor_n = next((r for r in disponiveis if r.regime == melhor_key), None)
+        _narra_n = ""
+        if _red_pct_n > 0:
+            try:
+                _c33 = get_cronograma(2033)
+                _cbs33 = round(_c33.get("cbs_percentual", 0.088) * _red_setor * 100, 2)
+                _ibs33 = round(_c33.get("ibs_percentual", 0.192) * _red_setor * 100, 2)
+                _narra_n += (
+                    f"O setor <b>{comp.setor}</b> beneficia-se de reducao setorial de <b>{_red_pct_n}%</b>, "
+                    f"com alíquotas efetivas de CBS {_cbs33}% e IBS {_ibs33}% (em 2033). "
+                )
+            except Exception:
+                pass
+        if _melhor_n:
+            _narra_n += (
+                f"No novo sistema, o <b>{_melhor_n.nome}</b> é o regime mais vantajoso em {comp.ano}, "
+                f"com carga de {brl(_melhor_n.total_novo or 0)} ({pct(_melhor_n.percentual_novo or 0)}) "
+                f"por operacao de {brl(comp.valor_base)}."
+            )
+        if _narra_n:
+            story.append(Spacer(1, 4))
+            story.append(Paragraph(_narra_n, ST["body_j"]))
     sec += 1
 
     # ── 4. VARIACAO ───────────────────────────────────────────────────────────
@@ -705,6 +877,23 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
     ]))
     story.append(t_v)
+    if disponiveis:
+        _sorted_var = sorted(disponiveis, key=lambda x: x.diferenca or 0)
+        _mv = _sorted_var[0]
+        if (_mv.diferenca or 0) < 0:
+            _narra_v = (
+                f"A reforma tributária é favorável para o <b>{_mv.nome}</b>, "
+                f"resultando em reducao de carga de {brl(abs(_mv.diferenca or 0))} por operacao "
+                f"({pct(abs(_mv.diferenca_percentual or 0), 1)})."
+            )
+        else:
+            _narra_v = (
+                f"A reforma tributária representa acréscimo de carga tributária para este setor. "
+                f"O <b>{_mv.nome}</b> apresenta o menor impacto: acréscimo de "
+                f"{brl(_mv.diferenca or 0)} por operacao ({pct(_mv.diferenca_percentual or 0, 1)})."
+            )
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(_narra_v, ST["body_j"]))
     sec += 1
 
     # ── 5. DESTAQUE DO MELHOR REGIME ─────────────────────────────────────────
@@ -818,6 +1007,31 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         "para confirmar se o regime continua sendo a melhor opcao a luz do "
         "faturamento, lucro e estrutura de despesas do período.",
         ST["body_j"]))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("Proximos passos recomendados:", ST["h3"]))
+    story.append(Spacer(1, 3))
+    _acoes_conclusao = []
+    if "mudanca" in objs and inp.regime_atual and melhor_key and inp.regime_atual != melhor_key:
+        _melhor_nome_c = melhor_obj2.nome if melhor_obj2 else melhor_key
+        _acoes_conclusao.append(
+            f"<b>Avaliar mudanca para {_melhor_nome_c}:</b> a opcao pelo novo regime deve ser "
+            "comunicada à Receita Federal em janeiro do ano seguinte. Confirme os resultados "
+            "do segundo semestre com seu contador antes de formalizar a mudanca."
+        )
+    _acoes_conclusao += [
+        "<b>Monitorar a publicacao das alíquotas definitivas de CBS e IBS</b> pelo Senado Federal (previsao 2025/2026). Os valores deste estudo sao estimativas com base na LC 214/2025.",
+        "<b>Organizar o registro de créditos de entrada</b> (insumos, servicos e bens usados na atividade) para aproveitamento de IBS e CBS a partir de 2027.",
+        "<b>Revisar contratos, precos e notas fiscais</b> para adaptar o destaque de CBS e IBS conforme exigido pela nova legislacao.",
+        "<b>Revisar este estudo anualmente</b>, ao fechar o balanco do exercício, para confirmar se o regime escolhido permanece vantajoso.",
+    ]
+    if inp.perfil_clientes == "pj":
+        _acoes_conclusao.append(
+            "<b>Avaliar o Simples Híbrido (se aplicável):</b> clientes PJ aproveitam o CBS e IBS destacados "
+            "na nota como crédito tributário. Consulte seu contador sobre a viabilidade."
+        )
+    for _acao in _acoes_conclusao:
+        story.append(Paragraph(f"• {_acao}", ST["body_j"]))
+        story.append(Spacer(1, 2))
 
     sec += 1
 
