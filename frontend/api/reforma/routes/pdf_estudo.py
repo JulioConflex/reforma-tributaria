@@ -86,6 +86,8 @@ def _styles() -> dict:
         "mem_total":      s("MT",   fontName="Helvetica-Bold",    fontSize=9,  textColor=INK_900, leading=13, alignment=TA_RIGHT),
         "mem_bl":         s("MBL",  fontName="Helvetica-Oblique", fontSize=7,  textColor=INK_400, leading=10),
         "mem_info":       s("MI",   fontName="Helvetica-Oblique", fontSize=8,  textColor=INK_400, leading=11),
+        "metric":         s("MT",   fontName="Helvetica-Bold",    fontSize=12, textColor=BRAND,   leading=16, alignment=TA_CENTER),
+        "metric_lbl":     s("ML",   fontName="Helvetica",         fontSize=8,  textColor=INK_400, leading=11, alignment=TA_CENTER),
     }
 
 def _table_style(header_color=BRAND, stripe=True) -> TableStyle:
@@ -379,6 +381,24 @@ def _memoria_regime_tables(
 
     elements.append(Spacer(1, 8))
     return elements
+
+
+# ─── Insight box ─────────────────────────────────────────────────────────────
+def _insight_box(ST: dict, text: str,
+                 border_color=None, bg=None) -> Table:
+    """Caixa de destaque com borda esquerda colorida."""
+    bc = border_color or EMERALD
+    bg_c = bg or colors.HexColor("#ECFDF5")
+    t = Table([[Paragraph(text, ST["body_j"])]], colWidths=[None])
+    t.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), bg_c),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 14),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 12),
+        ("TOPPADDING",    (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LINEBEFORE",    (0, 0), (-1, -1), 4, bc),
+    ]))
+    return t
 
 
 # ─── Seção Base Legal ─────────────────────────────────────────────────────────
@@ -817,6 +837,41 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         ("LINEBELOW", (0, 0), (-1, -2), 0.3, INK_100),
     ]))
     story.append(info_t)
+    story.append(Spacer(1, 6))
+
+    # ── Faixa de métricas-chave ──────────────────────────────────────────────
+    _melhor_capa = next((r for r in disponiveis if r.regime == melhor_key), None)
+    _pior_capa   = max(disponiveis, key=lambda x: x.total_novo or 0) if disponiveis else None
+    if _melhor_capa and _pior_capa and comp.valor_base > 0:
+        _eco_capa = (
+            ((_pior_capa.total_novo or 0) - (_melhor_capa.total_novo or 0))
+            / comp.valor_base * inp.faturamento_anual
+        )
+        _col_w = (W - 2 * margin) / 3
+        _mc_data = [[
+            Paragraph(brl(inp.faturamento_anual), ST["metric"]),
+            Paragraph(_melhor_capa.nome, ST["metric"]),
+            Paragraph(brl(_eco_capa) if _eco_capa > 0 else "—", ST["metric"]),
+        ], [
+            Paragraph("Faturamento anual", ST["metric_lbl"]),
+            Paragraph(f"Regime mais vantajoso ({comp.ano})", ST["metric_lbl"]),
+            Paragraph(f"Economia est. vs {_pior_capa.nome}", ST["metric_lbl"]),
+        ]]
+        _mc = Table(_mc_data, colWidths=[_col_w, _col_w, _col_w])
+        _mc.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, -1), INK_50),
+            ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING",    (0, 0), (-1, -1), 10),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+            ("BOX",           (0, 0), (-1, -1), 0.5, INK_400),
+            ("LINEAFTER",     (0, 0), (1, -1),  0.3, INK_400),
+            ("LINEABOVE",     (0, 0), (0, 0),   3, BRAND),
+            ("LINEABOVE",     (1, 0), (1, 0),   3, EMERALD),
+            ("LINEABOVE",     (2, 0), (2, 0),   3, EMERALD),
+        ]))
+        story.append(_mc)
     story.append(Spacer(1, 8))
 
     # Intro
@@ -1053,8 +1108,13 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 f"O <b>{_mv.nome}</b> apresenta o menor impacto: acréscimo de "
                 f"{brl(_mv.diferenca or 0)} por operacao ({pct(_mv.diferenca_percentual or 0, 1)})."
             )
-        story.append(Spacer(1, 4))
-        story.append(Paragraph(_narra_v, ST["body_j"]))
+        story.append(Spacer(1, 6))
+        _var_positivo = (_mv.diferenca or 0) < 0
+        story.append(_insight_box(
+            ST, _narra_v,
+            EMERALD if _var_positivo else AMBER,
+            colors.HexColor("#ECFDF5") if _var_positivo else colors.HexColor("#FFFBEB"),
+        ))
     sec += 1
 
     # ── 5. DESTAQUE DO MELHOR REGIME ─────────────────────────────────────────
@@ -1104,6 +1164,23 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("LINEBEFORE", (0, 0), (0, -1), 3, EMERALD),
         ]))
         story.append(dest_t)
+        if eco_anual > 0:
+            _atual_obj_dest = next((r for r in disponiveis if r.regime == inp.regime_atual), None)
+            if _atual_obj_dest and inp.regime_atual != melhor_key:
+                _dif_dest = (_atual_obj_dest.total_novo or 0) - (melhor_obj.total_novo or 0)
+                _eco_dest = _dif_dest / comp.valor_base * inp.faturamento_anual if comp.valor_base > 0 else 0
+                _txt_dest = (
+                    f"Ao adotar o <b>{melhor_obj.nome}</b> no novo sistema, a economia estimada é de "
+                    f"<b>{brl(_eco_dest)}</b> anuais em relação ao {_atual_obj_dest.nome} (regime atual), "
+                    f"com base no faturamento de {brl(inp.faturamento_anual)}."
+                )
+            else:
+                _txt_dest = (
+                    f"O <b>{melhor_obj.nome}</b> é o regime mais vantajoso no novo sistema em {comp.ano}, "
+                    f"com economia de <b>{brl(eco_anual)}</b> anuais em relação ao regime de maior carga ({pior.nome})."
+                )
+            story.append(Spacer(1, 6))
+            story.append(_insight_box(ST, _txt_dest))
         sec += 1
 
     # ── DRE SIMULADA ────────────────────────────────────────────────────────
