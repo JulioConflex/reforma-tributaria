@@ -68,6 +68,10 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
         <SimplesComparativoCard comp={resultado.simples_por_fora} ano={resultado.ano} />
       )}
 
+      {resultado.regime === "simples_nacional" && (
+        <SimplesGuiaCard ano={resultado.ano} />
+      )}
+
       {resultado.memoria_calculo && <MemoriaCalculoCard m={resultado.memoria_calculo} r={resultado} />}
 
       <NarrativeCard r={resultado} />
@@ -459,23 +463,29 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
           Simples Nacional · {ano}
         </div>
         <h3 className="font-display text-[17px] font-bold text-ink-900 leading-tight">
-          Normal vs Por Fora — qual vale mais para o seu negócio?
+          Normal vs Híbrido — qual vale mais para o seu negócio?
         </h3>
         <p className="text-[12.5px] text-ink-500 mt-1 leading-snug">
-          A partir de 2027, empresas do Simples podem optar por recolher IBS e CBS separados do DAS,
-          abrindo crédito integral para clientes B2B.
+          A partir de 2027, empresas do Simples podem optar pelo regime Híbrido: recolher IBS e CBS
+          separados do DAS pela alíquota plena, abrindo crédito integral para clientes B2B.
         </p>
       </div>
 
+      {/* Estimativa + fim do crédito presumido */}
       {!iguais && (
-        <div className="px-6 lg:px-7 pt-4 pb-0">
+        <div className="px-6 lg:px-7 pt-4 pb-0 space-y-2.5">
           <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3.5 flex gap-2.5">
             <span className="shrink-0 mt-0.5 text-amber-500 text-base">⚠️</span>
-            <p className="text-[12px] text-amber-800 leading-relaxed">
-              <strong className="font-semibold text-amber-900">Estimativa com dupla incerteza:</strong>{" "}
-              as alíquotas de referência de CBS (~9,3%) e IBS (~18,7%) são provisórias (sujeitas ao Senado), e o mecanismo exato
-              do Simples por fora ainda aguarda regulamentação do Comitê Gestor do IBS. Os valores reais poderão ser diferentes.
-            </p>
+            <div className="space-y-1">
+              <p className="text-[12px] text-amber-800 leading-relaxed">
+                <strong className="font-semibold text-amber-900">Valores são ESTIMATIVAS — não é o que você vai pagar de fato.</strong>{" "}
+                A regulamentação do CBS/IBS dentro do DAS ainda será publicada pelo CG-IBS. Os números reais poderão ser diferentes.
+              </p>
+              <p className="text-[11.5px] text-amber-700 leading-relaxed">
+                <strong>Fim do crédito presumido de 9,25%:</strong> clientes no Lucro Real que compravam de você e usavam 9,25% de crédito de PIS/COFINS
+                perderão esse benefício. No Simples Tradicional, o crédito passa a ser proporcional apenas ao CBS/IBS efetivo dentro do DAS — muito menor.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -489,7 +499,7 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
           {/* ── Normal ── */}
           <div className="px-6 lg:px-7 py-6">
             <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-2">
-              Simples Normal
+              Simples Tradicional
             </div>
             <div className="font-display text-[28px] font-bold text-ink-900 tab-num leading-tight">
               {brl(comp.total_normal)}
@@ -501,10 +511,10 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
                 Crédito que seu cliente B2B recupera
               </div>
               <div className="font-display text-[20px] font-bold text-red-600 tab-num">
-                Nenhum
+                Mínimo (~1% do valor)
               </div>
               <div className="text-[11px] text-ink-400 mt-0.5 leading-snug">
-                IBS/CBS embutido no DAS sem identificação separada — comprador não pode tomar crédito (LC 214/2025, Art. 28)
+                CBS/IBS dentro do DAS com alíquota reduzida — crédito muito menor que o regime regular (LC 214/2025, Art. 28)
               </div>
             </div>
 
@@ -514,10 +524,10 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
             </div>
           </div>
 
-          {/* ── Por Fora ── */}
+          {/* ── Híbrido ── */}
           <div className="px-6 lg:px-7 py-6 bg-gradient-to-br from-brand-50/50 to-transparent">
             <div className="text-[11px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-2">
-              Simples por Fora
+              Simples Híbrido
             </div>
             <div className="font-display text-[28px] font-bold text-brand-800 tab-num leading-tight">
               {brl(comp.total_por_fora)}
@@ -526,7 +536,7 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
               DAS + CBS + IBS separados
               {comp.diferenca_custo > 0 && (
                 <span className="ml-1.5 text-[11px] text-ink-400 font-normal">
-                  (+{brl(comp.diferenca_custo)} est. conservadora)
+                  (+{brl(comp.diferenca_custo)} vs tradicional)
                 </span>
               )}
             </div>
@@ -539,11 +549,17 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
                 {brl(comp.credito_cliente_por_fora)}
               </div>
               <div className="text-[11px] text-ink-400 mt-0.5 leading-snug">
-                crédito integral de IBS + CBS à alíquota de referência
+                crédito integral de IBS + CBS pela alíquota plena — igual ao regime regular
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3">
+            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+              <p className="text-[11px] text-red-700 leading-snug">
+                <strong>Irretratabilidade:</strong> se usar ressarcimento em dinheiro do saldo credor, fica preso no Híbrido por até 2 anos mesmo que deixe de ser vantajoso.
+              </p>
+            </div>
+
+            <div className="mt-3 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3">
               <div className="text-[11px] font-semibold text-brand-700 mb-1">Quando é melhor</div>
               <p className="text-[11.5px] text-brand-800 leading-snug">{comp.quando_b2b}</p>
             </div>
@@ -551,6 +567,106 @@ function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativ
         </div>
       )}
 
+    </div>
+  );
+}
+
+/* ─────────────── SIMPLES — JANELA DECISAO + OBRIGACOES ────────── */
+function SimplesGuiaCard({ ano }: { ano: number }) {
+  if (ano < 2027) return null;
+
+  return (
+    <div className="rounded-2xl bg-white hairline overflow-hidden">
+      <div className="px-6 lg:px-7 pt-5 pb-4 border-b border-ink-100/70 flex items-start gap-3">
+        <span className="text-2xl shrink-0">📋</span>
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.10em] text-amber-600 font-semibold mb-0.5">
+            Simples Nacional · Ação Necessária
+          </div>
+          <h3 className="font-display text-[16px] font-bold text-ink-900 leading-tight">
+            Decisão e obrigações antes de 2027
+          </h3>
+        </div>
+      </div>
+
+      <div className="p-6 lg:p-7 space-y-5">
+        {/* Janela de decisão */}
+        <div>
+          <div className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-2">
+            Janela de decisão — Tradicional ou Híbrido
+          </div>
+          <div className="space-y-2">
+            {[
+              { prazo: "Set/2026 (urgente)", desc: "Define a opção para Jan–Jun 2027. Prazo: 01 a 30 de setembro de 2026.", urgente: true },
+              { prazo: "Mar/2027", desc: "Define a opção para Jul–Dez 2027. Possível mudar se perdeu setembro.", urgente: false },
+              { prazo: "Semestral", desc: "A partir de 2027, revisão a cada 6 meses (Set e Mar de cada ano).", urgente: false },
+            ].map(({ prazo, desc, urgente }) => (
+              <div key={prazo} className={`rounded-lg px-3.5 py-2.5 flex gap-3 items-start ${urgente ? "bg-amber-50 border border-amber-200" : "bg-ink-50 border border-ink-100"}`}>
+                <span className={`text-[11px] font-bold shrink-0 mt-0.5 ${urgente ? "text-amber-700" : "text-ink-500"}`}>{prazo}</span>
+                <span className={`text-[12px] leading-snug ${urgente ? "text-amber-800" : "text-ink-600"}`}>{desc}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-ink-400 mt-2 leading-snug">
+            Condição obrigatória: empresa sem débitos fiscais em aberto. A Receita Federal antecipou notificações de exclusão em 2026.
+          </p>
+        </div>
+
+        {/* Novas obrigações */}
+        <div>
+          <div className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-2">
+            Novas obrigações acessórias
+          </div>
+          <div className="space-y-1.5">
+            {[
+              { prazo: "01/09/2026", label: "Emissor Nota Fiscal Nacional", desc: "ME e EPP passam a emitir NF pelo sistema nacional unificado." },
+              { prazo: "Jan/2027", label: "Destaque de CBS e IBS na NF", desc: "Obrigatório em toda nota, inclusive no Simples Tradicional." },
+              { prazo: "Jan/2027", label: "NBS — Nomenclatura Brasileira de Serviços", desc: "Novo campo que classifica o tipo de serviço. Erros afetam o crédito do comprador." },
+              { prazo: "Jan/2027", label: "cClassTrib — Código de Classificação Tributária", desc: "Identidade da operação para o Fisco. Obrigatório em toda NF-e." },
+            ].map(({ prazo, label, desc }) => (
+              <div key={label} className="flex gap-3 items-start bg-ink-50 rounded-lg px-3.5 py-2.5">
+                <span className="text-[10px] font-semibold text-brand-600 shrink-0 mt-0.5 min-w-[56px]">{prazo}</span>
+                <div>
+                  <div className="text-[12px] font-semibold text-ink-800">{label}</div>
+                  <div className="text-[11px] text-ink-500 leading-snug">{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Globalização de receitas */}
+        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3.5">
+          <div className="text-[11.5px] font-semibold text-amber-900 mb-1">Globalização de Receitas — novo risco ao limite</div>
+          <p className="text-[11.5px] text-amber-800 leading-relaxed">
+            A Receita Federal passará a somar o faturamento de outras fontes para verificar o limite de R$ 4,8 mi:
+            faturamento do sócio como autônomo (PF), outros CNPJs em que o sócio é administrador, taxas adicionais cobradas ao cliente,
+            aluguel de equipamentos e receitas de licenciamento ligadas à atividade.
+          </p>
+        </div>
+
+        {/* Checklist rápido */}
+        <div>
+          <div className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-2">
+            Checklist antes de setembro/2026
+          </div>
+          <div className="space-y-1">
+            {[
+              "Quitar todos os débitos fiscais (obrigatório para exercer a opção)",
+              "Mapear perfil da clientela: % B2B x B2C — clientes PJ precisam de crédito?",
+              "Simular com o contador: Tradicional vs Híbrido (carga x competitividade)",
+              "Atualizar software de NF para o Emissor Nacional (prazo: 01/09/2026)",
+              "Verificar NBS e cClassTrib corretos para cada serviço/produto",
+              "Revisar contratos B2B — fim do crédito presumido de 9,25% pode pressionar preços",
+            ].map((item) => (
+              <div key={item} className="flex gap-2 items-start text-[12px] text-ink-600 leading-snug">
+                <span className="text-ink-400 shrink-0 mt-0.5">☐</span>
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -41,6 +41,8 @@ WHITE     = colors.white
 EMRLD_50  = colors.HexColor("#ECFDF5")
 EMRLD_100 = colors.HexColor("#D1FAE5")
 EMRLD_200 = colors.HexColor("#A7F3D0")
+AMBER_50  = colors.HexColor("#FFFBEB")
+CONTENT_W = 16.4 * cm   # A4 - 2x margem util padrao
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -833,6 +835,371 @@ class _EstudoDoc(SimpleDocTemplate):
                 self.notify("TOCEntry", (0, flowable.getPlainText(), self.page, None))
             elif sn in ("H2", "H3"):
                 self.notify("TOCEntry", (1, flowable.getPlainText(), self.page, None))
+
+
+# ─── Simples Nacional — Guia Especifico ──────────────────────────────────────
+def _simples_nacional_section(
+    ST: dict,
+    sec: int,
+    setor_obj: dict | None,
+    inp,
+    comp,          # ComparativoRegimes — para pegar total_normal/por_fora se disponivel
+) -> list:
+    """Secao dedicada ao Simples Nacional: estimativas, janela de decisao,
+    irretratabilidade, globalizacao de receitas e novas obrigacoes."""
+    elements = []
+    regime  = inp.regime_atual or ""
+    if regime not in ("simples_nacional", "mei"):
+        return elements
+
+    fat_anual = inp.faturamento_anual
+    fat_pct_limite = round((fat_anual / 4_800_000) * 100, 1)
+    is_mei  = regime == "mei"
+    regime_nome = "MEI" if is_mei else "Simples Nacional"
+
+    # Percentual estimado de CBS+IBS dentro do DAS (proxy conservador)
+    # Em 2027, CBS = 8,8% mas no DAS a fatia e menor (estimativa ~1%)
+    # Em 2033, proxy ~3% dentro do DAS vs 27% no hibrido
+    credito_client_normal_2027 = fat_anual / 12 * 0.01   # ~1% da aliq CBS no DAS
+    credito_client_hibrido_2027 = fat_anual / 12 * 0.085  # ~8,5% estimado 2027
+    credito_client_hibrido_2033 = fat_anual / 12 * 0.27   # ~27% estimado 2033
+
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph(f"{sec}. {regime_nome} na Reforma — Guia de Decisao", ST["h1"]),
+        HRFlowable(width="100%", thickness=1.5, color=AMBER, spaceAfter=6),
+    ]))
+
+    # ── 1. AVISO ESTIMATIVA ──────────────────────────────────────────────────
+    aviso = Table([[Paragraph(
+        f"<b>ATENCAO: os valores calculados para 2027+ sao ESTIMATIVAS.</b> "
+        f"Para o {regime_nome}, a regulamentacao definitiva do CBS/IBS dentro do DAS "
+        f"ainda sera publicada pelo Comite Gestor do IBS (CG-IBS). Os valores reais "
+        f"poderao ser diferentes dos apresentados neste estudo. "
+        f"A decisao estrategica — {regime_nome} Tradicional ou Hibrido — deve ser tomada "
+        f"em <b>setembro de 2026</b>, com orientacao do contador.",
+        ST["body_j"])]], colWidths=[CONTENT_W])
+    aviso.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,-1), AMBER_50),
+        ("LINEBEFORE",    (0,0),(0,-1),  4, AMBER),
+        ("BOX",           (0,0),(-1,-1), 0.3, colors.HexColor("#FCD34D")),
+        ("LEFTPADDING",   (0,0),(-1,-1), 14),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 12),
+        ("TOPPADDING",    (0,0),(-1,-1), 9),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 9),
+    ]))
+    elements.append(aviso)
+    elements.append(Spacer(1, 6))
+
+    # ── 2. TRADICIONAL vs HIBRIDO ────────────────────────────────────────────
+    elements.append(KeepTogether([
+        Paragraph("Duas opcoes: Tradicional ou Hibrido", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    comp_rows = [
+        [Paragraph("", ST["cell_header"]),
+         Paragraph("Tradicional (DAS normal)", ST["cell_header"]),
+         Paragraph("Hibrido (CBS/IBS por fora)", ST["cell_header"])],
+        [Paragraph("Carga tributaria", ST["cell_l"]),
+         Paragraph("Menor — aliquotas beneficiadas do Simples", ST["cell_l"]),
+         Paragraph("Maior — aliquotas plenas do IVA (8,5% em 2027; ate ~27% em 2033)", ST["cell_l"])],
+        [Paragraph("Credito para cliente PJ", ST["cell_l"]),
+         Paragraph("Minimo — baseado na fatia CBS/IBS dentro do DAS (~1%)", ST["cell_l"]),
+         Paragraph("Integral — igual ao regime regular (8,5% em 2027; ~27% em 2033)", ST["cell_l"])],
+        [Paragraph("Burocracia", ST["cell_l"]),
+         Paragraph("Simples — 1 guia DAS", ST["cell_l"]),
+         Paragraph("Alta — apuracao mensal de credito e debito de CBS/IBS separados", ST["cell_l"])],
+        [Paragraph("Quando escolher", ST["cell_l"]),
+         Paragraph("Clientela B2C (PF) predominante ou fornecedores do Simples", ST["cell_l"]),
+         Paragraph("Clientela B2B (PJ) predominante que precisa de credito integral", ST["cell_l"])],
+        [Paragraph("Fim do credito presumido de 9,25%", ST["cell_bold"]),
+         Paragraph("SIM — clientes LR nao podem mais usar 9,25%; so o valor efetivo do DAS", ST["cell_l"]),
+         Paragraph("Nao se aplica — credito e calculado pela aliquota plena do IVA", ST["cell_l"])],
+    ]
+    t_comp = Table(comp_rows, colWidths=[3.5*cm, 6.8*cm, 6.1*cm])
+    t_comp.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,0),  NAVY),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, INK_50, WHITE, INK_50, WHITE]),
+        ("LINEBELOW",     (0,0),(-1,-2), 0.3, INK_100),
+        ("BOX",           (0,0),(-1,-1), 0.3, INK_400),
+        ("BACKGROUND",    (0,-1),(-1,-1), colors.HexColor("#FFFBEB")),
+        ("LINEABOVE",     (0,-1),(-1,-1), 0.5, AMBER),
+        ("TOPPADDING",    (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+        ("LEFTPADDING",   (0,0),(-1,-1), 7),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 7),
+        ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+    ]))
+    elements.append(t_comp)
+    elements.append(Spacer(1, 3))
+    elements.append(Paragraph(
+        "(*) O credito presumido de 9,25% (PIS/COFINS) era um beneficio estrutural para "
+        "clientes do Lucro Real que comprassem de optantes do Simples. Com a Reforma, "
+        "esse mecanismo e extinto — o credito passa a ser proporcional ao CBS/IBS "
+        "efetivamente recolhido dentro do DAS, que e muito menor (LC 214/2025, Art. 28).",
+        ST["small_j"]))
+
+    # ── 3. IMPACTO B2B — EXEMPLO NUMERICO ────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Impacto real no seu cliente B2B — comparativo de credito", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    exemplo_val = fat_anual / 12  # referencia mensal
+    ex_rows = [
+        [Paragraph("Cenario", ST["cell_header"]),
+         Paragraph("Ano", ST["cell_header"]),
+         Paragraph(f"Sobre {brl(exemplo_val)}/mes", ST["cell_header"]),
+         Paragraph("Credito que o comprador PJ recupera", ST["cell_header"])],
+        [Paragraph("Tradicional (DAS)", ST["cell_l"]),
+         Paragraph("2027", ST["cell_r"]),
+         Paragraph(brl(credito_client_normal_2027), ST["cell_r"]),
+         Paragraph("Muito limitado — proporcional a fatia CBS no DAS (~1%)", ST["cell_l"])],
+        [Paragraph("Hibrido (CBS/IBS por fora)", ST["cell_bold"]),
+         Paragraph("2027", ST["cell_r"]),
+         Paragraph(brl(credito_client_hibrido_2027), ST["cell_r"]),
+         Paragraph("Integral — igual ao regime normal (est. 8,5%)", ST["cell_l"])],
+        [Paragraph("Hibrido (CBS/IBS por fora)", ST["cell_bold"]),
+         Paragraph("2033", ST["cell_r"]),
+         Paragraph(brl(credito_client_hibrido_2033), ST["cell_r"]),
+         Paragraph("Integral — sistema pleno (~27% estimado)", ST["cell_l"])],
+    ]
+    t_ex = Table(ex_rows, colWidths=[3.8*cm, 1.5*cm, 3.0*cm, 8.1*cm])
+    t_ex.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,0),  NAVY),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, EMRLD_50, EMRLD_50]),
+        ("LINEBELOW",     (0,0),(-1,-2), 0.3, INK_100),
+        ("BOX",           (0,0),(-1,-1), 0.3, INK_400),
+        ("TOPPADDING",    (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+        ("LEFTPADDING",   (0,0),(-1,-1), 7),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 7),
+        ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+    ]))
+    elements.append(t_ex)
+    elements.append(Spacer(1, 3))
+    elements.append(Paragraph(
+        "Valores ilustrativos com base no faturamento informado. "
+        "Aliquotas estimadas — sujeitas a confirmacao pelo Senado Federal e CG-IBS.",
+        ST["small_j"]))
+
+    # ── 4. JANELA DE DECISAO ─────────────────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Janela de Decisao — Prazo e Calendario", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    jan_rows = [
+        [Paragraph("Prazo", ST["cell_header"]),
+         Paragraph("Janela", ST["cell_header"]),
+         Paragraph("O que define", ST["cell_header"]),
+         Paragraph("Condicao", ST["cell_header"])],
+        [Paragraph("Set/2026\n(01 a 30)", ST["cell_bold"]),
+         Paragraph("1a Janela", ST["cell_l"]),
+         Paragraph("Opcao vigente de Jan a Jun/2027", ST["cell_l"]),
+         Paragraph("Empresa sem debitos fiscais em aberto", ST["cell_l"])],
+        [Paragraph("Mar/2027\n(01 a 31)", ST["cell_bold"]),
+         Paragraph("2a Janela", ST["cell_l"]),
+         Paragraph("Opcao vigente de Jul a Dez/2027", ST["cell_l"]),
+         Paragraph("Empresa sem debitos fiscais em aberto", ST["cell_l"])],
+        [Paragraph("Set e Mar\ncada ano", ST["cell_l"]),
+         Paragraph("Semestral", ST["cell_l"]),
+         Paragraph("Revisao da opcao a cada semestre", ST["cell_l"]),
+         Paragraph("Regularidade fiscal obrigatoria", ST["cell_l"])],
+    ]
+    t_jan = Table(jan_rows, colWidths=[2.5*cm, 2.2*cm, 6.0*cm, 5.7*cm])
+    t_jan.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,0),  NAVY),
+        ("BACKGROUND",    (0,1),(0,1),   AMBER_50),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1), [AMBER_50, WHITE, INK_50]),
+        ("LINEBELOW",     (0,0),(-1,-2), 0.3, INK_100),
+        ("BOX",           (0,0),(-1,-1), 0.3, INK_400),
+        ("LINEABOVE",     (0,1),(-1,1),  1.0, AMBER),
+        ("TOPPADDING",    (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+        ("LEFTPADDING",   (0,0),(-1,-1), 7),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 7),
+        ("VALIGN",        (0,0),(-1,-1), "TOP"),
+    ]))
+    elements.append(t_jan)
+    elements.append(Spacer(1, 3))
+    elements.append(_insight_box(
+        ST,
+        "<b>Prazo critico:</b> a primeira decisao e em <b>setembro de 2026</b>. "
+        "Empresa com debito fiscal nao pode exercer essa opcao. A Receita Federal "
+        "antecipou notificacoes de exclusao em 2026 justamente para 'limpar' a base — "
+        "mantenha a regularidade fiscal.",
+        AMBER, AMBER_50))
+
+    # ── 5. IRRETRATABILIDADE ─────────────────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Regra de Irretratabilidade — Risco a Conhecer", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+    elements.append(_insight_box(
+        ST,
+        "<b>Atencao — trava de ate 2 anos:</b> se a empresa optar pelo Simples Hibrido "
+        "e utilizar o <b>ressarcimento em dinheiro</b> do saldo credor de CBS/IBS "
+        "(ou seja, pedir que o governo devolva o saldo de credito em especie), "
+        "ela fica <b>presa no regime Hibrido por ate 2 anos</b>, mesmo que a opcao "
+        "deixe de ser vantajosa. Essa regra nao se aplica se o credito for apenas "
+        "transferido para abater outros tributos (sem saque em dinheiro). "
+        "Avalie com cuidado antes de solicitar ressarcimento em especie.",
+        RED_C, colors.HexColor("#FEF2F2")))
+
+    # ── 6. GLOBALIZACAO DE RECEITAS ──────────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Globalizacao de Receitas — Novo Conceito de Receita Bruta", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+    elements.append(Paragraph(
+        "A LC 214/2025 ampliou o conceito de Receita Bruta para o {regime_nome}. "
+        "A Receita Federal passara a somar o faturamento de diferentes fontes para "
+        "verificar o limite de R$ 4,8 milhoes (Simples) ou R$ 81.000 (MEI):".format(
+            regime_nome=regime_nome),
+        ST["body_j"]))
+    elements.append(Spacer(1, 3))
+
+    glob_items = [
+        ("Inclui na Receita Bruta", [
+            "Juros e multas de atraso no recebimento",
+            "Venda de residuos e sucatas (se recorrente)",
+            "Taxas adicionais cobradas de clientes (entrega, montagem, personalizacao)",
+            "Receitas com franquias e licenciamento",
+            "Aluguel de equipamentos ou espacos ligados a atividade",
+            "Faturamento do socio como autonomo (PF) na mesma area de atuacao",
+            "Faturamento de outros CNPJs nos quais o socio e administrador de fato",
+        ], EMERALD, EMRLD_50),
+        ("NAO inclui na Receita Bruta", [
+            "Rendimentos de aplicacoes financeiras sem vinculo com a operacao",
+            "Dividendos recebidos de investimentos passivos",
+            "Receitas de outra empresa em que o socio seja apenas minoritario passivo",
+        ], RED_C, colors.HexColor("#FEF2F2")),
+    ]
+
+    for titulo, items, cor, bg in glob_items:
+        _style = ParagraphStyle(f"_gi_{titulo[:4]}",
+                                fontName="Helvetica", fontSize=9.5,
+                                textColor=INK_700, leading=13)
+        _row_data = [[Paragraph(f"  {i+1}. {item}", _style)] for i, item in enumerate(items)]
+        _t = Table([[Paragraph(titulo, ST["cell_header_l"])]] + _row_data,
+                   colWidths=[CONTENT_W])
+        _t.setStyle(TableStyle([
+            ("BACKGROUND",    (0,0),(0,0),   cor),
+            ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, bg]),
+            ("LINEBELOW",     (0,0),(-1,-2), 0.3, INK_100),
+            ("BOX",           (0,0),(-1,-1), 0.3, INK_400),
+            ("TOPPADDING",    (0,0),(-1,-1), 5),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+            ("LEFTPADDING",   (0,0),(-1,-1), 8),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 8),
+        ]))
+        elements.append(_t)
+        elements.append(Spacer(1, 4))
+
+    # alerta de limite
+    pct_txt = f"Faturamento atual ({brl(fat_anual)}/ano) representa {fat_pct_limite}% do limite do Simples."
+    if fat_pct_limite > 70:
+        elements.append(_insight_box(
+            ST,
+            f"<b>Atencao ao limite:</b> {pct_txt} Com a globalizacao de receitas, "
+            f"o somatório pode ultrapassar R$ 4,8 milhoes e causar exclusao automatica "
+            f"do Simples. Mapeie todas as fontes de receita do socio com o contador.",
+            AMBER, AMBER_50))
+    else:
+        elements.append(Paragraph(pct_txt, ST["small_j"]))
+
+    # ── 7. NOVAS OBRIGACOES ACESSORIAS ───────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Novas Obrigacoes Acessorias — O que Mudar na Emissao de NF", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    obrig_rows = [
+        [Paragraph("Prazo", ST["cell_header"]),
+         Paragraph("Obrigacao", ST["cell_header"]),
+         Paragraph("Detalhe", ST["cell_header_l"])],
+        [Paragraph("01/09/2026", ST["cell_bold"]),
+         Paragraph("Emissor Nota Fiscal Nacional", ST["cell_l"]),
+         Paragraph("ME e EPP do Simples passam a emitir NF pelo sistema nacional unificado. "
+                   "Verifique com seu software de gestao.", ST["cell_l"])],
+        [Paragraph("Jan/2027", ST["cell_bold"]),
+         Paragraph("Destaque de CBS e IBS na NF", ST["cell_l"]),
+         Paragraph("Toda NF deve destacar o valor de CBS e IBS separadamente, "
+                   "mesmo no Simples Tradicional.", ST["cell_l"])],
+        [Paragraph("Jan/2027", ST["cell_bold"]),
+         Paragraph("NBS — Nomenclatura Brasileira de Servicos", ST["cell_l"]),
+         Paragraph("Novo campo obrigatorio que classifica o tipo de servico prestado. "
+                   "Erros geram inconsistencia no credito do comprador.", ST["cell_l"])],
+        [Paragraph("Jan/2027", ST["cell_bold"]),
+         Paragraph("cClassTrib — Codigo de Classificacao Tributaria", ST["cell_l"]),
+         Paragraph("'Identidade' da operacao para o Fisco — define a aliquota aplicavel. "
+                   "Campo obrigatorio em toda NF-e.", ST["cell_l"])],
+    ]
+    t_obrig = Table(obrig_rows, colWidths=[2.4*cm, 4.5*cm, 9.5*cm])
+    t_obrig.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,0),  NAVY),
+        ("BACKGROUND",    (0,1),(0,1),   AMBER_50),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1), [AMBER_50, WHITE, INK_50, WHITE]),
+        ("LINEBELOW",     (0,0),(-1,-2), 0.3, INK_100),
+        ("LINEABOVE",     (0,1),(-1,1),  1.0, AMBER),
+        ("BOX",           (0,0),(-1,-1), 0.3, INK_400),
+        ("TOPPADDING",    (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+        ("LEFTPADDING",   (0,0),(-1,-1), 7),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 7),
+        ("VALIGN",        (0,0),(-1,-1), "TOP"),
+    ]))
+    elements.append(t_obrig)
+
+    # ── 8. CHECKLIST DE ACAO ─────────────────────────────────────────────────
+    elements.append(KeepTogether([
+        Spacer(1, 8),
+        Paragraph("Checklist — O que Fazer Antes de Setembro de 2026", ST["h3"]),
+        Spacer(1, 3),
+    ]))
+
+    checklist = [
+        "Quitar todos os debitos fiscais em aberto (condicao para exercer a opcao em Set/2026)",
+        "Mapear o perfil da clientela: percentual B2B x B2C e se os clientes PJ precisam de credito",
+        "Simular com o contador: Tradicional vs Hibrido, comparando carga x ganho competitivo",
+        "Verificar se ha faturamento do socio como PF autonomo ou outros CNPJs a somar",
+        "Atualizar o software de emissao de NF para o Emissor Nacional (prazo: 01/09/2026)",
+        "Solicitar ao contador o CNAE correto e o NBS para cada servico/produto principal",
+        "Revisar contratos B2B: a perda do credito presumido de 9,25% pode pressionar precos",
+        "Se optar pelo Hibrido: NAO solicitar ressarcimento em dinheiro sem antes avaliar a irretratabilidade",
+    ]
+
+    _ck_style = ParagraphStyle("_ck", fontName="Helvetica", fontSize=9.5,
+                               textColor=INK_700, leading=13)
+    ck_rows = [[
+        Paragraph(f"{'☐'}", _ck_style),
+        Paragraph(item, _ck_style),
+    ] for item in checklist]
+    t_ck = Table(ck_rows, colWidths=[0.7*cm, CONTENT_W - 0.7*cm])
+    t_ck.setStyle(TableStyle([
+        ("ROWBACKGROUNDS", (0,0),(-1,-1), [WHITE, INK_50]),
+        ("LINEBELOW",      (0,0),(-1,-2), 0.3, INK_100),
+        ("BOX",            (0,0),(-1,-1), 0.3, INK_400),
+        ("TOPPADDING",     (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING",  (0,0),(-1,-1), 5),
+        ("LEFTPADDING",    (0,0),(-1,-1), 6),
+        ("RIGHTPADDING",   (0,0),(-1,-1), 6),
+        ("VALIGN",         (0,0),(-1,-1), "TOP"),
+    ]))
+    elements.append(t_ck)
+    elements.append(Spacer(1, 3))
+    elements.append(Paragraph(
+        "Base legal: LC 214/2025 (Arts. 350-352 — Simples Nacional), LC 227/2026, LC 123/2006.",
+        ST["small_j"]))
+
+    return elements
 
 
 # ─── Direito a Credito ───────────────────────────────────────────────────────
@@ -2529,6 +2896,12 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     # ── 9. DIREITO A CREDITO DE CBS E IBS ────────────────────────────────────
     story.extend(_direito_credito_section(ST, sec, setor_obj, inp, icms_uf))
     sec += 1
+
+    # ── 10. SIMPLES NACIONAL — GUIA ESPECIFICO (so para simples/mei) ─────────
+    simples_els = _simples_nacional_section(ST, sec, setor_obj, inp, comp)
+    if simples_els:
+        story.extend(simples_els)
+        sec += 1
 
     # ── ASSINATURA — sempre ao final de tudo ────────────────────────────────
     story.append(Spacer(1, 14))
