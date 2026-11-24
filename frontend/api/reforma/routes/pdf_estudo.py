@@ -1546,7 +1546,7 @@ def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icm
          f"CBS {cbs_ef:.2f}% ef.\n{tipo_trib} mantido\nintegralmente.",
          colors.HexColor("#0B6E68")),
         ("2028", "Adaptacao",
-         f"{tipo_trib} e ISS\nmantidos integrais.\nIBS 0,1% (teste).\nAnno de ajustes.",
+         f"{tipo_trib}\nmantido integral.\nIBS 0,1% (teste).\nAno de ajustes.",
          f"Adaptar ERP,\ncontratos e\nprecificacao.",
          colors.HexColor("#0E9080")),
         ("2029", "10% IBS",
@@ -1897,7 +1897,7 @@ def _reforma_section(
         "(*) Projecao para 2033 (sistema pleno) com aliquotas de referencia provisorias. "
         "Em 2027, apenas CBS entra em vigor. O IBS comeca em 2029. "
         "O capital de giro deve ser revisado antes do inicio de 2027. "
-        "Split Payment obrigatorio para B2B a partir de 2028 (2027 e fase de adesao voluntaria).",
+        "O cronograma e os limites do Split Payment dependem de regulamentacao especifica ainda pendente.",
         ST["small_j"]))
 
     # ── 5-B. CASHBACK TRIBUTARIO (setores populares/reduzidos) ──────────────
@@ -2351,9 +2351,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     if comp.valores_projetados:
         story.append(Spacer(1, 4))
         story.append(Paragraph(
-            "<b>Atencao:</b> As alíquotas de referencia do IBS (~18,7%) e CBS (~9,3%) "
-            "ainda nao foram confirmadas pelo Senado Federal. Os valores do novo sistema "
-            "sao estimativas sujeitas a alteracao.",
+            "<b>Atencao:</b> As alíquotas de referencia do IBS (19,2%) e CBS (8,8%) "
+            "sao provisorias e sujeitas a confirmacao por Resolucao do Senado Federal "
+            "(LC 214/2025, Art. 361). Os valores do novo sistema sao estimativas.",
             ST["small"]))
 
     # ── BASE LEGAL ───────────────────────────────────────────────────────────
