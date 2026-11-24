@@ -715,7 +715,11 @@ def _calcular_irpj_csll_info(
     if regime == "lucro_real":
         # Estimável quando o usuário informa faturamento e despesas médias mensais.
         if faturamento_mensal and despesas_mensais is not None:
-            lucro_mensal = faturamento_mensal - despesas_mensais
+            pis_r, _, cof_r, _ = _get_pis_cofins(setor, "lucro_real")
+            tipo = setor.get("tipo", "servico")
+            iss_r = get_iss_padrao(setor) if tipo == "servico" else 0.0
+            tributos_receita = faturamento_mensal * (pis_r + cof_r + iss_r)
+            lucro_mensal = faturamento_mensal - despesas_mensais - tributos_receita
             if lucro_mensal <= 0:
                 return IrpjCsllInfo(
                     estimavel=True,
@@ -723,8 +727,9 @@ def _calcular_irpj_csll_info(
                     irpj_percentual=0.0, csll_percentual=0.0,
                     adicional_irpj_possivel=False,
                     mensagem_leigo=(
-                        f"Com receita de R$ {_br(faturamento_mensal)}/mês e despesas de "
-                        f"R$ {_br(despesas_mensais)}/mês, o lucro real é zero ou negativo — "
+                        f"Com receita de R$ {_br(faturamento_mensal)}/mês, despesas de "
+                        f"R$ {_br(despesas_mensais)}/mês e tributos sobre a receita de "
+                        f"R$ {_br(tributos_receita)}/mês, o lucro real é zero ou negativo — "
                         f"sem IRPJ/CSLL a recolher no período. (Estimativa; confirme com seu contador.)"
                     ),
                 )
@@ -744,9 +749,10 @@ def _calcular_irpj_csll_info(
                 csll_percentual=round(csll / faturamento_mensal * 100, 2),
                 adicional_irpj_possivel=adicional > 0,
                 mensagem_leigo=(
-                    f"Lucro real ≈ R$ {_br(lucro_mensal)}/mês (receita R$ {_br(faturamento_mensal)} − "
-                    f"despesas R$ {_br(despesas_mensais)}). IRPJ = 15% × lucro{adic_txt} = "
-                    f"R$ {_br(irpj_total)}/mês; CSLL = 9% × lucro = R$ {_br(csll)}/mês. "
+                    f"Lucro real ≈ R$ {_br(lucro_mensal)}/mês (receita R$ {_br(faturamento_mensal)} "
+                    f"− despesas R$ {_br(despesas_mensais)} − tributos s/ receita R$ {_br(tributos_receita)}). "
+                    f"IRPJ = 15% × lucro{adic_txt} = R$ {_br(irpj_total)}/mês; "
+                    f"CSLL = 9% × lucro = R$ {_br(csll)}/mês. "
                     f"Total IRPJ+CSLL ≈ R$ {_br(irpj_total + csll)}/mês. "
                     f"Estimativa — confirme com seu contador. (A reforma não altera IRPJ/CSLL.)"
                 ),
@@ -837,7 +843,11 @@ def _irpj_csll_por_operacao(
     elif regime == "lucro_real":
         if despesas_mensais is None:
             return 0.0
-        lucro_anual = faturamento_anual - despesas_mensais * 12.0
+        pis_r, _, cof_r, _ = _get_pis_cofins(setor, "lucro_real")
+        tipo = setor.get("tipo", "servico")
+        iss_r = get_iss_padrao(setor) if tipo == "servico" else 0.0
+        tributos_receita_anual = faturamento_anual * (pis_r + cof_r + iss_r)
+        lucro_anual = faturamento_anual - despesas_mensais * 12.0 - tributos_receita_anual
         if lucro_anual <= 0:
             return 0.0
         irpj_anual = lucro_anual * 0.15 + max(0.0, lucro_anual - 240_000.0) * 0.10
@@ -1122,10 +1132,19 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
     passos_irpj: list[PassoMemoria] = []
     if (inp.regime == "lucro_real" and irpj_csll_info and irpj_csll_info.estimavel
             and inp.faturamento_mensal and inp.despesas_mensais is not None):
-        lucro = inp.faturamento_mensal - inp.despesas_mensais
+        pis_r_m, _, cof_r_m, _ = _get_pis_cofins(setor, "lucro_real", getattr(inp, "pis_cofins_regime", None))
+        tipo_m = setor.get("tipo", "servico")
+        iss_r_m = iss_setor_aliq if tipo_m == "servico" else 0.0
+        tributos_m = inp.faturamento_mensal * (pis_r_m + cof_r_m + iss_r_m)
+        lucro = inp.faturamento_mensal - inp.despesas_mensais - tributos_m
         passos_irpj.append(PassoMemoria(
             rotulo="Lucro real mensal",
-            formula=f"R$ {_br(inp.faturamento_mensal)} (receita) − R$ {_br(inp.despesas_mensais)} (despesas) = R$ {_br(lucro)}",
+            formula=(
+                f"R$ {_br(inp.faturamento_mensal)} (receita) "
+                f"− R$ {_br(inp.despesas_mensais)} (despesas) "
+                f"− R$ {_br(tributos_m)} (PIS/COFINS/ISS dedutíveis) "
+                f"= R$ {_br(lucro)}"
+            ),
             valor=round(lucro, 2),
         ))
         if lucro > 0:

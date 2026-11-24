@@ -266,8 +266,18 @@ def _memoria_regime_tables(
                 )
             elif regime_key == "lucro_real":
                 if despesas_mensais is not None:
-                    lucro = faturamento_anual - despesas_mensais * 12
-                    irpj_formula = f"Lucro anual est. {brl(lucro)} × 15% (IRPJ) + 9% (CSLL)"
+                    from ..engine.calculadora import _get_pis_cofins as _gpc
+                    from ..engine.regras import get_iss_padrao as _giss
+                    _pr, _, _cr, _ = _gpc(setor_obj, "lucro_real")
+                    _ir = _giss(setor_obj) if setor_obj.get("tipo", "servico") == "servico" else 0.0
+                    _trib = faturamento_anual * (_pr + _cr + _ir)
+                    lucro = faturamento_anual - despesas_mensais * 12 - _trib
+                    irpj_formula = (
+                        f"Receita {brl(faturamento_anual)} "
+                        f"- Despesas {brl(despesas_mensais*12)} "
+                        f"- Tributos s/ receita {brl(_trib)} "
+                        f"= Lucro {brl(lucro)} × 15%+9%"
+                    )
                 else:
                     irpj_formula = "Lucro real — informar despesas para estimativa"
             else:
@@ -420,7 +430,7 @@ def _base_legal_section(
     """Gera a seção de Base Legal adaptada ao setor e regime."""
     elements = []
     tipo = setor_obj.get("tipo", "servico")
-    reducao = setor_obj.get("reducao_aliquota", 1.0)
+    redução = setor_obj.get("reducao_aliquota", 1.0)
 
     try:
         cron_2033 = get_cronograma(2033)
@@ -459,7 +469,7 @@ def _base_legal_section(
             Paragraph("<b>ICMS</b>\nImposto sobre Circulacao de Mercadorias e Servicos", ST["cell_l"]),
             Paragraph(f"CF/1988, Art. 155\nLC 87/1996\nLeg. estadual ({uf})", ST["cell_l"]),
             Paragraph(
-                f"Alíquota interna {uf}: {pct(icms_uf*100, 0)}. Operacoes interestaduais: 7% ou 12%. "
+                f"Alíquota interna {uf}: {pct(icms_uf*100, 0)}. Operações interestaduais: 7% ou 12%. "
                 "Calculado por dentro (integra o preco). Substituído progressivamente pelo IBS a partir de 2029.",
                 ST["cell_l"]),
         ])
@@ -469,7 +479,7 @@ def _base_legal_section(
         Paragraph("Lei 10.637/2002\nLei 10.833/2003", ST["cell_l"]),
         Paragraph(
             "Regime cumulativo (Lucro Presumido, Simples*): PIS 0,65% + COFINS 3,00% = 3,65% sobre receita.\n"
-            "Regime nao cumulativo (Lucro Real): PIS 1,65% + COFINS 7,60%, com crédito de insumos.\n"
+            "Regime não cumulativo (Lucro Real): PIS 1,65% + COFINS 7,60%, com crédito de insumos.\n"
             "(*) No Simples Nacional, incluídos no DAS. Substituídos pela CBS a partir de 2027.",
             ST["cell_l"]),
     ])
@@ -488,7 +498,7 @@ def _base_legal_section(
             irpj_txt = (
                 "Lucro Real: IRPJ 15% + adicional 10% sobre o lucro real apurado.\n"
                 "CSLL: 9% sobre o lucro real. Permite compensacao de prejuízos (limite de 30% ao período).\n"
-                f"Presuncao de referencia para estimativas: {pct(pres_irpj*100, 0)} (IRPJ), {pct(pres_csll*100, 0)} (CSLL)."
+                f"Presunção de referencia para estimativas: {pct(pres_irpj*100, 0)} (IRPJ), {pct(pres_csll*100, 0)} (CSLL)."
             )
     else:
         irpj_txt = "Incluído no DAS (Simples Nacional / MEI). Nao incide separadamente sobre o faturamento."
@@ -499,16 +509,16 @@ def _base_legal_section(
         Paragraph(irpj_txt, ST["cell_l"]),
     ])
 
-    cbs_ef_pct = round(cbs_ref * (1 - reducao) * 100, 2)
-    ibs_ef_pct = round(ibs_ref * (1 - reducao) * 100, 2)
-    red_pct = int(round(reducao * 100))
+    cbs_ef_pct = round(cbs_ref * (1 - redução) * 100, 2)
+    ibs_ef_pct = round(ibs_ref * (1 - redução) * 100, 2)
+    red_pct = int(round(redução * 100))
     cbs_ibs_txt = (
         f"CBS substitui PIS/COFINS — vigencia plena a partir de 2027.\n"
-        f"IBS substitui ISS/ICMS — transicao progressiva 2029 a 2032, vigencia plena em 2033.\n"
+        f"IBS substitui ISS/ICMS — transição progressiva 2029 a 2032, vigencia plena em 2033.\n"
         f"Alíquotas de referencia (plenas, 2033): CBS {round(cbs_ref*100, 1)}%, IBS {round(ibs_ref*100, 1)}%.\n"
-        f"Reducao setorial — {setor_nome}: {red_pct}%.\n"
+        f"Redução setorial — {setor_nome}: {red_pct}%.\n"
         f"Alíquotas efetivas para este setor: CBS {cbs_ef_pct}%, IBS {ibs_ef_pct}%.\n"
-        "Cobrados por fora (Art. 9.o, LC 214/2025): nao integram o preco da operacao."
+        "Cobrados por fora (Art. 9.o, LC 214/2025): não integram o preco da operação."
     )
     rows_bl.append([
         Paragraph("<b>CBS / IBS</b>\nNovos Tributos — Reforma Tributária", ST["cell_l"]),
@@ -597,8 +607,8 @@ def _dre_section(
         Paragraph(
             f"DRE simplificada para o <b>{regime_nome}</b> com faturamento anual de "
             f"<b>{brl(faturamento_anual)}</b>. No novo sistema, CBS e IBS sao cobrados por fora "
-            f"(Art. 9.o, LC 214/2025): nao reduzem a Receita Líquida, mas representam "
-            "uma obrigacao tributária separada paga via Split Payment.",
+            f"(Art. 9.o, LC 214/2025): não reduzem a Receita Líquida, mas representam "
+            "uma obrigação tributária separada paga via Split Payment.",
             ST["body_j"]),
         Spacer(1, 4),
     ]))
@@ -686,8 +696,8 @@ def _dre_section(
     elements.append(Paragraph(
         "<b>Nota:</b> No novo sistema, CBS e IBS sao recolhidos via Split Payment — o banco debita "
         "automaticamente no recebimento e repassa ao governo. A Receita Líquida aumenta (ISS, ICMS, "
-        "PIS e COFINS deixam de incidir), mas o fluxo de caixa deve considerar a obrigacao de CBS+IBS. "
-        "IRPJ e CSLL nao sao alterados pela Reforma Tributária. Valores estimados.",
+        "PIS e COFINS deixam de incidir), mas o fluxo de caixa deve considerar a obrigação de CBS+IBS. "
+        "IRPJ e CSLL não sao alterados pela Reforma Tributária. Valores estimados.",
         ST["small_j"]))
 
     return elements
@@ -704,14 +714,14 @@ def _analise_regimes_section(
     """Seção de análise narrativa por regime, do mais ao menos vantajoso."""
     elements = []
     tipo = setor_obj.get("tipo", "servico")
-    reducao = setor_obj.get("reducao_aliquota", 1.0)
-    red_pct = int(round(reducao * 100))
+    redução = setor_obj.get("reducao_aliquota", 1.0)
+    red_pct = int(round(redução * 100))
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
 
     try:
         c33 = get_cronograma(2033)
-        cbs_ef = round(c33.get("cbs_percentual", 0.088) * (1 - reducao) * 100, 2)
-        ibs_ef = round(c33.get("ibs_percentual", 0.192) * (1 - reducao) * 100, 2)
+        cbs_ef = round(c33.get("cbs_percentual", 0.088) * (1 - redução) * 100, 2)
+        ibs_ef = round(c33.get("ibs_percentual", 0.192) * (1 - redução) * 100, 2)
     except Exception:
         cbs_ef, ibs_ef = 8.8, 19.2
 
@@ -762,26 +772,26 @@ def _analise_regimes_section(
             ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
         ]))
 
-        # Narrativa especifica por regime
+        # Narrativa específica por regime
         pres_irpj = setor_obj.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
         cbs_ibs_total = f"CBS {cbs_ef}% + IBS {ibs_ef}%"
-        red_nota = f" (reducao setorial de {red_pct}% aplicada)" if red_pct > 0 else ""
+        red_nota = f" (redução setorial de {red_pct}% aplicada)" if red_pct > 0 else ""
 
         if r.regime == "lucro_presumido":
             narrativa = (
                 f"No Lucro Presumido, PIS/COFINS incidem no regime cumulativo (3,65%) sem aproveitamento "
                 f"de créditos, e {tipo_trib} compoe a carga atual de {pct(r.percentual_atual or 0)} sobre "
-                f"a operacao. IRPJ e CSLL sao estimados sobre presuncao de {int(pres_irpj*100)}% da receita. "
+                f"a operação. IRPJ e CSLL sao estimados sobre presunção de {int(pres_irpj*100)}% da receita. "
                 f"Com a reforma, {tipo_trib}, PIS e COFINS sao substituídos progressivamente por CBS e IBS. "
                 f"Em 2033, a alíquota efetiva neste setor sera {cbs_ibs_total}{red_nota}, "
                 "cobrados por fora via Split Payment."
             )
         elif r.regime == "lucro_real":
             narrativa = (
-                f"No Lucro Real, PIS/COFINS sao nao cumulativos (9,25%), com crédito integral de insumos. "
+                f"No Lucro Real, PIS/COFINS sao não cumulativos (9,25%), com crédito integral de insumos. "
                 f"IRPJ e CSLL incidem somente sobre o lucro apurado — zerados em cenário de prejuízo. "
                 f"Com a reforma, o Lucro Real mantem o aproveitamento de créditos de CBS/IBS "
-                f"(regime nao cumulativo por natureza). Em 2033, alíquotas efetivas: {cbs_ibs_total}{red_nota}. "
+                f"(regime não cumulativo por natureza). Em 2033, alíquotas efetivas: {cbs_ibs_total}{red_nota}. "
                 f"O crédito de entrada informado de {int(inp.credito_entrada*100)}% reduz a carga líquida de CBS/IBS."
             )
         elif r.regime == "simples_nacional":
@@ -837,7 +847,7 @@ class _EstudoDoc(SimpleDocTemplate):
                 self.notify("TOCEntry", (1, flowable.getPlainText(), self.page, None))
 
 
-# ─── Simples Nacional — Guia Especifico ──────────────────────────────────────
+# ─── Simples Nacional — Guia Específico ──────────────────────────────────────
 def _simples_nacional_section(
     ST: dict,
     sec: int,
@@ -846,7 +856,7 @@ def _simples_nacional_section(
     comp,          # ComparativoRegimes — para pegar total_normal/por_fora se disponivel
 ) -> list:
     """Secao dedicada ao Simples Nacional: estimativas, janela de decisao,
-    irretratabilidade, globalizacao de receitas e novas obrigacoes."""
+    irretratabilidade, globalizacao de receitas e novas obrigações."""
     elements = []
     regime  = inp.regime_atual or ""
     if regime not in ("simples_nacional", "mei"):
@@ -873,7 +883,7 @@ def _simples_nacional_section(
     # ── 1. AVISO ESTIMATIVA ──────────────────────────────────────────────────
     aviso = Table([[Paragraph(
         f"<b>ATENCAO: os valores calculados para 2027+ sao ESTIMATIVAS.</b> "
-        f"Para o {regime_nome}, a regulamentacao definitiva do CBS/IBS dentro do DAS "
+        f"Para o {regime_nome}, a regulamentação definitiva do CBS/IBS dentro do DAS "
         f"ainda sera publicada pelo Comite Gestor do IBS (CG-IBS). Os valores reais "
         f"poderao ser diferentes dos apresentados neste estudo. "
         f"A decisao estrategica — {regime_nome} Tradicional ou Hibrido — deve ser tomada "
@@ -901,11 +911,11 @@ def _simples_nacional_section(
         [Paragraph("", ST["cell_header"]),
          Paragraph("Tradicional (DAS normal)", ST["cell_header"]),
          Paragraph("Hibrido (CBS/IBS por fora)", ST["cell_header"])],
-        [Paragraph("Carga tributaria", ST["cell_l"]),
-         Paragraph("Menor — aliquotas beneficiadas do Simples", ST["cell_l"]),
-         Paragraph("Maior — aliquotas plenas do IVA (8,5% em 2027; ate ~27% em 2033)", ST["cell_l"])],
+        [Paragraph("Carga tributária", ST["cell_l"]),
+         Paragraph("Menor — alíquotas beneficiadas do Simples", ST["cell_l"]),
+         Paragraph("Maior — alíquotas plenas do IVA (8,5% em 2027; ate ~27% em 2033)", ST["cell_l"])],
         [Paragraph("Credito para cliente PJ", ST["cell_l"]),
-         Paragraph("Minimo — baseado na fatia CBS/IBS dentro do DAS (~1%)", ST["cell_l"]),
+         Paragraph("Mínimo — baseado na fatia CBS/IBS dentro do DAS (~1%)", ST["cell_l"]),
          Paragraph("Integral — igual ao regime regular (8,5% em 2027; ~27% em 2033)", ST["cell_l"])],
         [Paragraph("Burocracia", ST["cell_l"]),
          Paragraph("Simples — 1 guia DAS", ST["cell_l"]),
@@ -914,8 +924,8 @@ def _simples_nacional_section(
          Paragraph("Clientela B2C (PF) predominante ou fornecedores do Simples", ST["cell_l"]),
          Paragraph("Clientela B2B (PJ) predominante que precisa de credito integral", ST["cell_l"])],
         [Paragraph("Fim do credito presumido de 9,25%", ST["cell_bold"]),
-         Paragraph("SIM — clientes LR nao podem mais usar 9,25%; so o valor efetivo do DAS", ST["cell_l"]),
-         Paragraph("Nao se aplica — credito e calculado pela aliquota plena do IVA", ST["cell_l"])],
+         Paragraph("SIM — clientes LR não podem mais usar 9,25%; so o valor efetivo do DAS", ST["cell_l"]),
+         Paragraph("Nao se aplica — credito e calculado pela alíquota plena do IVA", ST["cell_l"])],
     ]
     t_comp = Table(comp_rows, colWidths=[3.5*cm, 6.8*cm, 6.1*cm])
     t_comp.setStyle(TableStyle([
@@ -982,7 +992,7 @@ def _simples_nacional_section(
     elements.append(Spacer(1, 3))
     elements.append(Paragraph(
         "Valores ilustrativos com base no faturamento informado. "
-        "Aliquotas estimadas — sujeitas a confirmacao pelo Senado Federal e CG-IBS.",
+        "Alíquotas estimadas — sujeitas a confirmacao pelo Senado Federal e CG-IBS.",
         ST["small_j"]))
 
     # ── 4. JANELA DE DECISAO ─────────────────────────────────────────────────
@@ -1028,8 +1038,8 @@ def _simples_nacional_section(
     elements.append(Spacer(1, 3))
     elements.append(_insight_box(
         ST,
-        "<b>Prazo critico:</b> a primeira decisao e em <b>setembro de 2026</b>. "
-        "Empresa com debito fiscal nao pode exercer essa opcao. A Receita Federal "
+        "<b>Prazo crítico:</b> a primeira decisao e em <b>setembro de 2026</b>. "
+        "Empresa com debito fiscal não pode exercer essa opcao. A Receita Federal "
         "antecipou notificacoes de exclusao em 2026 justamente para 'limpar' a base — "
         "mantenha a regularidade fiscal.",
         AMBER, AMBER_50))
@@ -1042,11 +1052,11 @@ def _simples_nacional_section(
     ]))
     elements.append(_insight_box(
         ST,
-        "<b>Atencao — trava de ate 2 anos:</b> se a empresa optar pelo Simples Hibrido "
+        "<b>Atenção — trava de ate 2 anos:</b> se a empresa optar pelo Simples Hibrido "
         "e utilizar o <b>ressarcimento em dinheiro</b> do saldo credor de CBS/IBS "
         "(ou seja, pedir que o governo devolva o saldo de credito em especie), "
         "ela fica <b>presa no regime Hibrido por ate 2 anos</b>, mesmo que a opcao "
-        "deixe de ser vantajosa. Essa regra nao se aplica se o credito for apenas "
+        "deixe de ser vantajosa. Essa regra não se aplica se o credito for apenas "
         "transferido para abater outros tributos (sem saque em dinheiro). "
         "Avalie com cuidado antes de solicitar ressarcimento em especie.",
         RED_C, colors.HexColor("#FEF2F2")))
@@ -1076,7 +1086,7 @@ def _simples_nacional_section(
             "Faturamento de outros CNPJs nos quais o socio e administrador de fato",
         ], EMERALD, EMRLD_50),
         ("NAO inclui na Receita Bruta", [
-            "Rendimentos de aplicacoes financeiras sem vinculo com a operacao",
+            "Rendimentos de aplicacoes financeiras sem vinculo com a operação",
             "Dividendos recebidos de investimentos passivos",
             "Receitas de outra empresa em que o socio seja apenas minoritario passivo",
         ], RED_C, colors.HexColor("#FEF2F2")),
@@ -1107,7 +1117,7 @@ def _simples_nacional_section(
     if fat_pct_limite > 70:
         elements.append(_insight_box(
             ST,
-            f"<b>Atencao ao limite:</b> {pct_txt} Com a globalizacao de receitas, "
+            f"<b>Atenção ao limite:</b> {pct_txt} Com a globalizacao de receitas, "
             f"o somatório pode ultrapassar R$ 4,8 milhoes e causar exclusao automatica "
             f"do Simples. Mapeie todas as fontes de receita do socio com o contador.",
             AMBER, AMBER_50))
@@ -1123,12 +1133,12 @@ def _simples_nacional_section(
 
     obrig_rows = [
         [Paragraph("Prazo", ST["cell_header"]),
-         Paragraph("Obrigacao", ST["cell_header"]),
+         Paragraph("Obrigação", ST["cell_header"]),
          Paragraph("Detalhe", ST["cell_header_l"])],
         [Paragraph("01/09/2026", ST["cell_bold"]),
          Paragraph("Emissor Nota Fiscal Nacional", ST["cell_l"]),
          Paragraph("ME e EPP do Simples passam a emitir NF pelo sistema nacional unificado. "
-                   "Verifique com seu software de gestao.", ST["cell_l"])],
+                   "Verifique com seu software de gestão.", ST["cell_l"])],
         [Paragraph("Jan/2027", ST["cell_bold"]),
          Paragraph("Destaque de CBS e IBS na NF", ST["cell_l"]),
          Paragraph("Toda NF deve destacar o valor de CBS e IBS separadamente, "
@@ -1138,8 +1148,8 @@ def _simples_nacional_section(
          Paragraph("Novo campo obrigatorio que classifica o tipo de servico prestado. "
                    "Erros geram inconsistencia no credito do comprador.", ST["cell_l"])],
         [Paragraph("Jan/2027", ST["cell_bold"]),
-         Paragraph("cClassTrib — Codigo de Classificacao Tributaria", ST["cell_l"]),
-         Paragraph("'Identidade' da operacao para o Fisco — define a aliquota aplicavel. "
+         Paragraph("cClassTrib — Codigo de Classificacao Tributária", ST["cell_l"]),
+         Paragraph("'Identidade' da operação para o Fisco — define a alíquota aplicavel. "
                    "Campo obrigatorio em toda NF-e.", ST["cell_l"])],
     ]
     t_obrig = Table(obrig_rows, colWidths=[2.4*cm, 4.5*cm, 9.5*cm])
@@ -1213,14 +1223,14 @@ def _direito_credito_section(
     elements = []
     so = setor_obj or {}
     tipo     = so.get("tipo", "servico")
-    reducao  = so.get("reducao_aliquota", 1.0)
+    redução  = so.get("reducao_aliquota", 1.0)
     setor_id = so.get("id", "")
     setor_nome = so.get("nome", inp.razao_social)
     regime   = inp.regime_atual or ""
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef_dec = CBS33 * (1 - reducao)
-    ibs_ef_dec = IBS33 * (1 - reducao)
+    cbs_ef_dec = CBS33 * (1 - redução)
+    ibs_ef_dec = IBS33 * (1 - redução)
     cbs_ef_pct = round(cbs_ef_dec * 100, 2)
     ibs_ef_pct = round(ibs_ef_dec * 100, 2)
     total_ef_pct = round((cbs_ef_dec + ibs_ef_dec) * 100, 2)
@@ -1231,19 +1241,19 @@ def _direito_credito_section(
     # Situacao atual do credito por regime
     if regime == "lucro_presumido":
         sit_atual = (
-            f"Atualmente, no <b>Lucro Presumido</b>, praticamente nao ha creditos de PIS e COFINS — "
-            f"o regime e cumulativo (0,65% + 3%), sem deducao de entradas. "
-            f"Com a CBS e o IBS, passa a vigorar a <b>nao cumulatividade ampla</b>: "
-            f"os tributos pagos nas aquisicoes de bens e servicos ligados a atividade "
+            f"Atualmente, no <b>Lucro Presumido</b>, praticamente não ha creditos de PIS e COFINS — "
+            f"o regime e cumulativo (0,65% + 3%), sem dedução de entradas. "
+            f"Com a CBS e o IBS, passa a vigorar a <b>não cumulatividade ampla</b>: "
+            f"os tributos pagos nas aquisições de bens e servicos ligados a atividade "
             f"podem ser abatidos do CBS/IBS devido nas vendas, observadas as restricoes da LC 214/2025."
         )
     elif regime == "lucro_real":
         sit_atual = (
-            f"No <b>Lucro Real</b>, PIS (1,65%) e COFINS (7,6%) ja sao nao cumulativos: "
+            f"No <b>Lucro Real</b>, PIS (1,65%) e COFINS (7,6%) ja sao não cumulativos: "
             f"a empresa ja deduz o PIS/COFINS pago nas entradas. "
             f"Com a CBS e o IBS, essa logica e <b>preservada e ampliada</b>: "
             f"o creditamento se torna mais abrangente e beneficia mais categorias de despesas, "
-            f"com potencial de reducao da carga tributaria liquida."
+            f"com potencial de redução da carga tributária liquida."
         )
     elif regime == "simples_nacional":
         sit_atual = (
@@ -1254,8 +1264,8 @@ def _direito_credito_section(
         )
     else:
         sit_atual = (
-            f"Com a CBS e o IBS, passa a vigorar a <b>nao cumulatividade ampla</b>: "
-            f"os tributos pagos nas aquisicoes de bens e servicos ligados a atividade "
+            f"Com a CBS e o IBS, passa a vigorar a <b>não cumulatividade ampla</b>: "
+            f"os tributos pagos nas aquisições de bens e servicos ligados a atividade "
             f"podem ser abatidos do CBS/IBS devido nas vendas, nos termos da LC 214/2025."
         )
 
@@ -1273,7 +1283,7 @@ def _direito_credito_section(
             "Contratos de manutencao, calibracao e assistencia tecnica de equipamentos",
             "Energia eletrica consumida no estabelecimento de saude",
             "Aluguel do imovel utilizado na atividade",
-            "Softwares de gestao, prontuario eletronico e sistemas de agendamento",
+            "Softwares de gestão, prontuario eletronico e sistemas de agendamento",
             "Servicos terceirizados (limpeza, seguranca, TI e contabilidade)",
             "Reformas e benfeitorias realizadas por empresas tributadas pelo IBS e CBS",
         ]
@@ -1283,7 +1293,7 @@ def _direito_credito_section(
             "Embalagens e materiais de acondicionamento",
             "Fretes e servicos de transporte quando tributados pelo IBS/CBS",
             "Energia eletrica consumida na atividade comercial",
-            "Softwares de gestao (ERP, PDV, e-commerce)",
+            "Softwares de gestão (ERP, PDV, e-commerce)",
             "Servicos terceirizados (limpeza, seguranca, TI e contabilidade)",
             "Reformas e benfeitorias realizadas por empresas tributadas",
         ]
@@ -1293,15 +1303,15 @@ def _direito_credito_section(
             "Servicos terceirizados ligados a atividade (TI, contabilidade, limpeza, seguranca)",
             "Energia eletrica consumida no estabelecimento",
             "Aluguel do imovel utilizado na atividade",
-            "Softwares de gestao e sistemas operacionais",
-            "Equipamentos utilizados na operacao da empresa",
+            "Softwares de gestão e sistemas operacionais",
+            "Equipamentos utilizados na operação da empresa",
             "Reformas e benfeitorias realizadas por empresas tributadas pelo IBS e CBS",
         ]
 
     itens_nao_credito = [
         "Despesas pessoais, beneficios de socios e diretores",
         "Aquisicoes junto ao Simples Nacional (exceto no Simples Hibrido)",
-        "Operacoes isentas ou nao tributadas pelo CBS/IBS na saida",
+        "Operações isentas ou não tributadas pelo CBS/IBS na saida",
         "Gastos com alimentacao, vestuario e lazer pessoal",
         "Multas, juros e encargos financeiros",
     ]
@@ -1315,9 +1325,9 @@ def _direito_credito_section(
         Spacer(1, 6),
     ]))
 
-    # Tabela: o que gera x nao gera credito
+    # Tabela: o que gera x não gera credito
     elements.append(KeepTogether([
-        Paragraph("O que gera e o que nao gera credito", ST["h3"]),
+        Paragraph("O que gera e o que não gera credito", ST["h3"]),
         Spacer(1, 3),
     ]))
 
@@ -1328,7 +1338,7 @@ def _direito_credito_section(
     _col_no = ParagraphStyle("_dcno", fontName="Helvetica", fontSize=9,
                              textColor=colors.HexColor("#B91C1C"), leading=12)
 
-    # Intercalar linhas das duas colunas ate o maximo
+    # Intercalar linhas das duas colunas ate o máximo
     n = max(len(itens_credito), len(itens_nao_credito))
     cred_rows = [
         [Paragraph("Gera credito de CBS/IBS", _col_h),
@@ -1362,7 +1372,7 @@ def _direito_credito_section(
         "Vedacoes: Art. 60 (LC 214/2025).",
         ST["small_j"]))
 
-    # Calculo estimado do credito — so se nao for Simples/MEI
+    # Cálculo estimado do credito — so se não for Simples/MEI
     if regime not in ("simples_nacional", "mei") and cred_pct > 0:
         elements.append(KeepTogether([
             Spacer(1, 8),
@@ -1385,7 +1395,7 @@ def _direito_credito_section(
              Paragraph(brl(ibs_bruto_m), ST["cell_r"])],
             [Paragraph(f"Total CBS + IBS bruto", ST["cell_l"]),
              Paragraph(brl(bruto_m), ST["cell_r"])],
-            [Paragraph(f"(-) Credito de entrada estimado ({int(cred_pct*100)}% das aquisicoes)",
+            [Paragraph(f"(-) Credito de entrada estimado ({int(cred_pct*100)}% das aquisições)",
                        ST["cell_l"]),
              Paragraph(f"({brl(cred_m)})", ST["cell_green_r"])],
             [Paragraph("<b>CBS + IBS liquido a recolher (mensal)</b>", ST["cell_bold"]),
@@ -1408,8 +1418,8 @@ def _direito_credito_section(
         elements.append(Spacer(1, 3))
         elements.append(Paragraph(
             f"(*) Estimativa para 2033 (sistema pleno). O credito de entrada de {int(cred_pct*100)}% "
-            f"representa a parcela das aquisicoes que geram CBS/IBS aproveitavel. "
-            f"Aliquotas de referencia sujeitas a confirmacao pelo Senado Federal.",
+            f"representa a parcela das aquisições que geram CBS/IBS aproveitavel. "
+            f"Alíquotas de referencia sujeitas a confirmacao pelo Senado Federal.",
             ST["small_j"]))
 
         # Tabela ano a ano do credito (2027, 2029, 2031, 2033)
@@ -1420,7 +1430,7 @@ def _direito_credito_section(
 
         elements.append(KeepTogether([
             Spacer(1, 8),
-            Paragraph("Progressao do Credito ao Longo da Transicao", ST["h3"]),
+            Paragraph("Progressao do Credito ao Longo da Transição", ST["h3"]),
             Spacer(1, 3),
         ]))
 
@@ -1433,8 +1443,8 @@ def _direito_credito_section(
             Paragraph("Liquido/mes", ST["cell_header"]),
         ]]
         for yr in anos_tabela:
-            c = round(cbs_yr[yr] * (1 - reducao), 4)
-            ib = round(ibs_yr[yr] * (1 - reducao), 4)
+            c = round(cbs_yr[yr] * (1 - redução), 4)
+            ib = round(ibs_yr[yr] * (1 - redução), 4)
             bruto = fat_mensal * (c + ib)
             cred  = bruto * cred_pct
             liq   = bruto - cred
@@ -1483,7 +1493,7 @@ def _direito_credito_section(
         elements.append(_insight_box(
             ST,
             f"O credito de entrada informado e <b>0%</b>. Isso significa que nenhum credito de "
-            f"CBS/IBS foi estimado sobre as aquisicoes. Caso a empresa realize compras de bens e "
+            f"CBS/IBS foi estimado sobre as aquisições. Caso a empresa realize compras de bens e "
             f"servicos tributados pelo CBS/IBS, o aproveitamento de credito pode reduzir "
             f"significativamente a carga liquida. Recomendamos revisar esse percentual com o contador.",
             AMBER, colors.HexColor("#FFFBEB"),
@@ -1497,9 +1507,9 @@ def _direito_credito_section(
         elements.append(_insight_box(
             ST,
             f"Para {setor_nome}, a migracao do regime cumulativo (PIS/COFINS sem credito) para "
-            f"o sistema nao cumulativo (CBS/IBS com credito) representa um <b>credito estimado de "
-            f"{brl(cred_a)} por ano</b> sobre as aquisicoes ({int(cred_pct*100)}% das entradas). "
-            f"Esse credito abate diretamente o CBS/IBS a recolher, reduzindo a carga tributaria liquida.",
+            f"o sistema não cumulativo (CBS/IBS com credito) representa um <b>credito estimado de "
+            f"{brl(cred_a)} por ano</b> sobre as aquisições ({int(cred_pct*100)}% das entradas). "
+            f"Esse credito abate diretamente o CBS/IBS a recolher, reduzindo a carga tributária liquida.",
             EMERALD, EMRLD_50,
         ))
 
@@ -1509,19 +1519,19 @@ def _direito_credito_section(
 # ─── Cronograma Timeline ──────────────────────────────────────────────────────
 def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icms_uf: float) -> list:
     elements = []
-    reducao  = (setor_obj or {}).get("reducao_aliquota", 1.0)
+    redução  = (setor_obj or {}).get("reducao_aliquota", 1.0)
     tipo     = (setor_obj or {}).get("tipo", "servico")
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
-    red_pct  = int(round(reducao * 100))
+    red_pct  = int(round(redução * 100))
     setor_nome = (setor_obj or {}).get("nome", "analisado")
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef = round(CBS33 * (1 - reducao) * 100, 2)
-    ibs_ef = round(IBS33 * (1 - reducao) * 100, 2)
-    total_ef = round((CBS33 + IBS33) * (1 - reducao) * 100, 2)
+    cbs_ef = round(CBS33 * (1 - redução) * 100, 2)
+    ibs_ef = round(IBS33 * (1 - redução) * 100, 2)
+    total_ef = round((CBS33 + IBS33) * (1 - redução) * 100, 2)
 
     def ibs_yr(fator: float) -> str:
-        return f"{round(IBS33 * fator * (1 - reducao) * 100, 2):.2f}%"
+        return f"{round(IBS33 * fator * (1 - redução) * 100, 2):.2f}%"
 
     # Inline styles para as células do timeline
     yh = ParagraphStyle("_yh", fontName="Helvetica-Bold", fontSize=11,
@@ -1550,19 +1560,19 @@ def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icm
          f"Adaptar ERP,\ncontratos e\nprecificacao.",
          colors.HexColor("#0E9080")),
         ("2029", "10% IBS",
-         f"{tipo_trib} reduzido\nem 10%. IBS a\n10% da aliquota\nde referencia.",
+         f"{tipo_trib} reduzido\nem 10%. IBS a\n10% da alíquota\nde referencia.",
          f"{tipo_trib} a 90%.\nIBS {ibs_yr(0.1)} ef.",
          colors.HexColor("#2D8A40")),
         ("2030", "20% IBS",
-         f"{tipo_trib} reduzido\nem 20%. IBS a\n20% da aliquota\nde referencia.",
+         f"{tipo_trib} reduzido\nem 20%. IBS a\n20% da alíquota\nde referencia.",
          f"{tipo_trib} a 80%.\nIBS {ibs_yr(0.2)} ef.",
          colors.HexColor("#6BA83A")),
         ("2031", "30% IBS",
-         f"{tipo_trib} reduzido\nem 30%. IBS a\n30% da aliquota\nde referencia.",
+         f"{tipo_trib} reduzido\nem 30%. IBS a\n30% da alíquota\nde referencia.",
          f"{tipo_trib} a 70%.\nIBS {ibs_yr(0.3)} ef.",
          colors.HexColor("#C87C14")),
         ("2032", "40% IBS",
-         f"{tipo_trib} reduzido\nem 40%. IBS a\n40% da aliquota\nde referencia.",
+         f"{tipo_trib} reduzido\nem 40%. IBS a\n40% da alíquota\nde referencia.",
          f"{tipo_trib} a 60%.\nIBS {ibs_yr(0.4)} ef.",
          colors.HexColor("#BE5010")),
         ("2033", "IVA Dual Pleno",
@@ -1575,11 +1585,11 @@ def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icm
 
     elements.append(KeepTogether([
         Spacer(1, 8),
-        Paragraph(f"{sec}. Cronograma da Transicao Tributaria (2026-2033)", ST["h1"]),
+        Paragraph(f"{sec}. Cronograma da Transição Tributária (2026-2033)", ST["h1"]),
         Spacer(1, 3),
         Paragraph(
-            f"Marcos e eventos da Reforma Tributaria conforme LC 214/2025 e EC 132/2023. "
-            + (f"Para o setor <b>{setor_nome}</b>, a reducao de <b>{red_pct}%</b> nas aliquotas "
+            f"Marcos e eventos da Reforma Tributária conforme LC 214/2025 e EC 132/2023. "
+            + (f"Para o setor <b>{setor_nome}</b>, a redução de <b>{red_pct}%</b> nas alíquotas "
                f"ja e refletida na linha 'Impacto para a empresa'."
                if red_pct > 0 else
                "Cada fase indica o evento principal, as mudancas nos tributos vigentes e o impacto estimado para esta empresa."),
@@ -1636,9 +1646,9 @@ def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icm
 
     elements.append(Spacer(1, 3))
     elements.append(Paragraph(
-        f"(*) Aliquotas CBS (8,8%) e IBS (19,2%) sao referencias provisorias, "
+        f"(*) Alíquotas CBS (8,8%) e IBS (19,2%) sao referencias provisórias, "
         f"sujeitas a confirmacao por Resolucao do Senado (LC 214/2025, Art. 361)."
-        + (f" Setor com reducao de {red_pct}%: CBS {cbs_ef:.2f}% + IBS {ibs_ef:.2f}% = {total_ef:.2f}% ef."
+        + (f" Setor com redução de {red_pct}%: CBS {cbs_ef:.2f}% + IBS {ibs_ef:.2f}% = {total_ef:.2f}% ef."
            if red_pct > 0 else ""),
         ST["small_j"]))
 
@@ -1658,14 +1668,14 @@ def _reforma_section(
     elements = []
     so = setor_obj or {}
     tipo      = so.get("tipo", "servico")
-    reducao   = so.get("reducao_aliquota", 1.0)
-    red_pct   = int(round(reducao * 100))
+    redução   = so.get("reducao_aliquota", 1.0)
+    red_pct   = int(round(redução * 100))
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
     setor_nome = so.get("nome", comp.setor)
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef_dec  = CBS33 * (1 - reducao)
-    ibs_ef_dec  = IBS33 * (1 - reducao)
+    cbs_ef_dec  = CBS33 * (1 - redução)
+    ibs_ef_dec  = IBS33 * (1 - redução)
     cbs_ef_pct  = round(cbs_ef_dec * 100, 2)
     ibs_ef_pct  = round(ibs_ef_dec * 100, 2)
     total_ef_pct = round((cbs_ef_dec + ibs_ef_dec) * 100, 2)
@@ -1685,10 +1695,10 @@ def _reforma_section(
     # ── CABECALHO ───────────────────────────────────────────────────────────
     elements.append(KeepTogether([
         Spacer(1, 8),
-        Paragraph(f"{sec}. O que Muda com a Reforma Tributaria", ST["h1"]),
+        Paragraph(f"{sec}. O que Muda com a Reforma Tributária", ST["h1"]),
         Spacer(1, 3),
         Paragraph(
-            f"A Reforma Tributaria (LC 214/2025 e EC 132/2023) institui o maior redesenho do "
+            f"A Reforma Tributária (LC 214/2025 e EC 132/2023) institui o maior redesenho do "
             f"sistema fiscal brasileiro em decadas. Este capitulo analisa, de forma objetiva, "
             f"as principais mudancas que impactam <b>{inp.razao_social}</b>: quais tributos sao "
             f"substituidos, como funciona o novo sistema, os efeitos no fluxo de caixa e os "
@@ -1706,10 +1716,10 @@ def _reforma_section(
     hdr = [
         Paragraph("Tributo atual", ST["cell_header_l"]),
         Paragraph("Tipo", ST["cell_header"]),
-        Paragraph("Aliquota ref.", ST["cell_header"]),
+        Paragraph("Alíquota ref.", ST["cell_header"]),
         Paragraph("Substituto", ST["cell_header"]),
-        Paragraph("Aliquota ef. (2033)", ST["cell_header"]),
-        Paragraph("Extincao", ST["cell_header"]),
+        Paragraph("Alíquota ef. (2033)", ST["cell_header"]),
+        Paragraph("Extinção", ST["cell_header"]),
     ]
     sub_rows = [hdr, [
         Paragraph("<b>PIS</b>", ST["cell_bold"]),
@@ -1749,7 +1759,7 @@ def _reforma_section(
     if red_pct > 0:
         elements.append(Spacer(1, 3))
         elements.append(Paragraph(
-            f"(*) Reducao de <b>{red_pct}%</b> nas aliquotas de CBS e IBS para o setor "
+            f"(*) Redução de <b>{red_pct}%</b> nas alíquotas de CBS e IBS para o setor "
             f"<b>{setor_nome}</b>, conforme LC 214/2025, Arts. 130-133 (Anexo III). "
             f"CBS: 8,8% reduzida para {cbs_ef_pct}%; IBS: 19,2% reduzida para {ibs_ef_pct}%.",
             ST["small_j"]))
@@ -1761,13 +1771,13 @@ def _reforma_section(
         Spacer(1, 3),
         Paragraph(
             f"A CBS e o novo tributo federal que substitui o PIS e a COFINS a partir de 2027. "
-            f"Sua principal diferenca estrutural e a <b>nao cumulatividade plena</b>: toda compra, "
-            f"contratacao de servico ou aquisicao de ativo ligada a atividade gera credito de CBS, "
-            f"que reduz o imposto a pagar no periodo — eliminando o efeito cascata do sistema atual."
-            + (f" Para o setor <b>{setor_nome}</b>, a aliquota de referencia de 8,8% e reduzida "
-               f"em {red_pct}%, resultando em aliquota efetiva de <b>{cbs_ef_pct}%</b>."
+            f"Sua principal diferenca estrutural e a <b>não cumulatividade plena</b>: toda compra, "
+            f"contratacao de servico ou aquisição de ativo ligada a atividade gera credito de CBS, "
+            f"que reduz o imposto a pagar no período — eliminando o efeito cascata do sistema atual."
+            + (f" Para o setor <b>{setor_nome}</b>, a alíquota de referencia de 8,8% e reduzida "
+               f"em {red_pct}%, resultando em alíquota efetiva de <b>{cbs_ef_pct}%</b>."
                if red_pct > 0 else
-               f" A aliquota de referencia da CBS para este setor e <b>{cbs_ef_pct}%</b>.")
+               f" A alíquota de referencia da CBS para este setor e <b>{cbs_ef_pct}%</b>.")
             + f" O recolhimento ocorre via <b>Split Payment</b>: a CBS e retida automaticamente "
               f"pelo sistema bancario no momento do recebimento, antes de o valor liquido "
               f"chegar a conta da empresa.",
@@ -1781,15 +1791,15 @@ def _reforma_section(
         Spacer(1, 3),
         Paragraph(
             f"O IBS substitui o {tipo_trib} e passa a ser gerido pelo Comite Gestor do IBS (CG-IBS), "
-            f"com aliquota de referencia de 19,2% compartilhada entre estados e municipios. "
-            + (f"Com a reducao setorial de {red_pct}%, a aliquota efetiva para <b>{setor_nome}</b> e "
+            f"com alíquota de referencia de 19,2% compartilhada entre estados e municípios. "
+            + (f"Com a redução setorial de {red_pct}%, a alíquota efetiva para <b>{setor_nome}</b> e "
                f"<b>{ibs_ef_pct}%</b>."
                if red_pct > 0 else
-               f"A aliquota efetiva para este setor e <b>{ibs_ef_pct}%</b>.")
-            + f" A transicao e gradual entre 2029 e 2032: o {tipo_trib} e reduzido em 10 pontos "
+               f"A alíquota efetiva para este setor e <b>{ibs_ef_pct}%</b>.")
+            + f" A transição e gradual entre 2029 e 2032: o {tipo_trib} e reduzido em 10 pontos "
               f"percentuais ao ano enquanto o IBS cresce proporcionalmente. "
               f"Em 2033, o {tipo_trib} e extinto definitivamente. "
-              f"O IBS segue a mesma logica nao cumulativa da CBS, com credito sobre aquisicoes e servicos.",
+              f"O IBS segue a mesma logica não cumulativa da CBS, com credito sobre aquisições e servicos.",
             ST["body_j"]),
     ]))
 
@@ -1802,19 +1812,19 @@ def _reforma_section(
     if inp.regime_atual == "lucro_presumido":
         nao_cum_txt = (
             f"No <b>Lucro Presumido</b> atual, PIS (0,65%) e COFINS (3%) sao <b>cumulativos</b>: "
-            f"nao ha credito sobre compras ou despesas. A partir de 2027, a CBS sera "
-            f"estruturalmente nao cumulativa mesmo para empresas do LP. "
+            f"não ha credito sobre compras ou despesas. A partir de 2027, a CBS sera "
+            f"estruturalmente não cumulativa mesmo para empresas do LP. "
             f"Compras, servicos contratados, aluguel e equipamentos utilizados na atividade "
             f"poderao gerar credito de CBS/IBS, reduzindo o imposto a pagar. "
             f"O percentual de credito de entrada informado neste estudo e "
             f"<b>{int(inp.credito_entrada*100)}%</b>. "
             f"Empresas com alto volume de entradas tributaveis tendem a se beneficiar "
-            f"dessa transicao do regime cumulativo para o nao cumulativo."
+            f"dessa transição do regime cumulativo para o não cumulativo."
         )
     elif inp.regime_atual == "lucro_real":
         nao_cum_txt = (
-            f"No <b>Lucro Real</b>, PIS (1,65%) e COFINS (7,6%) ja sao nao cumulativos. "
-            f"A CBS segue a mesma logica: credito sobre aquisicoes de insumos, servicos e ativos. "
+            f"No <b>Lucro Real</b>, PIS (1,65%) e COFINS (7,6%) ja sao não cumulativos. "
+            f"A CBS segue a mesma logica: credito sobre aquisições de insumos, servicos e ativos. "
             f"O IBS funciona de forma identica ao substituir o {tipo_trib}. "
             f"O impacto liquido depende do saldo entre debitos (CBS/IBS sobre vendas) e creditos "
             f"(CBS/IBS sobre compras e servicos). O credito de entrada informado e "
@@ -1827,7 +1837,7 @@ def _reforma_section(
             f"As regras de CBS/IBS para o Simples ainda serao definidas pelo CG-IBS. "
             f"A tendencia e incorporacao ao DAS, mas existe a opcao do <b>Simples Hibrido</b>: "
             f"destaque opcional de CBS/IBS na NF para gerar credito ao comprador PJ, "
-            f"ao custo de aliquota maior sobre essas operacoes. "
+            f"ao custo de alíquota maior sobre essas operações. "
             f"Empresas com clientes predominantemente B2B devem avaliar essa opcao. "
             f"Em 2026, optantes do Simples estao dispensados do CBS/IBS-teste (Art. 350 LC 214/2025)."
         )
@@ -1840,7 +1850,7 @@ def _reforma_section(
         )
     else:
         nao_cum_txt = (
-            "O novo sistema e integralmente nao cumulativo: cada etapa da cadeia recolhe "
+            "O novo sistema e integralmente não cumulativo: cada etapa da cadeia recolhe "
             "CBS/IBS apenas sobre o valor que efetivamente agregou, abatendo os creditos "
             "das etapas anteriores e eliminando o efeito cascata."
         )
@@ -1866,7 +1876,7 @@ def _reforma_section(
     sp_rows = [
         [Paragraph("Faturamento mensal estimado", ST["cell_l"]),
          Paragraph(brl(fat_mensal), ST["cell_bold_r"])],
-        [Paragraph(f"x Aliquota efetiva CBS ({cbs_ef_pct}%) + IBS ({ibs_ef_pct}%) = {total_ef_pct}%",
+        [Paragraph(f"x Alíquota efetiva CBS ({cbs_ef_pct}%) + IBS ({ibs_ef_pct}%) = {total_ef_pct}%",
                    ST["cell_l"]),
          Paragraph(brl(split_bruto), ST["cell_r"])],
     ]
@@ -1877,7 +1887,7 @@ def _reforma_section(
             Paragraph(f"({brl(split_cred)})", ST["cell_r"]),
         ])
     sp_rows.append([
-        Paragraph("<b>Retencao via Split Payment em 2033 (sistema pleno)</b>", ST["cell_bold"]),
+        Paragraph("<b>Retenção via Split Payment em 2033 (sistema pleno)</b>", ST["cell_bold"]),
         Paragraph(f"<b>{brl(split_liq)}/mes</b>", ST["cell_bold_r"]),
     ])
     t_sp = Table(sp_rows, colWidths=[12.5*cm, 4.0*cm])
@@ -1894,24 +1904,30 @@ def _reforma_section(
     elements.append(t_sp)
     elements.append(Spacer(1, 3))
     elements.append(Paragraph(
-        "(*) Projecao para 2033 (sistema pleno) com aliquotas de referencia provisorias. "
+        "(*) Projeção para 2033 (sistema pleno) com alíquotas de referencia provisórias. "
         "Em 2027, apenas CBS entra em vigor. O IBS comeca em 2029. "
         "O capital de giro deve ser revisado antes do inicio de 2027. "
-        "O cronograma e os limites do Split Payment dependem de regulamentacao especifica ainda pendente.",
+        "O cronograma e os limites do Split Payment dependem de regulamentação específica ainda pendente.",
         ST["small_j"]))
 
-    # ── 5-B. CASHBACK TRIBUTARIO (setores populares/reduzidos) ──────────────
+    # ── 5-B. CASHBACK TRIBUTARIO (apenas setores cujos produtos/servicos constam da lista LC 214) ──
+    # O cashback não e um beneficio do setor empresarial — e uma devolução ao consumidor final
+    # inscrito no CadUnico, restrita a bens específicos (gas GLP, energia, agua, telecom).
+    # Nao se aplica a servicos de saude, educacao, operadoras, etc.
+    _SETORES_CASHBACK = {
+        "gas_cozinha", "gas_glp", "energia_eletrica", "agua_saneamento",
+        "telecom", "telecomunicacoes", "servicos_basicos", "utilidades",
+    }
     setor_id_ref = so.get("id", "")
-    if reducao < 1.0:
+    if setor_id_ref in _SETORES_CASHBACK or so.get("cashback_relevante", False):
         elements.append(KeepTogether([
             Spacer(1, 6),
-            Paragraph("Cashback Tributario — Devolucao de CBS/IBS para Consumidores de Baixa Renda", ST["h3"]),
+            Paragraph("Cashback Tributário — Devolucao de CBS/IBS para Consumidores de Baixa Renda", ST["h3"]),
             Spacer(1, 3),
             Paragraph(
-                f"Seu setor possui reducao de aliquota de {red_pct}%, o que o qualifica como setor "
-                f"essencial/popular. Nesse contexto, parte ou todo o CBS/IBS pago pelos consumidores "
-                f"inscritos no CadUnico sera devolvido pelo governo via cashback tributario "
-                f"(LC 214/2025, Arts. 162-180 para CBS e Arts. 231-248 para IBS):",
+                f"Os produtos/servicos deste setor constam da lista de itens com cashback tributário "
+                f"(LC 214/2025, Arts. 164-174). O CBS/IBS pago pelos consumidores inscritos no CadUnico "
+                f"sera devolvido pelo governo:",
                 ST["body_j"]),
             Spacer(1, 3),
         ]))
@@ -1919,8 +1935,8 @@ def _reforma_section(
             [Paragraph("Item", ST["cell_header_l"]), Paragraph("CBS (a partir de 2027)", ST["cell_header"]), Paragraph("IBS (a partir de 2029)", ST["cell_header"])],
             [Paragraph("Gas de cozinha (GLP 13 kg)", ST["cell_l"]),  Paragraph("100% devolvido", ST["cell_green_r"]), Paragraph("100% devolvido", ST["cell_green_r"])],
             [Paragraph("Energia eletrica / agua / telecom", ST["cell_l"]), Paragraph("100% devolvido", ST["cell_green_r"]), Paragraph("20% devolvido", ST["cell_r"])],
-            [Paragraph("Alimentos cesta basica (reducao total)", ST["cell_l"]), Paragraph("Aliquota zero — sem devolucao", ST["cell_r"]), Paragraph("Aliquota zero — sem devolucao", ST["cell_r"])],
-            [Paragraph("Demais setores essenciais (reducao parcial)", ST["cell_l"]), Paragraph("Proporcional a aliquota ef.", ST["cell_r"]), Paragraph("Proporcional (fase-in 2029)", ST["cell_r"])],
+            [Paragraph("Alimentos cesta básica (redução total)", ST["cell_l"]), Paragraph("Alíquota zero — sem devolução", ST["cell_r"]), Paragraph("Alíquota zero — sem devolução", ST["cell_r"])],
+            [Paragraph("Demais setores essenciais (redução parcial)", ST["cell_l"]), Paragraph("Proporcional a alíquota ef.", ST["cell_r"]), Paragraph("Proporcional (fase-in 2029)", ST["cell_r"])],
         ]
         t_cb = Table(cb_rows, colWidths=[7.5*cm, 4.5*cm, 4.5*cm])
         t_cb.setStyle(TableStyle([
@@ -1936,25 +1952,25 @@ def _reforma_section(
         elements.append(t_cb)
         elements.append(Spacer(1, 3))
         elements.append(Paragraph(
-            "Para o empresario: o cashback nao afeta o valor do tributo a recolher, apenas "
-            "a devolucao ao consumidor final. O impacto e indireto — pode aumentar o poder de compra "
-            "do seu publico-alvo e reduzir resistencia ao repasse da carga tributaria nos precos.",
+            "Para o empresario: o cashback não afeta o valor do tributo a recolher, apenas "
+            "a devolução ao consumidor final. O impacto e indireto — pode aumentar o poder de compra "
+            "do seu publico-alvo e reduzir resistencia ao repasse da carga tributária nos precos.",
             ST["small_j"]))
 
     # ── 5-C. IPI ZERADO 2027 (industria_geral) ──────────────────────────────
     if setor_id_ref == "industria_geral":
         elements.append(KeepTogether([
             Spacer(1, 6),
-            Paragraph("IPI com Aliquota Zero a partir de 2027", ST["h3"]),
+            Paragraph("IPI com Alíquota Zero a partir de 2027", ST["h3"]),
             Spacer(1, 3),
             Paragraph(
-                "O IPI (Imposto sobre Produtos Industrializados) tera aliquota zero para a maioria dos "
+                "O IPI (Imposto sobre Produtos Industrializados) tera alíquota zero para a maioria dos "
                 "produtos a partir de 02/02/2027 (LC 214/2025, Art. 410). "
                 "Isso reduz o custo dos insumos industriais e pode melhorar a competitividade do setor.",
                 ST["body_j"]),
             Spacer(1, 3),
             Paragraph(
-                "<b>Excecoes — produtos que mantem aliquota de IPI:</b> produtos com vantagem competitiva "
+                "<b>Excecoes — produtos que mantem alíquota de IPI:</b> produtos com vantagem competitiva "
                 "da Zona Franca de Manaus (ZFM) acima do limiar de 6,5%, como motocicletas, televisores "
                 "e aparelhos de ar-condicionado fabricados na ZFM; e bens de Tecnologia da Informacao e "
                 "Comunicacao (TIC) com PPB obrigatorio. Para esses produtos o IPI continua como incentivo "
@@ -1972,25 +1988,25 @@ def _reforma_section(
     obrig = [
         ("<b>Nota Fiscal com CBS e IBS discriminados:</b> a partir de 2027, toda NF devera "
          "destacar separadamente os valores de CBS e IBS — requisito legal para que compradores "
-         "aproveitem como credito tributario. Erros na discriminacao impedem o credito do comprador "
+         "aproveitem como credito tributário. Erros na discriminacao impedem o credito do comprador "
          "e podem gerar conflito comercial."),
         ("<b>EFD CBS/IBS (nova escrituracao digital):</b> substituira o SPED PIS/COFINS "
-         "e parte do SPED ICMS. Periodicidade e layout ainda em regulamentacao pelo CG-IBS "
+         "e parte do SPED ICMS. Periodicidade e layout ainda em regulamentação pelo CG-IBS "
          "e pela Receita Federal. Monitorar publicacoes oficiais."),
         ("<b>Atualizacao de ERP e sistemas de faturamento:</b> os sistemas precisarao "
-         "calcular CBS/IBS por operacao, controlar creditos de entrada, gerar os campos nas NFs "
+         "calcular CBS/IBS por operação, controlar creditos de entrada, gerar os campos nas NFs "
          "e conciliar o Split Payment bancario com o saldo a recolher."),
         ("<b>Revisao de contratos de longo prazo:</b> contratos vigentes podem ter clausulas "
          "tributarias incompativeis com o novo sistema — preco fixo, reajuste por indice "
-         "tributario ou isencoes de {0} que deixarao de existir. Revisao preventiva e essencial.".format(tipo_trib)),
-        ("<b>Revisao de precificacao:</b> com a nao cumulatividade plena, o preco de venda "
+         "tributário ou isencoes de {0} que deixarao de existir. Revisao preventiva e essencial.".format(tipo_trib)),
+        ("<b>Revisao de precificação:</b> com a não cumulatividade plena, o preco de venda "
          "pode ser ajustado para refletir o credito de CBS/IBS sobre insumos. "
          "Empresas antes no cumulativo (LP) tendem a ter maior margem de ajuste positivo."),
     ]
     if inp.perfil_clientes in ("pj", "misto"):
         obrig.append(
             f"<b>Comunicacao com clientes PJ (B2B):</b> compradores no Lucro Real ou Presumido "
-            f"utilizarao o CBS/IBS discriminado na NF como credito tributario. "
+            f"utilizarao o CBS/IBS discriminado na NF como credito tributário. "
             f"A correta emissao e requisito legal e um diferencial competitivo importante.")
     for txt in obrig:
         elements.append(Paragraph(f"• {txt}", ST["body_j"]))
@@ -1999,17 +2015,17 @@ def _reforma_section(
     # ── 7. IMPACTO POR REGIME ────────────────────────────────────────────────
     elements.append(KeepTogether([
         Spacer(1, 8),
-        Paragraph(f"Impacto Especifico para o {regime_nome}", ST["h3"]),
+        Paragraph(f"Impacto Específico para o {regime_nome}", ST["h3"]),
         Spacer(1, 3),
     ]))
     if inp.regime_atual == "lucro_presumido":
-        presuncao = so.get("presuncao_irpj", 0.32)
+        presunção = so.get("presuncao_irpj", 0.32)
         regime_txt = (
             f"No <b>Lucro Presumido</b>, as mudancas mais significativas sao: "
-            f"(1) extincao do PIS/COFINS cumulativos (3,65% sem credito) e entrada da CBS "
-            f"nao cumulativa ({cbs_ef_pct}% ef., com credito sobre entradas); "
-            f"(2) substituicao progressiva do {tipo_trib} pelo IBS de 2029 a 2032. "
-            f"A presuncao de lucro de {int(presuncao*100)}% para IRPJ/CSLL nao e alterada "
+            f"(1) extinção do PIS/COFINS cumulativos (3,65% sem credito) e entrada da CBS "
+            f"não cumulativa ({cbs_ef_pct}% ef., com credito sobre entradas); "
+            f"(2) substituição progressiva do {tipo_trib} pelo IBS de 2029 a 2032. "
+            f"A presunção de lucro de {int(presunção*100)}% para IRPJ/CSLL não e alterada "
             f"pela reforma. O principal impacto financeiro e o Split Payment, que retira o "
             f"CBS/IBS antes de o valor chegar a conta. Revisar o capital de giro antes de 2027."
             + (f" A analise indica que o <b>{melhor_nome_r}</b> pode ser o regime mais vantajoso "
@@ -2018,8 +2034,8 @@ def _reforma_section(
         )
     elif inp.regime_atual == "lucro_real":
         regime_txt = (
-            f"No <b>Lucro Real</b>, a logica ja familiar do PIS/COFINS nao cumulativos "
-            f"(1,65%+7,6%) se transfere para CBS/IBS. A adaptacao operacional e menor. "
+            f"No <b>Lucro Real</b>, a logica ja familiar do PIS/COFINS não cumulativos "
+            f"(1,65%+7,6%) se transfere para CBS/IBS. A adaptação operacional e menor. "
             f"O impacto principal e o Split Payment, que elimina o prazo de recolhimento "
             f"e exige revisao do capital de giro. O IRPJ e a CSLL continuam calculados "
             f"sobre o lucro apurado sem alteracoes estruturais pela reforma."
@@ -2032,7 +2048,7 @@ def _reforma_section(
             f"Para o <b>Simples Nacional</b>, as regras de CBS/IBS ainda serao definidas "
             f"pelo CG-IBS. A expectativa e incorporacao ao DAS de forma simplificada. "
             f"Dois pontos criticos: (1) o <b>Simples Hibrido</b> permite destacar CBS/IBS "
-            f"na NF para clientes B2B, ao custo de aliquota maior; "
+            f"na NF para clientes B2B, ao custo de alíquota maior; "
             f"(2) a reforma pode tornar o Simples menos vantajoso para empresas com "
             f"faturamento proximo ao limite de R$ 4,8M. Avaliar migracao antecipada. "
             f"Em 2026, optantes estao dispensados do CBS/IBS-teste."
@@ -2046,7 +2062,7 @@ def _reforma_section(
     else:
         regime_txt = (
             f"A Reforma substitui PIS e COFINS pela CBS (2027) e {tipo_trib} pelo IBS "
-            f"(transicao 2029-2033). O recolhimento passa a ser via Split Payment. "
+            f"(transição 2029-2033). O recolhimento passa a ser via Split Payment. "
             f"IRPJ e CSLL permanecem sem alteracoes estruturais."
         )
     elements.append(Paragraph(regime_txt, ST["body_j"]))
@@ -2054,19 +2070,19 @@ def _reforma_section(
     # ── 8. PONTOS DE ATENCAO ─────────────────────────────────────────────────
     elements.append(KeepTogether([
         Spacer(1, 8),
-        Paragraph("Principais Pontos de Atencao", ST["h3"]),
+        Paragraph("Principais Pontos de Atenção", ST["h3"]),
         Spacer(1, 3),
     ]))
-    atencao = [
-        f"<b>2026 — Periodo de testes (agir agora):</b> adequar os sistemas para destacar "
+    atenção = [
+        f"<b>2026 — Período de testes (agir agora):</b> adequar os sistemas para destacar "
         f"CBS (0,9%) e IBS (0,1%) nas notas fiscais. Sem carga adicional real, mas a "
-        f"adequacao tecnica e obrigatoria. Oportunidade para capacitar a equipe e ajustar o ERP.",
+        f"adequação tecnica e obrigatoria. Oportunidade para capacitar a equipe e ajustar o ERP.",
 
-        f"<b>2027 — CBS plena (marco critico):</b> PIS e COFINS extintos em 31/12/2026. "
+        f"<b>2027 — CBS plena (marco crítico):</b> PIS e COFINS extintos em 31/12/2026. "
         f"CBS a {cbs_ef_pct}% ef. retida via Split Payment. "
-        f"Revisar contratos, precificacao e capital de giro antes dessa data.",
+        f"Revisar contratos, precificação e capital de giro antes dessa data.",
 
-        f"<b>2029-2032 — Periodo hibrido:</b> CBS e {tipo_trib} coexistem durante a transicao. "
+        f"<b>2029-2032 — Período hibrido:</b> CBS e {tipo_trib} coexistem durante a transição. "
         f"O {tipo_trib} e reduzido 10% ao ano enquanto o IBS avanca. "
         f"Dois sistemas rodando simultaneamente exigem controles paralelos e apuracao cuidadosa.",
 
@@ -2075,24 +2091,24 @@ def _reforma_section(
         f"Split Payment definitivo, creditamento pleno e operacional.",
     ]
     if red_pct > 0:
-        atencao.insert(1,
-            f"<b>CNAE — condicao para o beneficio fiscal:</b> a reducao de {red_pct}% nas "
-            f"aliquotas de CBS/IBS e condicionada ao CNAE correto cadastrado na Receita Federal "
+        atenção.insert(1,
+            f"<b>CNAE — condicao para o beneficio fiscal:</b> a redução de {red_pct}% nas "
+            f"alíquotas de CBS/IBS e condicionada ao CNAE correto cadastrado na Receita Federal "
             f"e na Prefeitura. Auditar e atualizar o CNAE e indispensavel para garantir o "
             f"beneficio desde o inicio da CBS em 2027 (LC 214/2025, Arts. 130-133).")
     if inp.perfil_clientes in ("pj", "misto"):
-        atencao.append(
+        atenção.append(
             "<b>Clientes B2B — credito de CBS/IBS:</b> compradores no Lucro Real ou Presumido "
-            "utilizarao o CBS/IBS discriminado na NF como credito tributario. "
+            "utilizarao o CBS/IBS discriminado na NF como credito tributário. "
             "A correta emissao e requisito legal e diferencial competitivo. "
             "NFs incorretas podem gerar conflito comercial ou perda de clientes.")
     if melhor_key and inp.regime_atual and melhor_key != inp.regime_atual:
-        atencao.append(
+        atenção.append(
             f"<b>Avaliar mudanca de regime:</b> a analise indica que o "
             f"<b>{melhor_nome_r}</b> pode ser mais vantajoso apos a reforma. "
-            f"A comunicacao a Receita Federal deve ser feita no prazo correto: "
+            f"A comunicação a Receita Federal deve ser feita no prazo correto: "
             f"consultar o contador antes de qualquer decisao.")
-    for txt in atencao:
+    for txt in atenção:
         elements.append(Paragraph(f"• {txt}", ST["body_j"]))
         elements.append(Spacer(1, 2))
 
@@ -2100,17 +2116,17 @@ def _reforma_section(
     elements.append(Spacer(1, 6))
     if total_ef_pct < 15:
         msg = (
-            f"O setor <b>{setor_nome}</b> conta com uma das menores aliquotas efetivas do "
+            f"O setor <b>{setor_nome}</b> conta com uma das menores alíquotas efetivas do "
             f"novo sistema: CBS {cbs_ef_pct}% + IBS {ibs_ef_pct}% = <b>{total_ef_pct}%</b>, "
-            f"gracos a reducao de {red_pct}% garantida pela LC 214/2025. "
+            f"graças a redução de {red_pct}% garantida pela LC 214/2025. "
             f"O principal desafio e operacional (Split Payment, novos sistemas, CNAE correto), "
-            f"nao necessariamente tributario."
+            f"não necessariamente tributário."
         )
     else:
         msg = (
             f"Com CBS {cbs_ef_pct}% + IBS {ibs_ef_pct}% = <b>{total_ef_pct}%</b> ef. em 2033, "
-            f"o planejamento tributario antecipado e fundamental. "
-            f"O aproveitamento maximo dos creditos de entrada e a adequacao tempestiva do "
+            f"o planejamento tributário antecipado e fundamental. "
+            f"O aproveitamento máximo dos creditos de entrada e a adequação tempestiva do "
             f"fluxo de caixa ao Split Payment sao os dois maiores alavancadores de resultado."
         )
     elements.append(_insight_box(ST, msg, BRAND, colors.HexColor("#EFF6FF")))
@@ -2351,8 +2367,8 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     if comp.valores_projetados:
         story.append(Spacer(1, 4))
         story.append(Paragraph(
-            "<b>Atencao:</b> As alíquotas de referencia do IBS (19,2%) e CBS (8,8%) "
-            "sao provisorias e sujeitas a confirmacao por Resolucao do Senado Federal "
+            "<b>Atenção:</b> As alíquotas de referencia do IBS (19,2%) e CBS (8,8%) "
+            "sao provisórias e sujeitas a confirmacao por Resolucao do Senado Federal "
             "(LC 214/2025, Art. 361). Os valores do novo sistema sao estimativas.",
             ST["small"]))
 
@@ -2427,7 +2443,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         _narra_a = (
             f"Entre os regimes disponíveis, o <b>{_melhor_atual.nome}</b> apresenta a menor carga "
             f"tributária no sistema atual: <b>{brl(_melhor_atual.total_atual or 0)}</b> "
-            f"({pct(_melhor_atual.percentual_atual or 0)} sobre a operacao de {brl(comp.valor_base)}). "
+            f"({pct(_melhor_atual.percentual_atual or 0)} sobre a operação de {brl(comp.valor_base)}). "
         )
         _atual_r = next((r for r in disponiveis if r.regime == inp.regime_atual), None)
         if _atual_r and _atual_r.regime != _melhor_atual.regime:
@@ -2484,7 +2500,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 _cbs33 = round(_c33.get("cbs_percentual", 0.088) * (1 - _red_setor) * 100, 2)
                 _ibs33 = round(_c33.get("ibs_percentual", 0.192) * (1 - _red_setor) * 100, 2)
                 _narra_n += (
-                    f"O setor <b>{comp.setor}</b> beneficia-se de reducao setorial de <b>{_red_pct_n}%</b>, "
+                    f"O setor <b>{comp.setor}</b> beneficia-se de redução setorial de <b>{_red_pct_n}%</b>, "
                     f"com alíquotas efetivas de CBS {_cbs33}% e IBS {_ibs33}% (em 2033). "
                 )
             except Exception:
@@ -2493,7 +2509,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             _narra_n += (
                 f"No novo sistema, o <b>{_melhor_n.nome}</b> é o regime mais vantajoso em {comp.ano}, "
                 f"com carga de {brl(_melhor_n.total_novo or 0)} ({pct(_melhor_n.percentual_novo or 0)}) "
-                f"por operacao de {brl(comp.valor_base)}."
+                f"por operação de {brl(comp.valor_base)}."
             )
         if _narra_n:
             story.append(Spacer(1, 4))
@@ -2541,14 +2557,14 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         if (_mv.diferenca or 0) < 0:
             _narra_v = (
                 f"A reforma tributária é favorável para o <b>{_mv.nome}</b>, "
-                f"resultando em reducao de carga de {brl(abs(_mv.diferenca or 0))} por operacao "
+                f"resultando em redução de carga de {brl(abs(_mv.diferenca or 0))} por operação "
                 f"({pct(abs(_mv.diferenca_percentual or 0), 1)})."
             )
         else:
             _narra_v = (
                 f"A reforma tributária representa acréscimo de carga tributária para este setor. "
                 f"O <b>{_mv.nome}</b> apresenta o menor impacto: acréscimo de "
-                f"{brl(_mv.diferenca or 0)} por operacao ({pct(_mv.diferenca_percentual or 0, 1)})."
+                f"{brl(_mv.diferenca or 0)} por operação ({pct(_mv.diferenca_percentual or 0, 1)})."
             )
         story.append(Spacer(1, 6))
         _var_positivo = (_mv.diferenca or 0) < 0
@@ -2674,7 +2690,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         conclusao += (
             "A saida do regime atual por escolha propria geralmente vale a partir de 1 de janeiro "
             "do ano seguinte. Recomendamos acompanhar os resultados ao longo do segundo semestre "
-            "para confirmar se a mudanca e vantajosa antes da comunicacao a Receita Federal."
+            "para confirmar se a mudanca e vantajosa antes da comunicação a Receita Federal."
         )
         if "reforma" in objs:
             conclusao += (
@@ -2934,9 +2950,9 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         story.append(Paragraph("<b>Notas metodológicas:</b>", ST["label"]))
         notas = [
             "IBS e CBS sao calculados por fora: somados ao preço, sobre base que exclui outros tributos (ICMS, ISS, PIS/COFINS). No sistema atual, esses tributos sao calculados por dentro.",
-            "Em 2026, CBS (0,9%) e IBS (0,1%) sao simbolicos — compensados com PIS/COFINS, nao aumentam a carga real.",
+            "Em 2026, CBS (0,9%) e IBS (0,1%) sao simbolicos — compensados com PIS/COFINS, não aumentam a carga real.",
             "Crédito de entrada: compras e insumos usados na atividade geram crédito de IBS/CBS que abate o imposto a pagar.",
-            "IRPJ e CSLL nao sao alterados pela reforma tributária — incidem sobre o lucro como hoje.",
+            "IRPJ e CSLL não sao alterados pela reforma tributária — incidem sobre o lucro como hoje.",
             f"Alíquotas de referencia utilizadas: CBS ~{cron_obj.get('cbs_percentual', 0)*100:.1f}% e IBS ~{cron_obj.get('ibs_percentual', 0)*100:.1f}% (sujeitas a Resolucao do Senado Federal).",
             "Para Simples Nacional e MEI, a partir de 2027, o simulador usa projeção do regime híbrido — regulamentação definitiva pendente do Comitê Gestor do IBS (CG-IBS).",
         ]
@@ -2974,7 +2990,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         "Este estudo tem carater informativo e foi elaborado com base nos dados fornecidos "
         "e na legislacao vigente na data de emissão. Nao substitui a análise individualizada "
         "do contador responsavel. Decisões de mudança de regime tributário devem ser validadas "
-        "por profissional habilitado antes de qualquer comunicacao a Receita Federal.",
+        "por profissional habilitado antes de qualquer comunicação a Receita Federal.",
         ST["disclaimer"]))
     story.append(Spacer(1, 14))
     story.append(Paragraph("______________________________", ST["body"]))
@@ -2991,7 +3007,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
 
 # ─── Route ───────────────────────────────────────────────────────────────────
-@router.post("/gerar-estudo-tributario")
+@router.post("/gerar-estudo-tributário")
 def gerar_estudo_tributario(inp: EstudoInput):
     pdf_bytes = _build_pdf(inp)
     nome = inp.razao_social.replace(" ", "_")[:40]
