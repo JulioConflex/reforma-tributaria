@@ -499,9 +499,9 @@ def _base_legal_section(
         Paragraph(irpj_txt, ST["cell_l"]),
     ])
 
-    cbs_ef_pct = round(cbs_ref * reducao * 100, 2)
-    ibs_ef_pct = round(ibs_ref * reducao * 100, 2)
-    red_pct = int(round((1 - reducao) * 100))
+    cbs_ef_pct = round(cbs_ref * (1 - reducao) * 100, 2)
+    ibs_ef_pct = round(ibs_ref * (1 - reducao) * 100, 2)
+    red_pct = int(round(reducao * 100))
     cbs_ibs_txt = (
         f"CBS substitui PIS/COFINS — vigencia plena a partir de 2027.\n"
         f"IBS substitui ISS/ICMS — transicao progressiva 2029 a 2032, vigencia plena em 2033.\n"
@@ -705,13 +705,13 @@ def _analise_regimes_section(
     elements = []
     tipo = setor_obj.get("tipo", "servico")
     reducao = setor_obj.get("reducao_aliquota", 1.0)
-    red_pct = int(round((1 - reducao) * 100))
+    red_pct = int(round(reducao * 100))
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
 
     try:
         c33 = get_cronograma(2033)
-        cbs_ef = round(c33.get("cbs_percentual", 0.088) * reducao * 100, 2)
-        ibs_ef = round(c33.get("ibs_percentual", 0.192) * reducao * 100, 2)
+        cbs_ef = round(c33.get("cbs_percentual", 0.088) * (1 - reducao) * 100, 2)
+        ibs_ef = round(c33.get("ibs_percentual", 0.192) * (1 - reducao) * 100, 2)
     except Exception:
         cbs_ef, ibs_ef = 8.8, 19.2
 
@@ -1219,8 +1219,8 @@ def _direito_credito_section(
     regime   = inp.regime_atual or ""
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef_dec = CBS33 * reducao
-    ibs_ef_dec = IBS33 * reducao
+    cbs_ef_dec = CBS33 * (1 - reducao)
+    ibs_ef_dec = IBS33 * (1 - reducao)
     cbs_ef_pct = round(cbs_ef_dec * 100, 2)
     ibs_ef_pct = round(ibs_ef_dec * 100, 2)
     total_ef_pct = round((cbs_ef_dec + ibs_ef_dec) * 100, 2)
@@ -1433,8 +1433,8 @@ def _direito_credito_section(
             Paragraph("Liquido/mes", ST["cell_header"]),
         ]]
         for yr in anos_tabela:
-            c = round(cbs_yr[yr] * reducao, 4)
-            ib = round(ibs_yr[yr] * reducao, 4)
+            c = round(cbs_yr[yr] * (1 - reducao), 4)
+            ib = round(ibs_yr[yr] * (1 - reducao), 4)
             bruto = fat_mensal * (c + ib)
             cred  = bruto * cred_pct
             liq   = bruto - cred
@@ -1512,16 +1512,16 @@ def _cronograma_timeline_section(ST: dict, sec: int, setor_obj: dict | None, icm
     reducao  = (setor_obj or {}).get("reducao_aliquota", 1.0)
     tipo     = (setor_obj or {}).get("tipo", "servico")
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
-    red_pct  = int(round((1 - reducao) * 100))
+    red_pct  = int(round(reducao * 100))
     setor_nome = (setor_obj or {}).get("nome", "analisado")
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef = round(CBS33 * reducao * 100, 2)
-    ibs_ef = round(IBS33 * reducao * 100, 2)
-    total_ef = round((CBS33 + IBS33) * reducao * 100, 2)
+    cbs_ef = round(CBS33 * (1 - reducao) * 100, 2)
+    ibs_ef = round(IBS33 * (1 - reducao) * 100, 2)
+    total_ef = round((CBS33 + IBS33) * (1 - reducao) * 100, 2)
 
     def ibs_yr(fator: float) -> str:
-        return f"{round(IBS33 * fator * reducao * 100, 2):.2f}%"
+        return f"{round(IBS33 * fator * (1 - reducao) * 100, 2):.2f}%"
 
     # Inline styles para as células do timeline
     yh = ParagraphStyle("_yh", fontName="Helvetica-Bold", fontSize=11,
@@ -1659,13 +1659,13 @@ def _reforma_section(
     so = setor_obj or {}
     tipo      = so.get("tipo", "servico")
     reducao   = so.get("reducao_aliquota", 1.0)
-    red_pct   = int(round((1 - reducao) * 100))
+    red_pct   = int(round(reducao * 100))
     tipo_trib = "ISS" if tipo == "servico" else "ICMS"
     setor_nome = so.get("nome", comp.setor)
 
     CBS33, IBS33 = 0.088, 0.192
-    cbs_ef_dec  = CBS33 * reducao
-    ibs_ef_dec  = IBS33 * reducao
+    cbs_ef_dec  = CBS33 * (1 - reducao)
+    ibs_ef_dec  = IBS33 * (1 - reducao)
     cbs_ef_pct  = round(cbs_ef_dec * 100, 2)
     ibs_ef_pct  = round(ibs_ef_dec * 100, 2)
     total_ef_pct = round((cbs_ef_dec + ibs_ef_dec) * 100, 2)
@@ -2475,14 +2475,14 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     story.append(t_n)
     if disponiveis and setor_obj is not None:
         _red_setor = setor_obj.get("reducao_aliquota", 1.0)
-        _red_pct_n = int(round((1 - _red_setor) * 100))
+        _red_pct_n = int(round(_red_setor * 100))
         _melhor_n = next((r for r in disponiveis if r.regime == melhor_key), None)
         _narra_n = ""
         if _red_pct_n > 0:
             try:
                 _c33 = get_cronograma(2033)
-                _cbs33 = round(_c33.get("cbs_percentual", 0.088) * _red_setor * 100, 2)
-                _ibs33 = round(_c33.get("ibs_percentual", 0.192) * _red_setor * 100, 2)
+                _cbs33 = round(_c33.get("cbs_percentual", 0.088) * (1 - _red_setor) * 100, 2)
+                _ibs33 = round(_c33.get("ibs_percentual", 0.192) * (1 - _red_setor) * 100, 2)
                 _narra_n += (
                     f"O setor <b>{comp.setor}</b> beneficia-se de reducao setorial de <b>{_red_pct_n}%</b>, "
                     f"com alíquotas efetivas de CBS {_cbs33}% e IBS {_ibs33}% (em 2033). "
