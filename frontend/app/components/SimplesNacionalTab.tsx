@@ -208,23 +208,7 @@ export default function SimplesNacionalTab({ setores }: Props) {
           </p>
         </div>
 
-        <div>
-          <FieldLabel>Crédito de entrada estimado (%)</FieldLabel>
-          <div className="flex items-center gap-3">
-            <input
-              type="range" min={0} max={80} step={5}
-              value={creditoPct}
-              onChange={(e) => setCreditoPct(Number(e.target.value))}
-              className="flex-1 accent-brand-500"
-            />
-            <span className="tab-num text-[15px] font-semibold text-ink-900 w-12 text-right">
-              {creditoPct}%
-            </span>
-          </div>
-          <p className="mt-1 text-[11.5px] text-ink-400">
-            Percentual do CBS/IBS que você recupera nas compras.
-          </p>
-        </div>
+        <CreditoEntradaSelector valor={creditoPct} onChange={setCreditoPct} />
 
         <div>
           <FieldLabel>Ano de referência</FieldLabel>
@@ -322,6 +306,89 @@ export default function SimplesNacionalTab({ setores }: Props) {
 }
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
+
+const CREDITO_OPCOES = [
+  {
+    valor: 10,
+    label: "Poucos insumos",
+    descricao: "Presto serviço com pouco material",
+    exemplo: "Consultor, contador, designer, coach",
+  },
+  {
+    valor: 30,
+    label: "Insumos moderados",
+    descricao: "Compro mercadoria ou material regularmente",
+    exemplo: "Loja, comércio, serviço com equipamentos",
+  },
+  {
+    valor: 50,
+    label: "Muitos insumos",
+    descricao: "Minha operação depende de matéria-prima",
+    exemplo: "Indústria, distribuidora, restaurante",
+  },
+  {
+    valor: 20,
+    label: "Não sei ainda",
+    descricao: "Usar estimativa conservadora padrão",
+    exemplo: "",
+  },
+];
+
+function CreditoEntradaSelector({ valor, onChange }: { valor: number; onChange: (v: number) => void }) {
+  const opcaoAtiva = CREDITO_OPCOES.find((o) => o.valor === valor) ?? CREDITO_OPCOES[3];
+  return (
+    <div className="rounded-xl bg-ink-50 border border-ink-200 px-4 py-4 space-y-3">
+      <div>
+        <div className="text-[12px] font-semibold text-ink-800 mb-0.5">
+          Quanto você compra para funcionar?
+        </div>
+        <p className="text-[11.5px] text-ink-500 leading-relaxed">
+          Na reforma, você vai pagar CBS/IBS nas suas compras (fornecedores, mercadoria, insumos)
+          e poderá <strong className="text-ink-700">abater esse valor</strong> do que cobrar dos seus clientes.
+          Quanto mais você compra, maior esse abatimento.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {CREDITO_OPCOES.map((o) => {
+          const ativo = o.valor === valor;
+          return (
+            <button
+              key={o.valor}
+              type="button"
+              onClick={() => onChange(o.valor)}
+              className={`text-left rounded-lg px-3 py-2.5 border transition-all ${
+                ativo
+                  ? "bg-brand-500 border-brand-500 text-white shadow-sm"
+                  : "bg-white border-ink-200 text-ink-800 hover:border-brand-400 hover:bg-brand-50"
+              }`}
+            >
+              <div className={`text-[12.5px] font-semibold leading-tight ${ativo ? "text-white" : "text-ink-900"}`}>
+                {o.label}
+              </div>
+              <div className={`text-[11px] mt-0.5 leading-snug ${ativo ? "text-white/80" : "text-ink-500"}`}>
+                {o.descricao}
+              </div>
+              {o.exemplo && (
+                <div className={`text-[10.5px] mt-1 ${ativo ? "text-white/60" : "text-ink-400"}`}>
+                  ex: {o.exemplo}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div className={`text-[11px] rounded-lg px-3 py-2 ${
+        opcaoAtiva.valor === 10 ? "bg-blue-50 text-blue-700" :
+        opcaoAtiva.valor === 30 ? "bg-emerald-50 text-emerald-700" :
+        opcaoAtiva.valor === 50 ? "bg-amber-50 text-amber-700" :
+        "bg-ink-100 text-ink-600"
+      }`}>
+        Usando <strong>{opcaoAtiva.valor}%</strong> de crédito de entrada nos cálculos.
+        {opcaoAtiva.valor === 20 && " Seu contador pode refinar esse número."}
+      </div>
+    </div>
+  );
+}
 
 function FatorRCard({ dados }: { dados: FatorRDetalhe }) {
   const noAnexoIII = dados.anexo_atual === "III";
