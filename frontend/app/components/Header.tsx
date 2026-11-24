@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
-export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment";
+export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment" | "simples_nacional";
 
 interface Props {
   aba: Aba;
@@ -75,7 +75,7 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
     }
   }
 
-  const isSimuladorArea = aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment";
+  const isSimuladorArea = aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && aba !== "simples_nacional";
 
   return (
     <header className="mesh-navy">
@@ -124,6 +124,16 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
             >
               Calculadora Retenção Dividendos
               {aba === "calculadora_dl" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
+            </button>
+
+            <button
+              onClick={() => setAba("simples_nacional")}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                aba === "simples_nacional" ? "text-white" : "text-ink-300 hover:text-white"
+              }`}
+            >
+              Simples Nacional
+              {aba === "simples_nacional" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
 
             {/* Split Payment — bloqueado: aguardando regulamentação da Receita Federal */}

@@ -14,6 +14,7 @@ import SplitPaymentTab from "./SplitPaymentTab";
 import Onboarding from "./Onboarding";
 import ChatAssistente from "./ChatAssistente";
 import { useConfigOverrides } from "./ConfigOverridesContext";
+import SimplesNacionalTab from "./SimplesNacionalTab";
 
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0,
@@ -244,6 +245,10 @@ export default function Simulador() {
 
         {aba === "split_payment" && (
           <SplitPaymentTab setores={setores} />
+        )}
+
+        {aba === "simples_nacional" && (
+          <SimplesNacionalTab setores={setores} />
         )}
       </main>
 

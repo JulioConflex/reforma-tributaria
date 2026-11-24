@@ -5,6 +5,7 @@ from .routes.glossario import router as glossario_router
 from .routes.recomendacao import router as recomendacao_router
 from .routes.assistente import router as assistente_router
 from .routes.pdf_estudo import router as pdf_router
+from .routes.simples import router as simples_router
 
 app = FastAPI(
     title="Sistema Reforma Tributária – LC 214/2025",
@@ -28,6 +29,7 @@ app.include_router(glossario_router)
 app.include_router(recomendacao_router)
 app.include_router(assistente_router)
 app.include_router(pdf_router)
+app.include_router(simples_router)
 
 
 @app.get("/")
