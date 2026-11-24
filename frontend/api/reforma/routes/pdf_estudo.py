@@ -1896,8 +1896,72 @@ def _reforma_section(
     elements.append(Paragraph(
         "(*) Projecao para 2033 (sistema pleno) com aliquotas de referencia provisorias. "
         "Em 2027, apenas CBS entra em vigor. O IBS comeca em 2029. "
-        "O capital de giro deve ser revisado antes do inicio de 2027.",
+        "O capital de giro deve ser revisado antes do inicio de 2027. "
+        "Split Payment obrigatorio para B2B a partir de 2028 (2027 e fase de adesao voluntaria).",
         ST["small_j"]))
+
+    # ── 5-B. CASHBACK TRIBUTARIO (setores populares/reduzidos) ──────────────
+    setor_id_ref = so.get("id", "")
+    if reducao < 1.0:
+        elements.append(KeepTogether([
+            Spacer(1, 6),
+            Paragraph("Cashback Tributario — Devolucao de CBS/IBS para Consumidores de Baixa Renda", ST["h3"]),
+            Spacer(1, 3),
+            Paragraph(
+                f"Seu setor possui reducao de aliquota de {red_pct}%, o que o qualifica como setor "
+                f"essencial/popular. Nesse contexto, parte ou todo o CBS/IBS pago pelos consumidores "
+                f"inscritos no CadUnico sera devolvido pelo governo via cashback tributario "
+                f"(LC 214/2025, Arts. 162-180 para CBS e Arts. 231-248 para IBS):",
+                ST["body_j"]),
+            Spacer(1, 3),
+        ]))
+        cb_rows = [
+            [Paragraph("Item", ST["cell_header_l"]), Paragraph("CBS (a partir de 2027)", ST["cell_header"]), Paragraph("IBS (a partir de 2029)", ST["cell_header"])],
+            [Paragraph("Gas de cozinha (GLP 13 kg)", ST["cell_l"]),  Paragraph("100% devolvido", ST["cell_green_r"]), Paragraph("100% devolvido", ST["cell_green_r"])],
+            [Paragraph("Energia eletrica / agua / telecom", ST["cell_l"]), Paragraph("100% devolvido", ST["cell_green_r"]), Paragraph("20% devolvido", ST["cell_r"])],
+            [Paragraph("Alimentos cesta basica (reducao total)", ST["cell_l"]), Paragraph("Aliquota zero — sem devolucao", ST["cell_r"]), Paragraph("Aliquota zero — sem devolucao", ST["cell_r"])],
+            [Paragraph("Demais setores essenciais (reducao parcial)", ST["cell_l"]), Paragraph("Proporcional a aliquota ef.", ST["cell_r"]), Paragraph("Proporcional (fase-in 2029)", ST["cell_r"])],
+        ]
+        t_cb = Table(cb_rows, colWidths=[7.5*cm, 4.5*cm, 4.5*cm])
+        t_cb.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.white, INK_50]),
+            ("LINEBELOW",     (0, 0), (-1, -2), 0.3, INK_100),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
+            ("BOX",           (0, 0), (-1, -1), 0.3, INK_400),
+        ]))
+        elements.append(t_cb)
+        elements.append(Spacer(1, 3))
+        elements.append(Paragraph(
+            "Para o empresario: o cashback nao afeta o valor do tributo a recolher, apenas "
+            "a devolucao ao consumidor final. O impacto e indireto — pode aumentar o poder de compra "
+            "do seu publico-alvo e reduzir resistencia ao repasse da carga tributaria nos precos.",
+            ST["small_j"]))
+
+    # ── 5-C. IPI ZERADO 2027 (industria_geral) ──────────────────────────────
+    if setor_id_ref == "industria_geral":
+        elements.append(KeepTogether([
+            Spacer(1, 6),
+            Paragraph("IPI com Aliquota Zero a partir de 2027", ST["h3"]),
+            Spacer(1, 3),
+            Paragraph(
+                "O IPI (Imposto sobre Produtos Industrializados) tera aliquota zero para a maioria dos "
+                "produtos a partir de 02/02/2027 (LC 214/2025, Art. 410). "
+                "Isso reduz o custo dos insumos industriais e pode melhorar a competitividade do setor.",
+                ST["body_j"]),
+            Spacer(1, 3),
+            Paragraph(
+                "<b>Excecoes — produtos que mantem aliquota de IPI:</b> produtos com vantagem competitiva "
+                "da Zona Franca de Manaus (ZFM) acima do limiar de 6,5%, como motocicletas, televisores "
+                "e aparelhos de ar-condicionado fabricados na ZFM; e bens de Tecnologia da Informacao e "
+                "Comunicacao (TIC) com PPB obrigatorio. Para esses produtos o IPI continua como incentivo "
+                "regional (Art. 150, par. 6-A, CF/88).",
+                ST["body_j"]),
+            Spacer(1, 3),
+        ]))
 
     # ── 6. OBRIGACOES ACESSORIAS ─────────────────────────────────────────────
     elements.append(KeepTogether([

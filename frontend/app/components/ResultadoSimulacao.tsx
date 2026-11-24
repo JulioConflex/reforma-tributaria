@@ -64,6 +64,10 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
 
       <Breakdown r={resultado} />
 
+      {resultado.reducao_setor_aplicada >= 0.6 && resultado.ano >= 2027 && (
+        <CashbackTributarioCard reducao={resultado.reducao_setor_aplicada} />
+      )}
+
       {resultado.simples_por_fora && (
         <SimplesComparativoCard comp={resultado.simples_por_fora} ano={resultado.ano} />
       )}
@@ -452,6 +456,40 @@ function MemoriaCalculoCard({ m, r }: { m: MemoriaCalculo; r: SimulacaoResult })
   );
 }
 
+/* ──────────────────────────── CASHBACK TRIBUTARIO ─── */
+function CashbackTributarioCard({ reducao }: { reducao: number }) {
+  const semCbsIbs = reducao === 1.0;
+  return (
+    <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-6 py-5">
+      <div className="text-[11px] uppercase tracking-[0.10em] text-emerald-700 font-semibold mb-1">
+        Cashback Tributario
+      </div>
+      <h3 className="font-display text-[16px] font-bold text-emerald-900 leading-tight mb-2">
+        Devolucao de CBS/IBS para familias de baixa renda (CadUnico)
+      </h3>
+      {semCbsIbs ? (
+        <p className="text-[12.5px] text-emerald-800 leading-relaxed">
+          Seu setor tem reducao total (aliquota zero) — nao ha CBS/IBS a ser devolvido via cashback.
+        </p>
+      ) : (
+        <>
+          <p className="text-[12.5px] text-emerald-800 leading-relaxed">
+            Para clientes inscritos no CadUnico, parte do CBS/IBS pago sera devolvido pelo governo:
+          </p>
+          <ul className="mt-2 space-y-1 text-[12px] text-emerald-800 leading-relaxed list-none">
+            <li>• Gas de cozinha (GLP 13 kg): 100% da CBS devolvida a partir de 2027</li>
+            <li>• Energia eletrica, agua e telecom: 100% CBS + 20% IBS (2027/2029)</li>
+            <li>• Demais setores essenciais: CBS + IBS proporcional a partir de 2027</li>
+          </ul>
+        </>
+      )}
+      <p className="mt-3 text-[11px] text-emerald-600 leading-snug">
+        Base legal: LC 214/2025, Arts. 162-180 (CBS) e Arts. 231-248 (IBS). CBS a partir de 2027, IBS a partir de 2029.
+      </p>
+    </div>
+  );
+}
+
 /* ────────────────────────────── SIMPLES NORMAL vs POR FORA ─── */
 function SimplesComparativoCard({ comp, ano }: { comp: SimplesNacionalComparativo; ano: number }) {
   const iguais = comp.diferenca_custo === 0;
@@ -746,7 +784,7 @@ function ProjectionDetail({ r, ano, setAno }: { r: SimulacaoResult; ano: number;
       </div>
       <p className="text-xs text-ink-400 mt-3 pt-3 border-t border-ink-100">
         <span className="font-semibold text-amber-600">Estimativa</span> Anos 2027–2033: valores estimados com alíquotas de referência provisórias
-        (CBS ~9,3% + IBS ~18,7%), sujeitas a confirmação pelo Senado Federal.
+        (CBS 8,8% + IBS 19,2% = 28%), sujeitas a confirmação pelo Senado Federal.
         Cronograma: LC 214/2025, Arts. 350–357.
       </p>
     </div>
@@ -899,7 +937,7 @@ function BaseLegal() {
         ))}
       </ul>
       <p className="mt-4 pt-4 border-t border-ink-100 text-[11.5px] text-ink-400 leading-relaxed">
-        Alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) são estimativas sujeitas a resolução do Senado Federal.
+        Alíquotas de referência do IBS (19,2%) e CBS (8,8%) são estimativas sujeitas a resolução do Senado Federal.
       </p>
     </div>
   );

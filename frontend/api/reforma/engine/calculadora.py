@@ -230,13 +230,12 @@ def calcular_sistema_novo(
             else:
                 aliq_base = get_mei_aliquota_efetiva(setor, faturamento_anual)
                 base_legal = "LC 123/2006, Art. 18-A — DAS fixo MEI"
-            aliq_ajustada = aliq_base * (1 + cron["cbs_percentual"] * 0.5)
-            v = valor * aliq_ajustada
+            v = valor * aliq_base
             detalhes.append(_detalhe(
-                "DAS (inclui CBS a partir de 2027 — estimativa)",
-                aliq_ajustada, v,
-                f"LC 214/2025, Art. 351; LC 123/2006 com alterações | {base_legal}",
-                formula=f"R$ {_br(valor)} × {aliq_ajustada*100:.2f}% [DAS {aliq_base*100:.2f}% × (1 + {cron['cbs_percentual']*100:.1f}% × 0,5)] = R$ {_br(v)}",
+                "DAS (aliquota base — CBS/IBS incorporados pelo CGSN, coeficiente pendente)",
+                aliq_base, v,
+                f"LC 214/2025, Arts. 350-351; CGSN Res. 190/2026 — coeficiente de reducao ainda nao publicado | {base_legal}",
+                formula=f"R$ {_br(valor)} × {aliq_base*100:.2f}% (DAS base) = R$ {_br(v)} — CBS incluida no DAS a partir de 2027 com reducao proporcional definida pelo CGSN",
             ))
             return ResultadoSistema(
                 total=round(v, 2),
@@ -649,13 +648,26 @@ def gerar_recomendacoes(
             prioridade="media",
         ))
 
+    if setor.get("id") == "industria_geral" and ano >= 2027:
+        recs.append(RecomendacaoItem(
+            titulo="IPI zerado a partir de 2027 — revise seus custos",
+            texto=(
+                "O IPI tem aliquota zero a partir de 2027 para a maioria dos produtos (LC 214/2025, Art. 410). "
+                "Excecoes: produtos com vantagem de Zona Franca de Manaus (motocicletas, TVs, ar-condicionado "
+                "acima do limiar ZFM de 6,5%) e bens de TIC. Revise sua precificacao e custo de insumos."
+            ),
+            icone="🟢",
+            prioridade="media",
+        ))
+
     if regime in ("lucro_presumido", "lucro_real") and ano >= 2027:
         recs.append(RecomendacaoItem(
             titulo="Prepare seu capital de giro para o Split Payment",
             texto=(
-                "A partir de 2027, quando um cliente te pagar, o banco vai separar "
-                "automaticamente o valor do imposto (CBS e IBS) antes de depositar na sua conta. "
-                "Você sempre vai receber menos que o valor da nota. "
+                "A partir de 2028 (obrigatorio — 2027 e fase de adesao voluntaria B2B), "
+                "quando um cliente te pagar, o banco vai separar automaticamente o valor "
+                "do imposto (CBS e IBS) antes de depositar na sua conta. "
+                "Voce sempre vai receber menos que o valor da nota. "
                 "Planeje seu fluxo de caixa com essa nova realidade."
             ),
             icone="🔵",
@@ -949,7 +961,7 @@ def _calcular_simples_por_fora(
         credito_cliente_normal=credito_normal,
         credito_cliente_por_fora=credito_por_fora,
         aviso=(
-            "⚠️ Estimativa com dupla incerteza: (1) as alíquotas de referência de CBS (~9,3%) e IBS (~18,7%) "
+            "⚠️ Estimativa com dupla incerteza: (1) as alíquotas de referência de CBS (8,8%) e IBS (19,2%) "
             "são provisórias, sujeitas à Resolução do Senado Federal; (2) o mecanismo exato de como o Simples "
             "Nacional funcionará com IBS/CBS ('por fora') ainda aguarda regulamentação do Comitê Gestor do IBS "
             "(CG-IBS). O DAS é mantido integral nesta estimativa — na prática será reduzido pelo componente "

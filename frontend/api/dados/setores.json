@@ -26,7 +26,7 @@
       "is_aplicavel": false,
       "icms_padrao": 0.18,
       "iss_padrao": null,
-      "obs": "Alíquota cheia. IPI pode incidir adicionalmente (não incluso). Simples Nacional: Anexo II."
+      "obs": "IPI tem aliquota zero a partir de 2027 (LC 214/2025, Art. 410). Excecoes: produtos ZFM (motocicletas, TVs, ar-condicionado acima do limiar ZFM de 6,5%) e bens de TIC. Simples Nacional: Anexo II."
     },
     {
       "id": "servicos_ti",
