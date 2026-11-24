@@ -218,7 +218,9 @@ export default function SimplesNacionalTab({ setores }: { setores: Setor[] }) {
 
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <FieldLabel className="mb-0">Clientes B2B: <span className="tab-num text-ink-900 font-bold">{b2bPct}%</span></FieldLabel>
+            <FieldLabel className="mb-0">
+              Quantos dos seus clientes são empresas? <span className="tab-num text-ink-900 font-bold">{b2bPct}%</span>
+            </FieldLabel>
           </div>
           <input
             type="range" min={0} max={100} step={5}
@@ -227,10 +229,10 @@ export default function SimplesNacionalTab({ setores }: { setores: Setor[] }) {
             className="w-full accent-brand-500"
           />
           <div className="flex justify-between text-[10.5px] text-ink-400 mt-0.5">
-            <span>0% — só B2C</span><span>100% — só B2B</span>
+            <span>0% — só pessoas físicas</span><span>100% — só empresas</span>
           </div>
           <p className="mt-1.5 text-[11px] text-ink-400">
-            B2B = empresas e profissionais que podem aproveitar crédito de CBS/IBS nas compras que fazem com você.
+            Empresas e profissionais (médico, advogado, engenheiro etc.) que emitem nota para a própria empresa conseguem recuperar o imposto pago nas compras. Pessoas físicas, não.
           </p>
         </div>
 
@@ -377,42 +379,77 @@ function ComparativoCard({ r }: { r: SimplesAnaliseOutput }) {
         </div>
       </div>
 
-      {/* Break-even inline */}
+      {/* Vale a pena mudar? */}
       {r.break_even_b2b_pct !== null && !dispensado && (
-        <div className="mt-4 rounded-xl bg-ink-50 border border-ink-200 px-4 py-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="text-[12.5px] text-ink-700">
-              <strong>Break-even B2B:</strong> o Híbrido se paga a partir de <span className="tab-num font-bold text-ink-900">{r.break_even_b2b_pct.toFixed(0)}%</span> de clientes empresariais.
-              Você informou <span className="tab-num font-bold text-ink-900">{(r.percentual_b2b_atual * 100).toFixed(0)}%</span>.
-            </div>
-            <span className={`px-3 py-1 rounded-full text-[11.5px] font-bold whitespace-nowrap ${
-              r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-amber-100 text-amber-800"
-            }`}>
-              {r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "Acima do break-even" : "Abaixo do break-even"}
-            </span>
-          </div>
-          {/* barra */}
-          <div className="relative mt-3 h-3 rounded-full bg-ink-200">
-            <div
-              className={`absolute left-0 top-0 h-full rounded-full ${
-                r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "bg-emerald-400" : "bg-amber-400"
-              }`}
-              style={{ width: `${Math.min(100, r.percentual_b2b_atual * 100)}%` }}
-            />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-px h-5 bg-ink-700"
-              style={{ left: `${Math.min(100, r.break_even_b2b_pct)}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-[10px] text-ink-400 mt-1">
-            <span>0%</span>
-            <span>BE {r.break_even_b2b_pct.toFixed(0)}%</span>
-            <span>100%</span>
-          </div>
-        </div>
+        <ValePenaCard r={r} />
       )}
+    </div>
+  );
+}
+
+// ─── Vale a pena mudar? (break-even em linguagem simples) ────────────────────
+
+function ValePenaCard({ r }: { r: SimplesAnaliseOutput }) {
+  const extra     = r.hibrido.custo_por_operacao - r.normal.custo_por_operacao;
+  const credito   = r.hibrido.credito_comprador_b2b;
+  const b2bAtual  = r.percentual_b2b_atual * 100;
+  const minEmp    = r.break_even_b2b_pct!;
+  const compensa  = b2bAtual >= minEmp;
+
+  return (
+    <div className={`rounded-xl border px-4 py-4 mt-4 ${compensa ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+      <div className={`text-[12px] font-bold mb-3 ${compensa ? "text-emerald-800" : "text-amber-800"}`}>
+        Vale a pena mudar para o Híbrido?
+      </div>
+
+      {/* Linha 1: o que você paga a mais */}
+      <div className="flex gap-2 mb-2">
+        <div className="mt-0.5 w-4 h-4 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+          <span className="text-red-600 text-[10px] font-bold">+</span>
+        </div>
+        <p className="text-[12.5px] text-ink-700 leading-snug">
+          No Híbrido você paga <strong className="text-ink-900">{brlOp(extra)} a mais</strong> por R$1.000 de venda (CBS e IBS cobrados separadamente).
+        </p>
+      </div>
+
+      {/* Linha 2: o que o cliente empresa ganha */}
+      <div className="flex gap-2 mb-3">
+        <div className="mt-0.5 w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <span className="text-emerald-600 text-[10px] font-bold">✓</span>
+        </div>
+        <p className="text-[12.5px] text-ink-700 leading-snug">
+          Em troca, cada cliente empresa recupera <strong className="text-ink-900">{brlOp(credito)}</strong> de imposto por R$1.000 que comprar de você — e pode preferir comprar de quem oferece isso.
+        </p>
+      </div>
+
+      {/* Conclusão */}
+      <div className={`rounded-lg px-3.5 py-3 text-[12.5px] font-medium leading-snug ${compensa ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"}`}>
+        {compensa
+          ? <>Com <strong>{b2bAtual.toFixed(0)}%</strong> de clientes empresa, o benefício que você oferece compensa o custo extra. <strong>O Híbrido vale a pena.</strong></>
+          : <>Com <strong>{b2bAtual.toFixed(0)}%</strong> de clientes empresa, o custo extra ainda supera o benefício. O Híbrido valeria se você tivesse pelo menos <strong>{minEmp.toFixed(0)}%</strong> de clientes empresa.</>
+        }
+      </div>
+
+      {/* Barra visual simples */}
+      <div className="mt-3">
+        <div className="flex justify-between text-[10.5px] text-ink-500 mb-1">
+          <span>Seus clientes empresa: <strong className="text-ink-800">{b2bAtual.toFixed(0)}%</strong></span>
+          <span>Mínimo para compensar: <strong className="text-ink-800">{minEmp.toFixed(0)}%</strong></span>
+        </div>
+        <div className="relative h-2.5 rounded-full bg-ink-200">
+          <div
+            className={`absolute left-0 top-0 h-full rounded-full ${compensa ? "bg-emerald-400" : "bg-amber-400"}`}
+            style={{ width: `${Math.min(100, b2bAtual)}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-ink-600 rounded-full"
+            style={{ left: `${Math.min(99, minEmp)}%` }}
+          />
+        </div>
+        <div className="text-[10px] text-ink-400 mt-1 text-right">
+          A linha vertical marca o mínimo necessário
+        </div>
+      </div>
     </div>
   );
 }
