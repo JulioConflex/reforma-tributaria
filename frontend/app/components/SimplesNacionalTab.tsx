@@ -5,7 +5,7 @@ import type { Setor } from "./types";
 import { API } from "./types";
 import { brl, FieldLabel, SelectField, CurrencyField, parseBRL } from "./ui";
 
-// ─── Tipos do backend ────────────────────────────────────────────────────────
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 
 interface FatorRDetalhe {
   valor: number;
@@ -56,62 +56,99 @@ interface SimplesAnaliseOutput {
   ibs_ref_pct: number;
 }
 
-// ─── Helpers visuais ─────────────────────────────────────────────────────────
-
-function pct(v: number) {
-  return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
-}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function brlOp(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 }
-
-const TIPO_COLOR: Record<string, string> = {
-  decisao:     "bg-amber-100 text-amber-800 border-amber-200",
-  obrigacao:   "bg-red-100 text-red-800 border-red-200",
-  vigencia:    "bg-blue-100 text-blue-800 border-blue-200",
-  oportunidade:"bg-emerald-100 text-emerald-800 border-emerald-200",
-};
+function pct2(v: number) {
+  return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+}
 
 const TIPO_DOT: Record<string, string> = {
-  decisao:     "bg-amber-500",
-  obrigacao:   "bg-red-500",
-  vigencia:    "bg-blue-500",
-  oportunidade:"bg-emerald-500",
+  decisao:      "bg-amber-500",
+  obrigacao:    "bg-red-500",
+  vigencia:     "bg-blue-500",
+  oportunidade: "bg-emerald-500",
 };
+const TIPO_LABEL: Record<string, string> = {
+  decisao:      "Decisão",
+  obrigacao:    "Obrigação",
+  vigencia:     "Vigência",
+  oportunidade: "Oportunidade",
+};
+
+// ─── Crédito de entrada ───────────────────────────────────────────────────────
+
+const CREDITO_OPCOES = [
+  { valor: 10, label: "Poucos insumos",    sub: "Consultor, contador, designer" },
+  { valor: 30, label: "Insumos moderados", sub: "Loja, comércio, serviço com equipamentos" },
+  { valor: 50, label: "Muitos insumos",    sub: "Indústria, distribuidora, restaurante" },
+  { valor: 20, label: "Não sei ainda",     sub: "Estimativa conservadora" },
+];
+
+function CreditoEntradaSelector({ valor, onChange }: { valor: number; onChange: (v: number) => void }) {
+  return (
+    <div>
+      <FieldLabel>Quanto você compra para funcionar?</FieldLabel>
+      <p className="text-[11.5px] text-ink-500 mb-2 leading-relaxed">
+        Na reforma você paga CBS/IBS nas compras e pode <strong className="text-ink-700">abater esse valor</strong> das vendas. Escolha o perfil mais próximo:
+      </p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {CREDITO_OPCOES.map((o) => {
+          const ativo = o.valor === valor;
+          return (
+            <button
+              key={o.valor}
+              type="button"
+              onClick={() => onChange(o.valor)}
+              className={`text-left rounded-lg px-3 py-2.5 border text-[12px] transition-all ${
+                ativo
+                  ? "bg-brand-500 border-brand-500 text-white shadow-sm"
+                  : "bg-white border-ink-200 hover:border-brand-400 hover:bg-brand-50"
+              }`}
+            >
+              <div className={`font-semibold leading-tight ${ativo ? "text-white" : "text-ink-900"}`}>{o.label}</div>
+              <div className={`text-[10.5px] mt-0.5 ${ativo ? "text-white/75" : "text-ink-500"}`}>{o.sub}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
-interface Props {
-  setores: Setor[];
-}
-
-export default function SimplesNacionalTab({ setores }: Props) {
+export default function SimplesNacionalTab({ setores }: { setores: Setor[] }) {
   const setoresSimples = setores.filter((s) => s.anexo_simples);
 
-  const [setorId, setSetorId] = useState("comercio_geral");
+  const [setorId, setSetorId]       = useState("comercio_geral");
   const [faturamento, setFaturamento] = useState("360.000,00");
-  const [folha, setFolha] = useState("");
-  const [b2bPct, setB2bPct] = useState(50);
+  const [folha, setFolha]           = useState("");
+  const [b2bPct, setB2bPct]         = useState(50);
   const [creditoPct, setCreditoPct] = useState(30);
-  const [ano, setAno] = useState(2027);
+  const [ano, setAno]               = useState(2027);
 
-  const [resultado, setResultado] = useState<SimplesAnaliseOutput | null>(null);
+  const [resultado, setResultado]   = useState<SimplesAnaliseOutput | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  const [erro, setErro]             = useState<string | null>(null);
+  const [memoriaAberta, setMemoriaAberta] = useState(false);
 
-  const setor = setores.find((s) => s.id === setorId);
+  const setor    = setores.find((s) => s.id === setorId);
   const ehFatorR = setor?.anexo_simples === "FATOR_R";
 
   useEffect(() => {
     if (!setoresSimples.length) return;
     const ids = setoresSimples.map((s) => s.id);
     if (!ids.includes(setorId)) setSetorId(ids[0]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setoresSimples.length]);
 
   useEffect(() => {
-    const timer = setTimeout(() => calcular(), 300);
-    return () => clearTimeout(timer);
+    const t = setTimeout(calcular, 300);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setorId, faturamento, folha, b2bPct, creditoPct, ano]);
 
   async function calcular() {
@@ -125,18 +162,13 @@ export default function SimplesNacionalTab({ setores }: Props) {
         percentual_credito_entrada: creditoPct / 100,
         ano,
       };
-      if (ehFatorR && folha) {
-        body.folha_pagamento_mensal = parseBRL(folha);
-      }
+      if (ehFatorR && folha) body.folha_pagamento_mensal = parseBRL(folha);
       const res = await fetch(`${API}/simples/analise`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.detail || "Erro na análise");
-      }
+      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || "Erro"); }
       setResultado(await res.json());
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : "Erro desconhecido");
@@ -147,12 +179,13 @@ export default function SimplesNacionalTab({ setores }: Props) {
 
   const setorOpts = setoresSimples.map((s) => ({
     value: s.id,
-    label: `${s.nome}${s.anexo_simples === "FATOR_R" ? " (Fator R)" : ` — Anexo ${s.anexo_simples}`}`,
+    label: s.nome + (s.anexo_simples === "FATOR_R" ? " (Fator R)" : ` — Anexo ${s.anexo_simples}`),
   }));
 
   return (
-    <div className="mt-7 grid lg:grid-cols-[380px_1fr] gap-6 items-start">
-      {/* ── Painel de inputs ─────────────────────────────────────────────── */}
+    <div className="mt-7 grid lg:grid-cols-[360px_1fr] gap-6 items-start">
+
+      {/* ── Painel de inputs ───────────────────────────────────────────── */}
       <aside className="rounded-2xl bg-white hairline px-6 py-6 space-y-5 lg:sticky lg:top-6">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-1">
@@ -161,50 +194,43 @@ export default function SimplesNacionalTab({ setores }: Props) {
           <h2 className="font-display text-[20px] font-bold text-ink-900 leading-tight">
             Normal ou Híbrido?
           </h2>
-          <p className="mt-1.5 text-[13px] text-ink-500 leading-relaxed">
-            Compare as opções e descubra qual regime vale mais para o seu perfil de clientes.
-          </p>
         </div>
 
         <div>
           <FieldLabel>Setor de atividade</FieldLabel>
           <SelectField value={setorId} onChange={setSetorId}>
-            {setorOpts.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
+            {setorOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </SelectField>
         </div>
 
         <div>
-          <FieldLabel>Faturamento anual</FieldLabel>
+          <FieldLabel>Faturamento anual (RBT12)</FieldLabel>
           <CurrencyField value={faturamento} onChange={setFaturamento} placeholder="360.000,00" />
         </div>
 
         {ehFatorR && (
           <div>
-            <FieldLabel>Folha de pagamento mensal</FieldLabel>
+            <FieldLabel>Folha de pagamento mensal <span className="text-brand-500 font-bold">(Fator R)</span></FieldLabel>
             <CurrencyField value={folha} onChange={setFolha} placeholder="ex: 8.400,00" />
-            <p className="mt-1 text-[11.5px] text-ink-400">
-              Usado para calcular o Fator R e definir Anexo III ou V.
-            </p>
+            <p className="mt-1 text-[11px] text-ink-400">Pro-labore + CLT. Fator R = folha×12 / RBT12</p>
           </div>
         )}
 
         <div>
-          <FieldLabel>Clientes B2B (%)</FieldLabel>
-          <div className="flex items-center gap-3">
-            <input
-              type="range" min={0} max={100} step={5}
-              value={b2bPct}
-              onChange={(e) => setB2bPct(Number(e.target.value))}
-              className="flex-1 accent-brand-500"
-            />
-            <span className="tab-num text-[15px] font-semibold text-ink-900 w-12 text-right">
-              {b2bPct}%
-            </span>
+          <div className="flex justify-between items-center mb-1.5">
+            <FieldLabel className="mb-0">Clientes B2B: <span className="tab-num text-ink-900 font-bold">{b2bPct}%</span></FieldLabel>
           </div>
-          <p className="mt-1 text-[11.5px] text-ink-400">
-            Empresas e profissionais que podem aproveitar crédito de CBS/IBS.
+          <input
+            type="range" min={0} max={100} step={5}
+            value={b2bPct}
+            onChange={(e) => setB2bPct(Number(e.target.value))}
+            className="w-full accent-brand-500"
+          />
+          <div className="flex justify-between text-[10.5px] text-ink-400 mt-0.5">
+            <span>0% — só B2C</span><span>100% — só B2B</span>
+          </div>
+          <p className="mt-1.5 text-[11px] text-ink-400">
+            B2B = empresas e profissionais que podem aproveitar crédito de CBS/IBS nas compras que fazem com você.
           </p>
         </div>
 
@@ -215,23 +241,21 @@ export default function SimplesNacionalTab({ setores }: Props) {
           <SelectField value={String(ano)} onChange={(v) => setAno(Number(v))}>
             {[2026,2027,2028,2029,2030,2031,2032,2033].map((y) => (
               <option key={y} value={y}>
-                {y === 2026 ? "2026 (dispensado)" : y === 2033 ? "2033 (pleno)" : y}
+                {y === 2026 ? "2026 — dispensado de CBS/IBS" : y === 2033 ? "2033 — sistema pleno" : String(y)}
               </option>
             ))}
           </SelectField>
         </div>
 
-        <p className="text-[11px] text-ink-400 leading-relaxed border-t border-ink-100 pt-4">
-          Base: LC 214/2025, Arts. 350-357 e Calculadora RTC Simples Nacional (Receita Federal).
+        <p className="text-[11px] text-ink-400 border-t border-ink-100 pt-3 leading-relaxed">
+          Base: LC 214/2025 Arts. 350-357 · Calculadora RTC Simples Nacional (Receita Federal)
         </p>
       </aside>
 
-      {/* ── Painel de resultados ─────────────────────────────────────────── */}
-      <section className="space-y-5 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1 lg:pb-6">
+      {/* ── Resultados ─────────────────────────────────────────────────── */}
+      <section className="space-y-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1 lg:pb-6">
         {erro && (
-          <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">
-            {erro}
-          </div>
+          <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">{erro}</div>
         )}
 
         {!resultado && !erro && (
@@ -242,61 +266,39 @@ export default function SimplesNacionalTab({ setores }: Props) {
 
         {resultado && (
           <>
-            {/* Fator R */}
+            {/* 1. Recomendação — topo, destaque */}
+            <RecomendacaoCard tipo={resultado.recomendacao_tipo} texto={resultado.recomendacao} />
+
+            {/* 2. Comparativo simplificado */}
+            <ComparativoCard r={resultado} />
+
+            {/* 3. Fator R — só se aplicável */}
             {resultado.eh_fator_r && resultado.fator_r && (
               <FatorRCard dados={resultado.fator_r} />
             )}
 
-            {/* DAS atual */}
-            <div className="rounded-2xl bg-white hairline px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
+            {/* 4. Memória de cálculo — accordion */}
+            <div className="rounded-2xl bg-white hairline overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setMemoriaAberta((v) => !v)}
+                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-ink-50 transition"
+              >
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-1">
-                    DAS atual — Anexo {resultado.anexo_nome}
-                  </div>
-                  <div className="tab-num text-[32px] font-bold text-ink-900 leading-none">
-                    {pct(resultado.das_aliquota_pct)}
-                  </div>
-                  <div className="mt-1 text-[13px] text-ink-500">
-                    {brl(resultado.das_mensal)} / mês sobre faturamento informado
-                  </div>
+                  <span className="text-[13.5px] font-semibold text-ink-800">Como calculamos</span>
+                  <span className="ml-2 text-[12px] text-ink-400">passo a passo dos valores acima</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-[11px] text-ink-400">CBS ref.</div>
-                  <div className="tab-num font-semibold text-ink-700">{pct(resultado.cbs_ref_pct)}</div>
-                  <div className="mt-2 text-[11px] text-ink-400">IBS ref.</div>
-                  <div className="tab-num font-semibold text-ink-700">{pct(resultado.ibs_ref_pct)}</div>
-                </div>
-              </div>
-              {resultado.aviso_fator_r && (
-                <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12.5px] text-amber-800">
-                  {resultado.aviso_fator_r}
-                </div>
-              )}
+                <svg
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={`flex-shrink-0 text-ink-400 transition-transform ${memoriaAberta ? "rotate-180" : ""}`}
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              {memoriaAberta && <MemoriaCalculo r={resultado} creditoPct={creditoPct} />}
             </div>
 
-            {/* Comparativo Normal vs Híbrido */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <OpcaoCard opcao={resultado.normal} tipo="normal" ativa={resultado.recomendacao_tipo === "normal"} />
-              <OpcaoCard opcao={resultado.hibrido} tipo="hibrido" ativa={resultado.recomendacao_tipo === "hibrido"} />
-            </div>
-
-            {/* Break-even */}
-            {resultado.break_even_b2b_pct !== null && resultado.ano !== 2026 && (
-              <BreakEvenCard
-                breakEven={resultado.break_even_b2b_pct}
-                b2bAtual={resultado.percentual_b2b_atual * 100}
-                recomendacao={resultado.recomendacao_tipo}
-              />
-            )}
-
-            {/* Recomendação */}
-            <RecomendacaoCard
-              tipo={resultado.recomendacao_tipo}
-              texto={resultado.recomendacao}
-            />
-
-            {/* Linha do tempo */}
+            {/* 5. Linha do tempo — compacta */}
             <TimelineCard marcos={resultado.marcos} anoAtual={resultado.ano} />
           </>
         )}
@@ -305,291 +307,292 @@ export default function SimplesNacionalTab({ setores }: Props) {
   );
 }
 
-// ─── Sub-componentes ─────────────────────────────────────────────────────────
-
-const CREDITO_OPCOES = [
-  {
-    valor: 10,
-    label: "Poucos insumos",
-    descricao: "Presto serviço com pouco material",
-    exemplo: "Consultor, contador, designer, coach",
-  },
-  {
-    valor: 30,
-    label: "Insumos moderados",
-    descricao: "Compro mercadoria ou material regularmente",
-    exemplo: "Loja, comércio, serviço com equipamentos",
-  },
-  {
-    valor: 50,
-    label: "Muitos insumos",
-    descricao: "Minha operação depende de matéria-prima",
-    exemplo: "Indústria, distribuidora, restaurante",
-  },
-  {
-    valor: 20,
-    label: "Não sei ainda",
-    descricao: "Usar estimativa conservadora padrão",
-    exemplo: "",
-  },
-];
-
-function CreditoEntradaSelector({ valor, onChange }: { valor: number; onChange: (v: number) => void }) {
-  const opcaoAtiva = CREDITO_OPCOES.find((o) => o.valor === valor) ?? CREDITO_OPCOES[3];
-  return (
-    <div className="rounded-xl bg-ink-50 border border-ink-200 px-4 py-4 space-y-3">
-      <div>
-        <div className="text-[12px] font-semibold text-ink-800 mb-0.5">
-          Quanto você compra para funcionar?
-        </div>
-        <p className="text-[11.5px] text-ink-500 leading-relaxed">
-          Na reforma, você vai pagar CBS/IBS nas suas compras (fornecedores, mercadoria, insumos)
-          e poderá <strong className="text-ink-700">abater esse valor</strong> do que cobrar dos seus clientes.
-          Quanto mais você compra, maior esse abatimento.
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {CREDITO_OPCOES.map((o) => {
-          const ativo = o.valor === valor;
-          return (
-            <button
-              key={o.valor}
-              type="button"
-              onClick={() => onChange(o.valor)}
-              className={`text-left rounded-lg px-3 py-2.5 border transition-all ${
-                ativo
-                  ? "bg-brand-500 border-brand-500 text-white shadow-sm"
-                  : "bg-white border-ink-200 text-ink-800 hover:border-brand-400 hover:bg-brand-50"
-              }`}
-            >
-              <div className={`text-[12.5px] font-semibold leading-tight ${ativo ? "text-white" : "text-ink-900"}`}>
-                {o.label}
-              </div>
-              <div className={`text-[11px] mt-0.5 leading-snug ${ativo ? "text-white/80" : "text-ink-500"}`}>
-                {o.descricao}
-              </div>
-              {o.exemplo && (
-                <div className={`text-[10.5px] mt-1 ${ativo ? "text-white/60" : "text-ink-400"}`}>
-                  ex: {o.exemplo}
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <div className={`text-[11px] rounded-lg px-3 py-2 ${
-        opcaoAtiva.valor === 10 ? "bg-blue-50 text-blue-700" :
-        opcaoAtiva.valor === 30 ? "bg-emerald-50 text-emerald-700" :
-        opcaoAtiva.valor === 50 ? "bg-amber-50 text-amber-700" :
-        "bg-ink-100 text-ink-600"
-      }`}>
-        Usando <strong>{opcaoAtiva.valor}%</strong> de crédito de entrada nos cálculos.
-        {opcaoAtiva.valor === 20 && " Seu contador pode refinar esse número."}
-      </div>
-    </div>
-  );
-}
-
-function FatorRCard({ dados }: { dados: FatorRDetalhe }) {
-  const noAnexoIII = dados.anexo_atual === "III";
-  return (
-    <div className={`rounded-2xl border px-6 py-5 ${noAnexoIII ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
-      <div className={`text-[11px] uppercase tracking-[0.10em] font-semibold mb-2 ${noAnexoIII ? "text-emerald-700" : "text-amber-700"}`}>
-        Fator R — Definição do Anexo
-      </div>
-      <div className="flex items-end gap-6 flex-wrap">
-        <div>
-          <div className={`tab-num text-[36px] font-bold leading-none ${noAnexoIII ? "text-emerald-900" : "text-amber-900"}`}>
-            {dados.valor.toFixed(1)}%
-          </div>
-          <div className={`text-[13px] mt-1 ${noAnexoIII ? "text-emerald-700" : "text-amber-700"}`}>
-            Fator R atual (folha/faturamento 12m)
-          </div>
-        </div>
-        <div className="flex-1 min-w-[180px]">
-          <div className="text-[12px] font-medium text-ink-600 mb-1">
-            Anexo atual: <strong>{dados.anexo_atual}</strong> ({dados.aliq_efetiva_iii.toFixed(2)}% III · {dados.aliq_efetiva_v.toFixed(2)}% V)
-          </div>
-          {!noAnexoIII && (
-            <div className="text-[12px] text-amber-800">
-              Para Anexo III: folha mensal de {brl(dados.folha_minima_iii)} ({dados.threshold}% de Fator R).
-              {dados.economia_mensal_iii > 0 && (
-                <span className="font-semibold"> Economia potencial: {brl(dados.economia_mensal_iii)}/mês.</span>
-              )}
-            </div>
-          )}
-          {noAnexoIII && (
-            <div className="text-[12px] text-emerald-800 font-medium">
-              Você está no Anexo III (menor alíquota para serviços). Folha adequada.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OpcaoCard({ opcao, tipo, ativa }: {
-  opcao: SimplesOpcao;
-  tipo: "normal" | "hibrido";
-  ativa: boolean;
-}) {
-  const isHibrido = tipo === "hibrido";
-  return (
-    <div className={`rounded-2xl border px-5 py-5 relative ${ativa ? "border-brand-400 shadow-[0_0_0_2px_rgba(1,209,255,.18)]" : "border-ink-200 bg-white"}`}>
-      {ativa && (
-        <div className="absolute -top-3 left-4 bg-brand-500 text-white text-[10.5px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-          Recomendado
-        </div>
-      )}
-      <div className={`text-[10.5px] font-semibold uppercase tracking-[0.10em] mb-2 ${isHibrido ? "text-blue-600" : "text-ink-500"}`}>
-        {isHibrido ? "Simples Híbrido (por fora)" : "DAS Normal"}
-      </div>
-      <div className="tab-num text-[30px] font-bold text-ink-900 leading-none">
-        {brlOp(opcao.custo_por_operacao)}
-      </div>
-      <div className="text-[12px] text-ink-400 mt-0.5">por R$1.000 de venda</div>
-
-      <div className="mt-4 space-y-2">
-        {opcao.componentes.map((c, i) => (
-          <div key={i} className="flex justify-between items-baseline text-[12px]">
-            <span className="text-ink-500 leading-snug flex-1 mr-2">{c.nome}</span>
-            <span className="tab-num font-semibold text-ink-800 whitespace-nowrap">{brlOp(c.valor)}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className={`mt-4 rounded-lg px-3.5 py-2.5 ${isHibrido ? "bg-emerald-50 border border-emerald-200" : "bg-ink-50 border border-ink-200"}`}>
-        <div className={`text-[11px] font-semibold uppercase tracking-wide mb-1 ${isHibrido ? "text-emerald-700" : "text-ink-500"}`}>
-          Crédito do comprador B2B
-        </div>
-        <div className={`tab-num text-[18px] font-bold ${isHibrido ? "text-emerald-900" : "text-ink-500"}`}>
-          {brlOp(opcao.credito_comprador_b2b)}
-        </div>
-        {isHibrido && opcao.credito_comprador_b2b > 0 && (
-          <div className="text-[11px] text-emerald-700 mt-0.5">CBS + IBS integrais (Art. 156-A CF/88)</div>
-        )}
-        {!isHibrido && (
-          <div className="text-[11px] text-ink-400 mt-0.5">Art. 28 LC 214/2025 — crédito praticamente nulo</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function BreakEvenCard({ breakEven, b2bAtual, recomendacao }: {
-  breakEven: number;
-  b2bAtual: number;
-  recomendacao: string;
-}) {
-  const acimaBreakEven = b2bAtual >= breakEven;
-  const fillPct = Math.min(100, b2bAtual);
-  const bePct   = Math.min(100, breakEven);
-
-  return (
-    <div className="rounded-2xl bg-white hairline px-6 py-5">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-3">
-        Break-even B2B
-      </div>
-      <div className="flex items-end gap-4 mb-4">
-        <div>
-          <div className="text-[13px] text-ink-500">Break-even</div>
-          <div className="tab-num text-[28px] font-bold text-ink-900">{breakEven.toFixed(0)}%</div>
-        </div>
-        <div>
-          <div className="text-[13px] text-ink-500">Seu perfil</div>
-          <div className={`tab-num text-[28px] font-bold ${acimaBreakEven ? "text-emerald-700" : "text-amber-700"}`}>
-            {b2bAtual.toFixed(0)}%
-          </div>
-        </div>
-        <div className={`ml-auto px-3 py-1.5 rounded-full text-[12px] font-bold ${acimaBreakEven ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-          {acimaBreakEven ? "Acima do break-even" : "Abaixo do break-even"}
-        </div>
-      </div>
-
-      {/* Barra de gauge */}
-      <div className="relative h-6 rounded-full bg-ink-100 overflow-visible">
-        {/* faixa preenchida atual */}
-        <div
-          className={`absolute left-0 top-0 h-full rounded-full transition-all ${acimaBreakEven ? "bg-emerald-400" : "bg-amber-400"}`}
-          style={{ width: `${fillPct}%` }}
-        />
-        {/* marcador break-even */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 w-0.5 h-9 bg-ink-700 rounded-full z-10"
-          style={{ left: `${bePct}%` }}
-        />
-        {/* label break-even */}
-        <div
-          className="absolute -top-6 -translate-x-1/2 text-[11px] font-semibold text-ink-600 whitespace-nowrap"
-          style={{ left: `${bePct}%` }}
-        >
-          BE {breakEven.toFixed(0)}%
-        </div>
-      </div>
-
-      <div className="mt-4 text-[12.5px] text-ink-500 leading-relaxed">
-        {acimaBreakEven
-          ? `Com ${b2bAtual.toFixed(0)}% de B2B, o crédito que seus clientes recuperam compensa o custo extra do Híbrido.`
-          : `Com ${b2bAtual.toFixed(0)}% de B2B, o custo extra do Híbrido ainda supera o benefício competitivo do crédito. Aumente o B2B para ${breakEven.toFixed(0)}% para o Híbrido compensar.`
-        }
-      </div>
-    </div>
-  );
-}
+// ─── Recomendação ────────────────────────────────────────────────────────────
 
 function RecomendacaoCard({ tipo, texto }: { tipo: string; texto: string }) {
-  const configs: Record<string, { bg: string; border: string; titulo: string; labelColor: string }> = {
-    hibrido:    { bg: "bg-brand-50",    border: "border-brand-300",   titulo: "Opte pelo Regime Híbrido",   labelColor: "text-brand-700" },
-    normal:     { bg: "bg-white",       border: "border-ink-200",     titulo: "Mantenha o DAS Normal",      labelColor: "text-ink-500"   },
-    dispensado: { bg: "bg-emerald-50",  border: "border-emerald-200", titulo: "Dispensado em 2026",         labelColor: "text-emerald-700"},
-    indiferente:{ bg: "bg-blue-50",     border: "border-blue-200",    titulo: "Regimes equivalentes",       labelColor: "text-blue-700"  },
+  const cfg: Record<string, { icon: string; titulo: string; bg: string; border: string; iconBg: string }> = {
+    hibrido:    { icon: "✓", titulo: "Opte pelo Regime Híbrido",  bg: "bg-emerald-50", border: "border-emerald-300", iconBg: "bg-emerald-500" },
+    normal:     { icon: "✓", titulo: "Mantenha o DAS Normal",    bg: "bg-white",      border: "border-ink-200",     iconBg: "bg-brand-500"   },
+    dispensado: { icon: "i", titulo: "Dispensado em 2026",       bg: "bg-blue-50",    border: "border-blue-200",    iconBg: "bg-blue-500"    },
+    indiferente:{ icon: "=", titulo: "Regimes equivalentes",     bg: "bg-ink-50",     border: "border-ink-200",     iconBg: "bg-ink-400"     },
   };
-  const cfg = configs[tipo] ?? configs.normal;
-
+  const c = cfg[tipo] ?? cfg.normal;
   return (
-    <div className={`rounded-2xl border px-6 py-5 ${cfg.bg} ${cfg.border}`}>
-      <div className={`text-[11px] uppercase tracking-[0.10em] font-semibold mb-1 ${cfg.labelColor}`}>
-        Recomendação
+    <div className={`rounded-2xl border px-6 py-5 ${c.bg} ${c.border}`}>
+      <div className="flex items-start gap-4">
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[15px] flex-shrink-0 mt-0.5 ${c.iconBg}`}>
+          {c.icon}
+        </div>
+        <div className="flex-1">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-0.5">Recomendação</div>
+          <h3 className="font-display text-[18px] font-bold text-ink-900 leading-tight mb-2">{c.titulo}</h3>
+          <p className="text-[13px] text-ink-700 leading-relaxed">{texto}</p>
+        </div>
       </div>
-      <h3 className="font-display text-[17px] font-bold text-ink-900 leading-tight mb-2">
-        {cfg.titulo}
-      </h3>
-      <p className="text-[13.5px] text-ink-700 leading-relaxed">
-        {texto}
-      </p>
-      <div className="mt-3 rounded-lg bg-white/60 border border-white/80 px-3.5 py-2.5 text-[12px] text-ink-500">
-        Esta análise é estimativa conservadora: o coeficiente de redução do DAS ainda não foi publicado pelo CGSN (Res. 190/2026, Art. 3). O Híbrido pode ficar ainda mais vantajoso após a regulamentação.
+      <div className="mt-3 ml-13 text-[11.5px] text-ink-500 bg-white/60 border border-white rounded-lg px-3.5 py-2.5 leading-relaxed">
+        Estimativa conservadora: o coeficiente de redução do DAS no Híbrido ainda não foi publicado pelo CGSN (Res. 190/2026). O Híbrido tende a ser ainda mais vantajoso após a regulamentação.
       </div>
     </div>
   );
 }
+
+// ─── Comparativo Normal vs Híbrido ───────────────────────────────────────────
+
+function ComparativoCard({ r }: { r: SimplesAnaliseOutput }) {
+  const dispensado = r.ano === 2026;
+  const recHibrido = r.recomendacao_tipo === "hibrido";
+  return (
+    <div className="rounded-2xl bg-white hairline px-6 py-5">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-4">
+        Comparativo — base R$1.000 de venda · Anexo {r.anexo_nome} · {pct2(r.das_aliquota_pct)} DAS
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Normal */}
+        <div className={`rounded-xl border px-4 py-4 ${!recHibrido && !dispensado ? "border-brand-400 bg-brand-50" : "border-ink-200"}`}>
+          <div className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-2">DAS Normal</div>
+          <div className="tab-num text-[26px] font-bold text-ink-900 leading-none">{brlOp(r.normal.custo_por_operacao)}</div>
+          <div className="text-[11px] text-ink-400 mt-0.5">custo por R$1.000</div>
+          <div className="mt-3 pt-3 border-t border-ink-100">
+            <div className="text-[11px] text-ink-500 mb-0.5">Crédito para o comprador B2B</div>
+            <div className="tab-num text-[15px] font-bold text-ink-400">{brlOp(r.normal.credito_comprador_b2b)}</div>
+            <div className="text-[10.5px] text-ink-400">praticamente nulo (Art. 28 LC 214)</div>
+          </div>
+        </div>
+
+        {/* Híbrido */}
+        <div className={`rounded-xl border px-4 py-4 ${recHibrido && !dispensado ? "border-brand-400 bg-brand-50" : "border-ink-200"}`}>
+          <div className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-2">Simples Híbrido</div>
+          <div className="tab-num text-[26px] font-bold text-ink-900 leading-none">{brlOp(r.hibrido.custo_por_operacao)}</div>
+          <div className="text-[11px] text-ink-400 mt-0.5">custo por R$1.000</div>
+          <div className="mt-3 pt-3 border-t border-ink-100">
+            <div className="text-[11px] text-ink-500 mb-0.5">Crédito para o comprador B2B</div>
+            <div className={`tab-num text-[15px] font-bold ${r.hibrido.credito_comprador_b2b > 0 ? "text-emerald-700" : "text-ink-400"}`}>
+              {brlOp(r.hibrido.credito_comprador_b2b)}
+            </div>
+            {r.hibrido.credito_comprador_b2b > 0 && (
+              <div className="text-[10.5px] text-emerald-700">CBS + IBS integrais (Art. 156-A CF)</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Break-even inline */}
+      {r.break_even_b2b_pct !== null && !dispensado && (
+        <div className="mt-4 rounded-xl bg-ink-50 border border-ink-200 px-4 py-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-[12.5px] text-ink-700">
+              <strong>Break-even B2B:</strong> o Híbrido se paga a partir de <span className="tab-num font-bold text-ink-900">{r.break_even_b2b_pct.toFixed(0)}%</span> de clientes empresariais.
+              Você informou <span className="tab-num font-bold text-ink-900">{(r.percentual_b2b_atual * 100).toFixed(0)}%</span>.
+            </div>
+            <span className={`px-3 py-1 rounded-full text-[11.5px] font-bold whitespace-nowrap ${
+              r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-amber-100 text-amber-800"
+            }`}>
+              {r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "Acima do break-even" : "Abaixo do break-even"}
+            </span>
+          </div>
+          {/* barra */}
+          <div className="relative mt-3 h-3 rounded-full bg-ink-200">
+            <div
+              className={`absolute left-0 top-0 h-full rounded-full ${
+                r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "bg-emerald-400" : "bg-amber-400"
+              }`}
+              style={{ width: `${Math.min(100, r.percentual_b2b_atual * 100)}%` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-px h-5 bg-ink-700"
+              style={{ left: `${Math.min(100, r.break_even_b2b_pct)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-ink-400 mt-1">
+            <span>0%</span>
+            <span>BE {r.break_even_b2b_pct.toFixed(0)}%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Fator R ─────────────────────────────────────────────────────────────────
+
+function FatorRCard({ dados }: { dados: FatorRDetalhe }) {
+  const noIII = dados.anexo_atual === "III";
+  return (
+    <div className={`rounded-2xl border px-6 py-4 ${noIII ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+      <div className={`text-[11px] uppercase tracking-[0.10em] font-semibold mb-3 ${noIII ? "text-emerald-700" : "text-amber-700"}`}>
+        Fator R — define o Anexo do seu setor
+      </div>
+      <p className="text-[12px] text-ink-600 mb-3 leading-relaxed">
+        Para serviços com Fator R, o Anexo (e a alíquota DAS) depende da proporção entre folha de pagamento e faturamento.
+        Fator R = folha 12 meses ÷ faturamento 12 meses.
+      </p>
+      <div className="flex items-center gap-6 flex-wrap">
+        <div>
+          <div className={`tab-num text-[32px] font-bold leading-none ${noIII ? "text-emerald-900" : "text-amber-900"}`}>{dados.valor.toFixed(1)}%</div>
+          <div className="text-[12px] text-ink-600 mt-0.5">Fator R calculado</div>
+        </div>
+        <div className="flex-1 min-w-[180px] space-y-1">
+          <div className="text-[12.5px]">
+            Anexo atual: <strong className="text-ink-900">{dados.anexo_atual}</strong> —
+            alíquota <span className="tab-num font-semibold">{noIII ? pct2(dados.aliq_efetiva_iii) : pct2(dados.aliq_efetiva_v)}</span>
+          </div>
+          {!noIII && (
+            <div className={`text-[12px] rounded-lg px-3 py-2 bg-amber-100 text-amber-900`}>
+              Para cair no Anexo III ({pct2(dados.aliq_efetiva_iii)}), a folha mensal precisa ser {brl(dados.folha_minima_iii)}.
+              {dados.economia_mensal_iii > 0 && <span className="font-semibold"> Economia potencial: {brl(dados.economia_mensal_iii)}/mês.</span>}
+            </div>
+          )}
+          {noIII && (
+            <div className="text-[12px] text-emerald-800 font-medium">
+              Folha adequada. Você está no Anexo com menor alíquota para serviços.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Memória de cálculo ───────────────────────────────────────────────────────
+
+function MemoriaCalculo({ r, creditoPct }: { r: SimplesAnaliseOutput; creditoPct: number }) {
+  const BASE = 1000;
+  const dispensado = r.ano === 2026;
+
+  const passos: { titulo: string; linhas: { label: string; valor: string; destaque?: boolean }[]; nota?: string }[] = [];
+
+  // Passo 1: DAS
+  passos.push({
+    titulo: "1. Alíquota DAS (sua situação atual)",
+    linhas: [
+      { label: "Faturamento anual informado (RBT12)", valor: brl(parseBRL("") || 360000) },
+      { label: `Tabela Simples — Anexo ${r.anexo_nome}`, valor: "" },
+      { label: "Alíquota DAS efetiva", valor: pct2(r.das_aliquota_pct), destaque: true },
+      { label: "DAS mensal estimado", valor: brl(r.das_mensal) },
+    ],
+    nota: r.aviso_fator_r ?? undefined,
+  });
+
+  if (!dispensado) {
+    // Passo 2: Alíquotas de referência
+    passos.push({
+      titulo: "2. CBS e IBS de referência neste ano",
+      linhas: [
+        { label: `CBS (Contribuição sobre Bens e Serviços) — ${r.ano}`, valor: pct2(r.cbs_ref_pct) },
+        { label: `IBS (Imposto sobre Bens e Serviços) — ${r.ano}`, valor: pct2(r.ibs_ref_pct) },
+        { label: "Total CBS + IBS", valor: pct2(r.cbs_ref_pct + r.ibs_ref_pct), destaque: true },
+      ],
+      nota: "Alíquotas de referência da LC 214/2025. No regime Híbrido, CBS e IBS são cobrados por fora do DAS a essas alíquotas.",
+    });
+
+    // Passo 3: Regime Normal
+    passos.push({
+      titulo: "3. Regime Normal — sobre R$1.000 de venda",
+      linhas: [
+        { label: `DAS: R$ 1.000 × ${pct2(r.das_aliquota_pct)}`, valor: brlOp(r.normal.custo_por_operacao) },
+        { label: "CBS/IBS embutidos no DAS (alíquota reduzida)", valor: "incluso" },
+        { label: "Custo total para você", valor: brlOp(r.normal.custo_por_operacao), destaque: true },
+        { label: "Crédito disponível para o comprador B2B", valor: brlOp(r.normal.credito_comprador_b2b) },
+      ],
+      nota: "No DAS Normal, CBS e IBS ficam embutidos com alíquota muito reduzida. O comprador B2B não consegue tomar crédito (Art. 28 LC 214/2025).",
+    });
+
+    // Passo 4: Regime Híbrido
+    const linhasHibrido = r.hibrido.componentes.map((c) => ({
+      label: c.nome,
+      valor: brlOp(c.valor),
+    }));
+    linhasHibrido.push({ label: "Custo total para você", valor: brlOp(r.hibrido.custo_por_operacao), destaque: true } as { label: string; valor: string; destaque?: boolean });
+    linhasHibrido.push({ label: `Crédito disponível para o comprador B2B (CBS ${pct2(r.cbs_ref_pct)} + IBS ${pct2(r.ibs_ref_pct)} integrais)`, valor: brlOp(r.hibrido.credito_comprador_b2b) });
+    passos.push({
+      titulo: "4. Regime Híbrido — sobre R$1.000 de venda",
+      linhas: linhasHibrido,
+      nota: `Crédito de entrada de ${creditoPct}% descontado do CBS e IBS (insumos que você compra). IS não entra na base do Simples Nacional.`,
+    });
+
+    // Passo 5: Break-even
+    if (r.break_even_b2b_pct !== null) {
+      const extra = r.hibrido.custo_por_operacao - r.normal.custo_por_operacao;
+      const credB2b = r.hibrido.credito_comprador_b2b;
+      passos.push({
+        titulo: "5. Break-even B2B — a partir de quando o Híbrido vale",
+        linhas: [
+          { label: `Custo extra do Híbrido: R$1.000 × Híbrido − R$1.000 × Normal`, valor: brlOp(extra) },
+          { label: `Crédito gerado por venda B2B no Híbrido`, valor: brlOp(credB2b) },
+          { label: `Break-even = custo extra ÷ crédito B2B = ${brlOp(extra)} ÷ ${brlOp(credB2b)}`, valor: `${r.break_even_b2b_pct.toFixed(1)}% de clientes B2B`, destaque: true },
+          { label: "Seu perfil informado", valor: `${(r.percentual_b2b_atual * 100).toFixed(0)}% de clientes B2B` },
+          { label: "Resultado", valor: r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "Híbrido vantajoso" : "DAS Normal vantajoso", destaque: true },
+        ],
+        nota: "Lógica baseada em CalculoSimplesPorForaService.java — Calculadora RTC Simples Nacional (Receita Federal do Brasil).",
+      });
+    }
+  } else {
+    passos.push({
+      titulo: "2. Situação em 2026 — dispensado",
+      linhas: [
+        { label: "CBS e IBS em vigor em 2026", valor: "Não" },
+        { label: "DAS Normal e Híbrido são idênticos", valor: "Sim", destaque: true },
+      ],
+      nota: "LC 214/2025 dispensa o Simples Nacional de CBS e IBS em 2026. Use o ano para planejar: calcule o Fator R e mapeie seus clientes B2B.",
+    });
+  }
+
+  return (
+    <div className="border-t border-ink-100 px-6 pb-6 pt-4 space-y-5">
+      <p className="text-[12px] text-ink-500">
+        Todos os valores abaixo são calculados sobre R$1.000 de venda como base comparativa.
+      </p>
+      {passos.map((passo, pi) => (
+        <div key={pi}>
+          <div className="text-[12.5px] font-semibold text-ink-800 mb-2">{passo.titulo}</div>
+          <table className="w-full text-[12px]">
+            <tbody>
+              {passo.linhas.map((l, li) => (
+                <tr key={li} className={`border-b border-ink-100 last:border-0 ${l.destaque ? "bg-ink-50" : ""}`}>
+                  <td className={`py-1.5 pr-4 leading-snug ${l.destaque ? "font-semibold text-ink-800" : "text-ink-600"}`}>{l.label}</td>
+                  <td className={`py-1.5 text-right tab-num whitespace-nowrap ${l.destaque ? "font-bold text-ink-900" : "text-ink-700"}`}>{l.valor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {passo.nota && (
+            <p className="mt-2 text-[11px] text-ink-400 leading-relaxed bg-ink-50 rounded-lg px-3 py-2">{passo.nota}</p>
+          )}
+        </div>
+      ))}
+      <p className="text-[11px] text-ink-400 pt-2 border-t border-ink-100">
+        Base legal: LC 214/2025 (Arts. 350-357, 156-A CF/88, Art. 28) · CGSN Res. 190/2026 · NT 2026.005 Receita Federal
+      </p>
+    </div>
+  );
+}
+
+// ─── Linha do tempo ───────────────────────────────────────────────────────────
 
 function TimelineCard({ marcos, anoAtual }: { marcos: MarcoTimeline[]; anoAtual: number }) {
   return (
     <div className="rounded-2xl bg-white hairline px-6 py-5">
       <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ink-500 mb-4">
-        Linha do tempo — Decisões e obrigações
+        Calendário de decisões e obrigações
       </div>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {marcos.map((m, i) => {
           const isAtual = m.ano === anoAtual;
           return (
-            <div
-              key={i}
-              className={`flex gap-3 items-start rounded-xl px-3.5 py-3 transition ${isAtual ? "bg-brand-50 border border-brand-200" : ""}`}
-            >
-              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${TIPO_DOT[m.tipo] ?? "bg-ink-300"}`} />
+            <div key={i} className={`flex gap-3 items-start rounded-lg px-3 py-2.5 ${isAtual ? "bg-brand-50 border border-brand-200" : "hover:bg-ink-50"}`}>
+              <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${TIPO_DOT[m.tipo] ?? "bg-ink-300"}`} />
               <div className="flex-1">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="tab-num text-[12.5px] font-bold text-ink-800">
+                  <span className="tab-num text-[12px] font-bold text-ink-800">
                     {m.ano}{m.mes ? ` / ${m.mes}` : ""}
                   </span>
-                  <span className={`inline-flex text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${TIPO_COLOR[m.tipo] ?? "bg-ink-100 text-ink-600 border-ink-200"}`}>
-                    {m.tipo}
-                  </span>
+                  <span className="text-[10.5px] text-ink-400">{TIPO_LABEL[m.tipo] ?? m.tipo}</span>
                 </div>
-                <p className={`text-[12.5px] leading-snug mt-0.5 ${m.destaque ? "text-ink-900 font-medium" : "text-ink-600"}`}>
+                <p className={`text-[12px] leading-snug mt-0.5 ${m.destaque ? "text-ink-900 font-medium" : "text-ink-600"}`}>
                   {m.evento}
                 </p>
               </div>
