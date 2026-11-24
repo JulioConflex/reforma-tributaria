@@ -311,54 +311,63 @@ def calcular_sistema_novo(
             separador=True,
         ))
 
-    # 3) CBS e IBS — calculados sobre a base "por fora".
+    # 3) Imposto Seletivo — calculado ANTES do CBS/IBS porque IS compõe a base deles.
+    # Código oficial RFB (calculadora-rtc-regime-regular): vIS calculado entra na base de CBS/IBS.
+    # MP 1.399/2026, vigência 02/02/2027. LC 214/2025, Art. 409.
+    is_valor = 0.0
+    if setor.get("is_aplicavel") and cron["cbs_percentual"] >= 0.08:
+        is_rate = setor.get("is_estimado", 0.0)
+        is_valor = round(base_consumo * is_rate, 2)
+        aviso_is = " (estimativa)" if setor.get("aviso_estimativa") else ""
+        detalhes.append(_detalhe(
+            f"IS – Imposto Seletivo ({is_rate*100:.1f}%{aviso_is} — MP 1.399/2026)",
+            is_rate, is_valor,
+            "LC 214/2025, Art. 409 – MP 1.399/2026, vigência 02/02/2027",
+            formula=f"R$ {base_fmt} (base) × {is_rate*100:.1f}% (IS) = R$ {_br(is_valor)}",
+        ))
+
+    # IS compõe a base de CBS/IBS (Art. 11 LC 214/2025 / código oficial RFB GitHub)
+    base_cbs_ibs = base_consumo + is_valor
+    base_cbs_ibs_fmt = _br(base_cbs_ibs)
+    nota_is = " incl. IS" if is_valor > 0 else ""
+
+    # 4) CBS e IBS — calculados sobre a base "por fora" que inclui IS quando aplicável.
     if cron["cbs_percentual"] > 0:
         cbs_bruto = cron["cbs_percentual"] * fator_reducao
         cbs_efetivo = cbs_bruto * (1 - percentual_credito)
-        cbs_valor = base_consumo * cbs_efetivo
+        cbs_valor = base_cbs_ibs * cbs_efetivo
         nome_cbs = ("CBS (simbólica em 2026 — compensada)" if simbolico
                     else f"CBS (alíquota-ref. {cbs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)")
         detalhes.append(_detalhe(
             nome_cbs, cbs_efetivo, cbs_valor,
             "LC 214/2025, Art. 9º – CBS (cálculo por fora)",
-            formula=f"R$ {base_fmt} (base por fora) × {cron['cbs_percentual']*100:.1f}% (CBS ref.){red_txt}{cred_txt} = R$ {_br(cbs_valor)}{nota_simb}",
+            formula=f"R$ {base_cbs_ibs_fmt} (base por fora{nota_is}) × {cron['cbs_percentual']*100:.1f}% (CBS ref.){red_txt}{cred_txt} = R$ {_br(cbs_valor)}{nota_simb}",
             informativo=simbolico,
         ))
 
     if cron["ibs_percentual"] > 0:
         ibs_bruto = cron["ibs_percentual"] * fator_reducao
         ibs_efetivo = ibs_bruto * (1 - percentual_credito)
-        ibs_valor = base_consumo * ibs_efetivo
+        ibs_valor = base_cbs_ibs * ibs_efetivo
         ibs_fator = cron.get("ibs_fator", 0.0)
         if simbolico:
             nome_ibs = "IBS (simbólico em 2026 — compensado)"
-            formula_ibs = f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}{nota_simb}"
+            formula_ibs = f"R$ {base_cbs_ibs_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}{nota_simb}"
         elif ibs_fator > 0 and ibs_fator < 1:
-            ibs_ref_full = cron["ibs_percentual"] / ibs_fator  # alíquota de referência plena
+            ibs_ref_full = cron["ibs_percentual"] / ibs_fator
             nome_ibs = f"IBS — {int(ibs_fator*100)}% em vigência (ref. plena {ibs_ref_full*100:.1f}%)"
             formula_ibs = (
-                f"R$ {base_fmt} (base por fora) × {ibs_ref_full*100:.1f}% (IBS ref. plena){red_txt}"
+                f"R$ {base_cbs_ibs_fmt} (base por fora{nota_is}) × {ibs_ref_full*100:.1f}% (IBS ref. plena){red_txt}"
                 f" × {int(ibs_fator*100)}% (fase-in 2029-2032){cred_txt} = R$ {_br(ibs_valor)}"
             )
         else:
             nome_ibs = f"IBS (alíquota-ref. {ibs_bruto*100:.1f}%, crédito {percentual_credito*100:.0f}%)"
-            formula_ibs = f"R$ {base_fmt} (base por fora) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}"
+            formula_ibs = f"R$ {base_cbs_ibs_fmt} (base por fora{nota_is}) × {cron['ibs_percentual']*100:.1f}% (IBS ref.){red_txt}{cred_txt} = R$ {_br(ibs_valor)}"
         detalhes.append(_detalhe(
             nome_ibs, ibs_efetivo, ibs_valor,
             "LC 214/2025, Art. 156-A CF – IBS (cálculo por fora)",
             formula=formula_ibs,
             informativo=simbolico,
-        ))
-
-    # 4) Imposto Seletivo (a partir de 2027, quando a CBS entra cheia).
-    if setor.get("is_aplicavel") and cron["cbs_percentual"] >= 0.08:
-        is_rate = setor.get("is_estimado", 0.0)
-        is_valor = valor * is_rate
-        detalhes.append(_detalhe(
-            f"IS – Imposto Seletivo (estimado {is_rate*100:.0f}%)",
-            is_rate, is_valor,
-            "LC 214/2025, Art. 409 – Imposto Seletivo (taxa sujeita a regulamentação)",
-            formula=f"R$ {_br(valor)} × {is_rate*100:.0f}% (estimativa de IS) = R$ {_br(is_valor)}",
         ))
 
     total = sum(d.valor for d in detalhes if not d.informativo)
@@ -603,12 +612,14 @@ def gerar_recomendacoes(
         ))
 
     if setor.get("is_aplicavel"):
+        is_rate_rec = setor.get("is_estimado", 0.0)
+        aviso_rec = " (estimativa)" if setor.get("aviso_estimativa") else ""
         recs.append(RecomendacaoItem(
             titulo="Imposto Seletivo (IS) incide sobre seu produto",
             texto=(
-                "Seu setor está sujeito ao Imposto Seletivo, com alíquotas ainda a serem "
-                "regulamentadas. Monitore as publicações do governo e prepare sua "
-                "precificação para esse custo adicional significativo."
+                f"Seu setor está sujeito ao IS de {is_rate_rec*100:.1f}%{aviso_rec} — MP 1.399/2026, "
+                f"vigência 02/02/2027. O IS é calculado sobre a base da operação e ainda "
+                f"compõe a base de CBS/IBS, ampliando a carga. Revise sua precificação."
             ),
             icone="🔴",
             prioridade="alta",
@@ -1038,10 +1049,10 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
             "Não haverá IBS nem CBS sobre estas operações."
         )
     elif setor.get("is_aplicavel"):
+        aviso_est = " (estimativa — alíquota sujeita a regulamentação complementar)" if setor.get("aviso_estimativa") else ""
         alerta = (
-            "⚠️ Atenção: este setor está sujeito ao Imposto Seletivo (IS). "
-            "As alíquotas mostradas são ESTIMATIVAS de mercado — o decreto regulamentador "
-            "ainda não foi publicado. Os valores reais podem ser significativamente diferentes."
+            f"⚠️ Atenção: este setor está sujeito ao Imposto Seletivo (IS) — MP 1.399/2026, "
+            f"vigência 02/02/2027.{aviso_est} O IS entra na base de cálculo do CBS e IBS."
         )
 
     if fator_r_info and fator_r_info.fator_r_calculado is None and not alerta:
@@ -1142,7 +1153,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
             "Crédito: compras e insumos usados na atividade geram crédito de IBS/CBS (abatem o imposto). Uso/consumo pessoal não gera; bares e restaurantes têm crédito vedado.",
             "Em 2026, CBS (0,9%) e IBS (0,1%) são simbólicos — compensados com PIS/COFINS, não aumentam a carga real.",
             "IRPJ e CSLL incidem sobre o lucro (mensal/anual) e NÃO entram no comparativo da reforma — ela não altera esses tributos.",
-            "Alíquotas de referência de IBS/CBS são provisórias: CBS ~9,3% + IBS ~18,7% = ~28% (sujeitas a Resolução do Senado).",
+            "Alíquotas de referência de IBS/CBS são provisórias: CBS 8,8% + IBS 19,2% = 28% (sujeitas a Resolução do Senado; TCU calculou CBS 11,3% para 2027 — prazo deliberação 22/12/2026).",
         ],
     )
 

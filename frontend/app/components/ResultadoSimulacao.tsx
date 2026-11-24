@@ -25,8 +25,8 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
               Resultados baseados em projeções — sujeitos a alteração
             </p>
             <p className="text-[12.5px] text-amber-800 leading-relaxed">
-              As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) ainda não foram confirmadas pelo Senado Federal,
-              e as taxas do Imposto Seletivo dependem de decreto regulamentador não publicado.
+              As alíquotas de referência do IBS (19,2%) e CBS (8,8%) são provisórias e sujeitas a Resolução do Senado Federal
+              (TCU calculou CBS em 11,3% para 2027 — prazo de deliberação 22/12/2026).
               Os valores exibidos são estimativas e <strong>poderão ser diferentes</strong> quando os valores definitivos forem divulgados.
               Consulte seu contador antes de tomar decisões estratégicas.
             </p>
@@ -57,8 +57,8 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
       {/* IS aviso */}
       {resultado.is_aplicavel && (
         <div className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3.5 text-[13px] text-amber-900">
-          <strong>⚠️ Imposto Seletivo — alíquotas estimadas:</strong>{" "}
-          Os valores exibidos são estimativas de mercado. Decreto regulamentador ainda não publicado.
+          <strong>⚠️ Imposto Seletivo (MP 1.399/2026) — vigência 02/02/2027:</strong>{" "}
+          O IS incide sobre a base da operação e ainda compõe a base de cálculo do CBS e IBS, ampliando a carga total.
         </div>
       )}
 

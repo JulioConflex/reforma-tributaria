@@ -416,11 +416,11 @@
       "mei_conselho": null,
       "reducao_aliquota": 0.0,
       "is_aplicavel": true,
-      "aviso_estimativa": true,
-      "is_estimado": 1.50,
+      "aviso_estimativa": false,
+      "is_estimado": 0.667,
       "icms_padrao": 0.27,
       "iss_padrao": null,
-      "obs": "Imposto Seletivo (IS) incide adicionalmente — produtos fumígenos (LC 214/2025, Art. 409, §1º, III). ATENÇÃO: alíquota de 150% é ESTIMATIVA de mercado. A LC 214/2025 NÃO fixa o percentual; será escalonado de 2029 a 2033 incorporando o diferencial do ICMS (Art. 13 das disposições do IS) e definido na forma da lei. MEI vedado."
+      "obs": "Imposto Seletivo (IS) de 66,7% conforme MP 1.399/2026, vigência 02/02/2027 (LC 214/2025, Art. 409, §1º, III). Cigarros e cigarrilhas também têm parcela específica de R$ 3,50/maço (ad rem, não modelado neste simulador). Outros fumígenos: 37,5%. IS compõe a base de CBS/IBS. MEI vedado."
     },
     {
       "id": "bebidas_alcoolicas",
@@ -433,10 +433,26 @@
       "reducao_aliquota": 0.0,
       "is_aplicavel": true,
       "aviso_estimativa": true,
-      "is_estimado": 0.28,
+      "is_estimado": 0.042,
       "icms_padrao": 0.25,
       "iss_padrao": null,
-      "obs": "Imposto Seletivo (IS) incide adicionalmente — bebidas alcoólicas (LC 214/2025, Art. 409, §1º, IV). ATENÇÃO: alíquota de 28% é ESTIMATIVA de mercado. A LC 214/2025 NÃO fixa o percentual; será escalonado de 2029 a 2033 incorporando o diferencial do ICMS e definido na forma da lei. MEI vedado (fabricação requer licença MAPA)."
+      "obs": "Imposto Seletivo (IS) conforme MP 1.399/2026, vigência 02/02/2027 (LC 214/2025, Art. 409, §1º, IV). Alíquotas: cervejas de malte 4,2% (valor usado neste simulador como referência), vinhos (Madeira/Porto/Xerez) 13%, destilados e demais categorias pendentes de regulamentação complementar. IS compõe a base de CBS/IBS. MEI vedado (fabricação requer licença MAPA)."
+    },
+    {
+      "id": "bebidas_acucaradas",
+      "nome": "Bebidas Açucaradas (refrigerantes, sucos industriais)",
+      "tipo": "produto",
+      "anexo_simples": "I",
+      "mei_permitido": false,
+      "mei_restricao": "atividade_vedada",
+      "mei_conselho": null,
+      "reducao_aliquota": 0.0,
+      "is_aplicavel": true,
+      "aviso_estimativa": false,
+      "is_estimado": 0.026,
+      "icms_padrao": 0.18,
+      "iss_padrao": null,
+      "obs": "Imposto Seletivo (IS) de 2,6% conforme MP 1.399/2026, vigência 02/02/2027 (LC 214/2025, Art. 409, §1º, V). Inclui refrigerantes, sucos industrializados com açúcar adicionado e bebidas energéticas. IS compõe a base de CBS/IBS. MEI vedado (fabricação industrial)."
     },
     {
       "id": "combustiveis_fosseis",
@@ -462,11 +478,11 @@
       "mei_conselho": null,
       "reducao_aliquota": 0.0,
       "is_aplicavel": true,
-      "aviso_estimativa": true,
-      "is_estimado": 0.08,
+      "aviso_estimativa": false,
+      "is_estimado": 0.063,
       "icms_padrao": 0.12,
       "iss_padrao": null,
-      "obs": "Imposto Seletivo (IS) incide sobre veículos (LC 214/2025, Art. 409, §1º, I). ATENÇÃO: alíquota de 8% é ESTIMATIVA de mercado; a LC 214/2025 NÃO fixa o percentual (definido na forma da lei, podendo variar por eficiência/emissão). MEI vedado (concessionária/montadora não compatível com MEI)."
+      "obs": "Imposto Seletivo (IS) de 6,3% conforme MP 1.399/2026, vigência 02/02/2027 (LC 214/2025, Art. 409, §1º, I). Alíquota majoritária para veículos em geral; alguns NCMs têm 3,9%. Veículos PcD/táxi: alíquota zero. Caminhões >3.500 kg: não incidência. IS compõe a base de CBS/IBS. MEI vedado (concessionária/montadora não compatível com MEI)."
     },
     {
       "id": "cultura_esporte",
