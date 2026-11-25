@@ -33,6 +33,7 @@ const MODULOS = [
   { id: "comparador",       label: "Comparador" },
   { id: "split_payment",    label: "Split Payment" },
   { id: "simples_nacional", label: "Simples Nacional" },
+  { id: "contador",         label: "Contador" },
   { id: "ferramentas",      label: "Ferramentas" },
 ] as const;
 
