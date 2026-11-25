@@ -4,7 +4,13 @@ Gerador de estudo tributário em HTML printável (A4, 14 páginas).
 from html import escape as _esc
 from datetime import date
 from typing import Optional
+from pathlib import Path
 from ..models.schemas import SimulacaoComProjecaoOutput
+
+# ─── Logo (WebP real, base64) ──────────────────────────────────────────────
+_B64_FILE = Path(__file__).parent.parent / "assets" / "conflex-logo-b64.txt"
+_LOGO_B64 = _B64_FILE.read_text(encoding="ascii").strip()
+_LOGO_SRC = f"data:image/webp;base64,{_LOGO_B64}"
 
 # ─── Formatters ────────────────────────────────────────────────────────────
 
@@ -32,30 +38,23 @@ REGIME_COLOR = {
     "mei": "#9BA8C2",
 }
 
-# ─── SVG Assets ────────────────────────────────────────────────────────────
+# ─── Logo / Watermark ──────────────────────────────────────────────────────
 
-LOGO_LIGHT = (
-    '<svg viewBox="0 0 170 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:30px">'
-    '<path d="M36 11 A18 18 0 1 0 36 41" stroke="#01D1FF" stroke-width="6" stroke-linecap="round"/>'
-    '<path d="M31 19 A9 9 0 1 0 31 33" stroke="#01D1FF" stroke-width="4" stroke-linecap="round"/>'
-    '<text x="60" y="35" font-family="Inter,system-ui,sans-serif" font-size="24" font-weight="600" fill="#ffffff" letter-spacing="-0.3">conflex</text>'
-    "</svg>"
-)
+# Logo em fundo escuro (capa): imagem direta — texto branco visível
+LOGO_LIGHT = f'<img src="{_LOGO_SRC}" style="height:32px;display:block">'
 
+# Logo em fundo branco (cabeçalhos): badge navy para o texto branco aparecer
 LOGO_DARK = (
-    '<svg viewBox="0 0 170 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:22px">'
-    '<path d="M36 11 A18 18 0 1 0 36 41" stroke="#01D1FF" stroke-width="6" stroke-linecap="round"/>'
-    '<path d="M31 19 A9 9 0 1 0 31 33" stroke="#01D1FF" stroke-width="4" stroke-linecap="round"/>'
-    '<text x="60" y="35" font-family="Inter,system-ui,sans-serif" font-size="24" font-weight="600" fill="#0A2540" letter-spacing="-0.3">conflex</text>'
-    "</svg>"
+    f'<span style="background:#0A2540;border-radius:6px;padding:3px 10px;'
+    f'display:inline-flex;align-items:center;flex-shrink:0">'
+    f'<img src="{_LOGO_SRC}" style="height:20px;display:block"></span>'
 )
 
+# Marca d'água centralizada na página
 WM = (
-    '<svg viewBox="0 0 52 52" fill="none" style="width:260px;height:260px;opacity:0.04;'
-    'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0">'
-    '<path d="M36 11 A18 18 0 1 0 36 41" stroke="#0A2540" stroke-width="6" stroke-linecap="round"/>'
-    '<path d="M31 19 A9 9 0 1 0 31 33" stroke="#0A2540" stroke-width="4" stroke-linecap="round"/>'
-    "</svg>"
+    f'<img src="{_LOGO_SRC}" style="width:320px;position:absolute;top:50%;left:50%;'
+    f'transform:translate(-50%,-50%) rotate(-15deg);opacity:0.04;'
+    f'pointer-events:none;z-index:0;filter:grayscale(100%)">'
 )
 
 # ─── Layout helpers ────────────────────────────────────────────────────────
