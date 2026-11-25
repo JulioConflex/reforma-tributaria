@@ -580,22 +580,29 @@ def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput) -> str:
     mc = r.memoria_calculo
     desp = mc.despesas_mensais if mc and mc.despesas_mensais else val * 0.6
 
-    # Current DRE
+    # Current DRE: soma apenas tributos sobre receita (exclui IRPJ/CSLL)
     tributos_sobre_receita_atual = sum(
         d.valor for d in r.sistema_atual.detalhes
         if d.nome not in ("IRPJ", "CSLL", "IRPJ adicional", "IRPJ (base lucro)", "CSLL (base lucro)")
         and "IRPJ" not in d.nome and "CSLL" not in d.nome and "adicional" not in d.nome.lower()
     )
-    irpjcsll_atual = r.sistema_atual.total - tributos_sobre_receita_atual
+
+    # IRPJ/CSLL e reform-neutral: mesmo valor em ambas as colunas.
+    # Lucro Presumido: usa irpj_csll_info (estimavel=True).
+    # Outros (Simples/MEI ja incluem no DAS; Lucro Real sem despesas nao e estimavel): fallback para 0.
+    if r.irpj_csll_info and r.irpj_csll_info.estimavel and not r.irpj_csll_info.incluido_no_das:
+        irpjcsll = (r.irpj_csll_info.irpj_estimado or 0.0) + (r.irpj_csll_info.csll_estimado or 0.0)
+    else:
+        irpjcsll = max(0.0, r.sistema_atual.total - tributos_sobre_receita_atual)
+    irpjcsll_atual = irpjcsll
+    irpjcsll_novo = irpjcsll  # reforma nao altera IRPJ/CSLL
+
     receita_liq_atual = val - tributos_sobre_receita_atual
     lajir_atual = receita_liq_atual - desp
     resultado_atual = lajir_atual - irpjcsll_atual
 
-    tributos_sobre_receita_novo = sum(
-        d.valor for d in r.sistema_novo.detalhes
-        if "CBS" in d.nome or "IBS" in d.nome or "PIS" in d.nome or "COFINS" in d.nome or "ISS" in d.nome or "ICMS" in d.nome or "DAS" in d.nome
-    )
-    irpjcsll_novo = r.sistema_novo.total - tributos_sobre_receita_novo
+    # Sistema novo: CBS+IBS+residual = r.sistema_novo.total (ja liquido de creditos, sem IRPJ/CSLL)
+    tributos_sobre_receita_novo = r.sistema_novo.total
     receita_liq_novo = val - tributos_sobre_receita_novo
     lajir_novo = receita_liq_novo - desp
     resultado_novo = lajir_novo - irpjcsll_novo
