@@ -2202,9 +2202,10 @@ def _bar_chart_comparativo(
         bc.bars[i].strokeWidth = 0
     d.add(bc)
 
-    # Legenda
+    # Legenda horizontal centralizada abaixo do eixo X
     leg = Legend()
-    leg.x, leg.y = 50, 8
+    leg.x = float(CONTENT_W) / 2
+    leg.y = 10
     leg.alignment = "left"
     leg.colorNamePairs = [
         (COR_HOJE, "Hoje"),
@@ -2212,10 +2213,13 @@ def _bar_chart_comparativo(
         (COR_2033, "2033"),
     ]
     leg.fontName = "Helvetica"
-    leg.fontSize = 7.5
-    leg.deltax    = 60
+    leg.fontSize  = 7.5
+    leg.columnMaximum = 3  # força linha unica
+    leg.deltax    = 65
     leg.deltay    = 0
-    leg.boxAnchor = "sw"
+    leg.dx        = 8
+    leg.dy        = 8
+    leg.boxAnchor = "s"
     d.add(leg)
 
     return d
@@ -2278,19 +2282,23 @@ def _line_chart_evolucao(
 
     d.add(lc)
 
-    # Legenda
+    # Legenda horizontal centralizada abaixo do eixo X
     leg = Legend()
-    leg.x, leg.y = 50, 8
+    leg.x = float(dw) / 2
+    leg.y = 10
     leg.alignment = "left"
     leg.colorNamePairs = [
         (NAVY if r.regime == melhor_key else colors.HexColor("#9CA3AF"), r.nome)
         for r in disponiveis
     ]
     leg.fontName = "Helvetica"
-    leg.fontSize = 7.5
+    leg.fontSize  = 7.5
+    leg.columnMaximum = len(disponiveis)  # força linha unica
     leg.deltax    = 90
     leg.deltay    = 0
-    leg.boxAnchor = "sw"
+    leg.dx        = 8
+    leg.dy        = 8
+    leg.boxAnchor = "s"
     d.add(leg)
 
     return d
