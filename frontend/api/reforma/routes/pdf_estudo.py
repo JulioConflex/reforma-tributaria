@@ -2134,6 +2134,186 @@ def _reforma_section(
     return elements
 
 
+# ─── Gráficos vetoriais (reportlab.graphics) ─────────────────────────────────
+from reportlab.graphics.shapes import Drawing, Rect, String, Group
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.charts.legends import Legend
+
+
+def _bar_chart_comparativo(
+    disponiveis: list,
+    ano: int,
+    melhor_key: str,
+    comp,
+    inp,
+    setor_obj: dict,
+    icms_uf: float,
+) -> Drawing:
+    """Gráfico de barras: Hoje / {ano} / 2033 para cada regime disponível."""
+    # calcular percentuais para 2033: CBS/IBS via calcular_sistema_novo + IRPJ/CSLL fixo
+    pcts: list[tuple[float, float, float]] = []
+    for r in disponiveis:
+        irpj_pct = round((r.irpj_csll_estimado or 0) / comp.valor_base * 100, 2) if comp.valor_base else 0.0
+        try:
+            res33 = calcular_sistema_novo(
+                comp.valor_base, r.regime, setor_obj, comp.uf, 2033,
+                inp.credito_entrada, inp.faturamento_anual, inp.folha_pagamento_mensal,
+                _icms_uf=icms_uf,
+            )
+            p33 = round(res33.total / comp.valor_base * 100 + irpj_pct, 2) if comp.valor_base else 0.0
+        except Exception:
+            p33 = 0.0
+        pcts.append((round(r.percentual_atual or 0, 2), round(r.percentual_novo or 0, 2), p33))
+
+    # Estrutura: categorias = regimes, séries = Hoje / {ano} / 2033
+    COR_HOJE  = colors.HexColor("#9CA3AF")
+    COR_ANO   = NAVY
+    COR_2033  = colors.HexColor("#374151")
+    nomes = [r.nome for r in disponiveis]
+
+    d = Drawing(CONTENT_W, 185)
+    bc = VerticalBarChart()
+    bc.x, bc.y = 50, 40
+    bc.width  = float(CONTENT_W) - 60
+    bc.height = 120
+
+    # uma série por coluna temporal, cada série tem len(disponiveis) valores
+    bc.data = [
+        [p[0] for p in pcts],  # Hoje
+        [p[1] for p in pcts],  # {ano}
+        [p[2] for p in pcts],  # 2033
+    ]
+    bc.categoryAxis.categoryNames = nomes
+    bc.categoryAxis.labels.fontSize = 7.5
+    bc.categoryAxis.labels.angle = 0
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.labelTextFormat = lambda v: f"{v:.1f}%"
+    bc.valueAxis.labels.fontSize = 7
+    bc.valueAxis.gridStrokeColor = colors.HexColor("#F3F4F6")
+    bc.valueAxis.gridStrokeWidth = 0.3
+    bc.barSpacing = 1
+    bc.groupSpacing = 6
+    bc.bars[0].fillColor = COR_HOJE
+    bc.bars[1].fillColor = COR_ANO
+    bc.bars[2].fillColor = COR_2033
+    for i in range(3):
+        bc.bars[i].strokeColor = None
+        bc.bars[i].strokeWidth = 0
+    d.add(bc)
+
+    # Legenda
+    leg = Legend()
+    leg.x, leg.y = 50, 8
+    leg.alignment = "left"
+    leg.colorNamePairs = [
+        (COR_HOJE, "Hoje"),
+        (COR_ANO,  str(ano)),
+        (COR_2033, "2033"),
+    ]
+    leg.fontName = "Helvetica"
+    leg.fontSize = 7.5
+    leg.deltax    = 60
+    leg.deltay    = 0
+    leg.boxAnchor = "sw"
+    d.add(leg)
+
+    return d
+
+
+def _line_chart_evolucao(
+    disponiveis: list,
+    ano_ref: int,
+    melhor_key: str,
+    comp,
+    inp,
+    setor_obj: dict,
+    icms_uf: float,
+) -> Drawing:
+    """Gráfico de linha: carga total (%) de 2026 a 2033 por regime."""
+    anos = list(range(2026, 2034))
+    series: list[list[float]] = []
+    for r in disponiveis:
+        irpj_pct = round((r.irpj_csll_estimado or 0) / comp.valor_base * 100, 2) if comp.valor_base else 0.0
+        pts: list[float] = []
+        for yr in anos:
+            try:
+                res = calcular_sistema_novo(
+                    comp.valor_base, r.regime, setor_obj, comp.uf, yr,
+                    inp.credito_entrada, inp.faturamento_anual, inp.folha_pagamento_mensal,
+                    _icms_uf=icms_uf,
+                )
+                pts.append(round(res.total / comp.valor_base * 100 + irpj_pct, 2) if comp.valor_base else 0.0)
+            except Exception:
+                pts.append(0.0)
+        series.append(pts)
+
+    dw = float(CONTENT_W)
+    d = Drawing(dw, 185)
+
+    # Faixa azul-clara no ano de referência
+    if ano_ref in anos:
+        idx = anos.index(ano_ref)
+        col_w = (dw - 70) / len(anos)
+        rx = 50 + idx * col_w
+        d.add(Rect(rx, 38, col_w, 122, fillColor=colors.HexColor("#DBEAFE"), strokeColor=None))
+
+    lc = HorizontalLineChart()
+    lc.x, lc.y = 50, 38
+    lc.width  = dw - 70
+    lc.height = 122
+    lc.data   = series
+    lc.categoryAxis.categoryNames = [str(y) for y in anos]
+    lc.categoryAxis.labels.fontSize = 7.5
+    lc.valueAxis.labelTextFormat = lambda v: f"{v:.1f}%"
+    lc.valueAxis.labels.fontSize = 7
+    lc.valueAxis.gridStrokeColor = colors.HexColor("#F3F4F6")
+    lc.valueAxis.gridStrokeWidth = 0.3
+
+    for i, r in enumerate(disponiveis):
+        is_best = r.regime == melhor_key
+        lc.lines[i].strokeColor = NAVY if is_best else colors.HexColor("#9CA3AF")
+        lc.lines[i].strokeWidth = 2.0 if is_best else 1.2
+        lc.lines[i].symbol = None
+
+    d.add(lc)
+
+    # Legenda
+    leg = Legend()
+    leg.x, leg.y = 50, 8
+    leg.alignment = "left"
+    leg.colorNamePairs = [
+        (NAVY if r.regime == melhor_key else colors.HexColor("#9CA3AF"), r.nome)
+        for r in disponiveis
+    ]
+    leg.fontName = "Helvetica"
+    leg.fontSize = 7.5
+    leg.deltax    = 90
+    leg.deltay    = 0
+    leg.boxAnchor = "sw"
+    d.add(leg)
+
+    return d
+
+
+def _gerar_leitura_grafico(disponiveis: list, ano_ref: int, melhor_key: str) -> str:
+    """Gera frase automática de conclusão do gráfico de linha."""
+    melhor = next((r for r in disponiveis if r.regime == melhor_key), None)
+    if not melhor:
+        return "Consulte os detalhes nas seções a seguir."
+    atual = round(melhor.percentual_atual or 0, 1)
+    novo  = round(melhor.percentual_novo  or 0, 1)
+    delta = round(novo - atual, 1)
+    sinal = "queda" if delta < 0 else "alta"
+    abs_d = abs(delta)
+    return (
+        f"No regime {melhor.nome}, a carga passa de {atual:.1f}% (sistema atual) "
+        f"para {novo:.1f}% em {ano_ref} ({sinal} de {abs_d:.1f} p.p.). "
+        f"Em 2033, com o sistema pleno (IBS + CBS), a carga atinge o valor indicado no gráfico. "
+        f"Os valores são estimativas sujeitas à regulamentação do CG-IBS."
+    )
+
+
 # ─── PDF builder ─────────────────────────────────────────────────────────────
 def _build_pdf(inp: EstudoInput) -> bytes:
     buf = BytesIO()
@@ -2159,59 +2339,41 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
     def on_page(canvas, doc):
         canvas.saveState()
-        fh = 42          # altura do rodapé em pontos
-        lw = 135         # alcance horizontal de cada aba diagonal
+        # Header — apenas nas páginas internas (não na capa)
+        if doc.page > 1:
+            canvas.setFont("Helvetica", 8)
+            canvas.setFillColor(INK_600)
+            canvas.drawString(
+                margin, H - margin + 8,
+                f"Estudo tribut\xe1rio \xb7 {inp.razao_social}",
+            )
+            canvas.setFont("Helvetica-Bold", 9)
+            canvas.setFillColor(NAVY)
+            canvas.drawRightString(W - margin, H - margin + 8, "conflex")
+            canvas.setStrokeColor(INK_400)
+            canvas.setLineWidth(0.5)
+            canvas.line(margin, H - margin + 3, W - margin, H - margin + 3)
 
-        # barra azul no topo
-        canvas.setFillColor(NAVY)
-        canvas.rect(0, H - 8, W, 8, fill=1, stroke=0)
-
-        # linha separadora acima do rodapé
+        # Footer
         canvas.setStrokeColor(INK_400)
-        canvas.setLineWidth(0.35)
-        canvas.line(0, fh, W, fh)
-
-        # aba esquerda
-        canvas.setFillColor(NAVY)
-        p = canvas.beginPath()
-        p.moveTo(0, 0)
-        p.lineTo(0, fh)
-        p.lineTo(lw - 24, fh)
-        p.lineTo(lw, 0)
-        p.close()
-        canvas.setFillColor(NAVY)
-        canvas.drawPath(p, fill=1, stroke=0)
-
-        # aba direita
-        p = canvas.beginPath()
-        p.moveTo(W, 0)
-        p.lineTo(W, fh)
-        p.lineTo(W - lw + 24, fh)
-        p.lineTo(W - lw, 0)
-        p.close()
-        canvas.setFillColor(NAVY)
-        canvas.drawPath(p, fill=1, stroke=0)
-
-        # numero da pagina (branco, dentro da aba direita)
-        canvas.setFont("Helvetica-Bold", 8.5)
-        canvas.setFillColor(WHITE)
-        canvas.drawCentredString(W - lw / 2 - 4, fh / 2 - 4, str(doc.page))
-
-        # endereco centralizado (Latin-1 seguro: \xba = º, \xe1 = á)
-        canvas.setFont("Helvetica", 7.5)
+        canvas.setLineWidth(0.3)
+        canvas.line(margin, margin - 4, W - margin, margin - 4)
+        canvas.setFont("Helvetica", 7)
         canvas.setFillColor(INK_600)
         canvas.drawCentredString(
-            W / 2, fh / 2 + 5,
-            "Rua XV de novembro, 1155, 10\xba Andar | Centro | Curitiba | Paran\xe1 | www.conflex.com.br",
+            W / 2, margin - 13,
+            "Rua XV de Novembro, 1155, 10\xba andar \xb7 Centro \xb7 Curitiba/PR \xb7 (41) 3277-1313 \xb7 conflex.com.br",
         )
-        canvas.drawCentredString(W / 2, fh / 2 - 7, "Telefone: (41) 3277-1313")
+        canvas.setFont("Helvetica-Bold", 8)
+        canvas.setFillColor(NAVY)
+        canvas.drawRightString(W - margin, margin - 13, str(doc.page))
 
         canvas.restoreState()
 
     doc = _EstudoDoc(
         buf, pagesize=A4,
         leftMargin=margin, rightMargin=margin,
-        topMargin=margin + 4, bottomMargin=margin + 10,
+        topMargin=margin + 14, bottomMargin=margin + 14,
     )
     story = []
 
@@ -2330,6 +2492,49 @@ def _build_pdf(inp: EstudoInput) -> bytes:
     story.append(toc)
     story.append(PageBreak())
 
+    # ── VISÃO GERAL VISUAL ───────────────────────────────────────────────────
+    if setor_obj is not None and len(disponiveis) >= 2 and comp.valor_base > 0:
+        story.append(Paragraph("1. Comparativo entre regimes", ST["h1"]))
+        story.append(Paragraph(
+            "Carga tributária total como % do faturamento · valores ilustrativos",
+            ST["small"]))
+        story.append(Spacer(1, 6))
+        story.append(_bar_chart_comparativo(
+            disponiveis, comp.ano, melhor_key, comp, inp, setor_obj, icms_uf))
+        story.append(Spacer(1, 16))
+
+        story.append(Paragraph("2. Evolução da carga ano a ano", ST["h1"]))
+        story.append(Paragraph(
+            f"Carga total como % do faturamento, 2026 a 2033 · valores ilustrativos",
+            ST["small"]))
+        story.append(Spacer(1, 6))
+        story.append(_line_chart_evolucao(
+            disponiveis, comp.ano, melhor_key, comp, inp, setor_obj, icms_uf))
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(
+            "Faixa azul-clara: ano de referência do estudo.", ST["small"]))
+        story.append(Spacer(1, 10))
+
+        # Box "Leitura do gráfico"
+        _leitura = _gerar_leitura_grafico(disponiveis, comp.ano, melhor_key)
+        _leitura_t = Table(
+            [[Paragraph(f"<b>Leitura do gráfico:</b> {_leitura}", ST["body"])]],
+            colWidths=[CONTENT_W],
+        )
+        _leitura_t.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, -1), colors.HexColor("#EFF6FF")),
+            ("BOX",           (0, 0), (-1, -1), 0.5, colors.HexColor("#93C5FD")),
+            ("TOPPADDING",    (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 10),
+        ]))
+        story.append(_leitura_t)
+        story.append(PageBreak())
+        sec = 3
+    else:
+        sec = 1
+
     story.append(Spacer(1, 8))
 
     # Intro
@@ -2373,7 +2578,6 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ST["small"]))
 
     # ── BASE LEGAL ───────────────────────────────────────────────────────────
-    sec = 1
     if setor_obj is not None:
         story.extend(_base_legal_section(ST, sec, setor_obj, comp.setor, inp.regime_atual or "", comp.uf, icms_uf))
         sec += 1
