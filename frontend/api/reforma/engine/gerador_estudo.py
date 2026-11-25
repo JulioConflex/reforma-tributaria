@@ -233,21 +233,35 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
     economia_pct = abs(r.economia_percentual)
     is_economy = r.economia_ou_acrescimo < 0
 
+    intro = (
+        f'<div style="font-size:11px;color:#3D4559;line-height:1.7;background:#F5F7FC;border-radius:8px;padding:12px 16px;border:1px solid #DCE3EF">'
+        f'Este estudo analisa o impacto da <strong style="color:#0A2540">Reforma Tributária (LC 214/2025)</strong> sobre as operações de '
+        f'<strong style="color:#0A2540">{_esc(empresa)}</strong>, simulado no regime de <strong style="color:#0A2540">{_esc(regime_atual)}</strong>, '
+        f'setor <strong style="color:#0A2540">{_esc(r.setor_nome)}</strong>, para o ano de referência <strong style="color:#0A2540">{r.ano}</strong>. '
+        f'O <em>Sistema Atual</em> representa os tributos vigentes hoje (ISS, PIS/COFINS, IRPJ/CSLL). '
+        f'O <em>Sistema Novo</em> estima a carga após a entrada do IBS e da CBS, conforme cronograma da reforma.'
+        f'</div>'
+    )
+
     kpi_row = (
         f'<div style="display:flex;gap:10px">'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid #334E6E">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Base da Operação</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">Base da Operação</div>'
+        f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">Valor mensal utilizado como base de cálculo</div>'
         f'<div style="font-size:17px;font-weight:800;color:#0A2540">{_br(r.valor_operacao)}</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid {regime_cor}">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Sistema Atual</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">Sistema Atual</div>'
+        f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">Tributos devidos hoje (ISS + PIS/COFINS + IR)</div>'
         f'<div style="font-size:17px;font-weight:800;color:#0A2540">{_br(r.sistema_atual.total)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(r.sistema_atual.percentual_sobre_valor)} do faturamento</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid #01D1FF">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Sistema Novo ({r.ano})</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">Sistema Novo ({r.ano})</div>'
+        f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">Estimativa com IBS + CBS após a reforma</div>'
         f'<div style="font-size:17px;font-weight:800;color:#0A2540">{_br(r.sistema_novo.total)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(r.sistema_novo.percentual_sobre_valor)} do faturamento</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid {"#1A6B3C" if is_economy else "#C0392B"}">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">{"Economia" if is_economy else "Acréscimo"}</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">{"Economia" if is_economy else "Acréscimo"}</div>'
+        f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">{"Redução" if is_economy else "Aumento"} em relação ao sistema atual</div>'
         f'<div style="font-size:17px;font-weight:800;color:{"#1A6B3C" if is_economy else "#C0392B"}">{"▼" if is_economy else "▲"} {_br(economia_abs)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(economia_pct)} da carga atual</div></div>'
         f'</div>'
@@ -256,13 +270,14 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
     regime_cards = (
         f'<div style="display:flex;gap:10px">'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:14px 16px">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Regime Simulado</div>'
-        f'<div style="font-size:14px;font-weight:700;color:#0A2540">{_esc(regime_atual)}</div>'
-        f'<div style="font-size:10px;color:#6B7592;margin-top:2px">Regime informado para análise</div></div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">Regime Simulado</div>'
+        f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">Regime tributário atual da empresa, conforme informado</div>'
+        f'<div style="font-size:14px;font-weight:700;color:#0A2540">{_esc(regime_atual)}</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:14px 16px;background:#EDF7F2;border-color:#B6E0C8">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2E7D52;margin-bottom:5px">Regime Recomendado</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2E7D52;margin-bottom:3px">Regime Recomendado</div>'
+        f'<div style="font-size:9px;color:#6BAF8A;margin-bottom:5px">Regime com menor carga tributária estimada no sistema novo</div>'
         f'<div style="font-size:14px;font-weight:700;color:#0A2540">{_esc(regime_rec)}</div>'
-        f'<div style="font-size:10px;color:#2E7D52;margin-top:2px">Menor carga no sistema novo</div></div>'
+        f'<div style="font-size:10px;color:#2E7D52;margin-top:4px">{"Mesmo regime atual — nenhuma mudança necessária." if best_regime == r.regime else "Recomenda-se avaliar migração de regime antes de 2027."}</div></div>'
         f'</div>'
     )
 
@@ -271,15 +286,15 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
     if mc:
         mc_note = (
             f'<div style="background:#FFFBF0;border-left:3px solid #E8A838;border-radius:0 8px 8px 0;padding:10px 14px">'
-            f'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9A6B00;margin-bottom:3px">Premissas utilizadas</div>'
-            f'<div style="font-size:10px;color:#6B5700;line-height:1.6">'
-            f'Crédito entrada: {_pct(mc.percentual_credito_entrada * 100)} · '
-            f'CBS: {_pct(mc.cbs_percentual * 100)} · IBS: {_pct(mc.ibs_percentual * 100)} · '
-            f'Redução setorial: {_pct(mc.reducao_setor * 100)} · UF: {_esc(r.uf)} · Setor: {_esc(r.setor_nome)}'
+            f'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9A6B00;margin-bottom:3px">Premissas utilizadas no cálculo</div>'
+            f'<div style="font-size:10px;color:#6B5700;line-height:1.7">'
+            f'<strong>Crédito de entrada:</strong> {_pct(mc.percentual_credito_entrada * 100)} — percentual de CBS/IBS aproveitado sobre compras de insumos · '
+            f'<strong>CBS:</strong> {_pct(mc.cbs_percentual * 100)} · <strong>IBS:</strong> {_pct(mc.ibs_percentual * 100)} (alíquotas provisórias) · '
+            f'<strong>Redução setorial:</strong> {_pct(mc.reducao_setor * 100)} · <strong>UF:</strong> {_esc(r.uf)} · <strong>Setor:</strong> {_esc(r.setor_nome)}'
             f'</div></div>'
         )
 
-    body = _sec("3", "Resumo Executivo", f"Base: {_br(r.valor_operacao)} · Regime: {regime_atual} · Setor: {r.setor_nome}") + kpi_row + regime_cards + mc_note
+    body = _sec("3", "Resumo Executivo", f"Regime: {regime_atual} · Setor: {r.setor_nome} · Ano de referência: {r.ano}") + intro + kpi_row + regime_cards + mc_note
     return _wrap(body, 3, empresa)
 
 
