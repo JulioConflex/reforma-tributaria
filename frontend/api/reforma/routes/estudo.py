@@ -6,7 +6,7 @@ from ..models.schemas import SimulacaoInput, RegimeTributario
 from ..engine.calculadora import simular
 from ..engine.gerador_estudo import gerar_html_estudo
 
-router = APIRouter(prefix="/api", tags=["estudo"])
+router = APIRouter(prefix="/api/py", tags=["estudo"])
 
 
 class GerarEstudoRequest(BaseModel):
