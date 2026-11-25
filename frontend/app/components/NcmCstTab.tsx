@@ -12,6 +12,8 @@ interface NcmResult {
   categoria_nome?: string;
   categoria_descricao?: string;
   reducao_pct?: number;
+  cbs_referencia?: number;
+  ibs_referencia?: number;
   cbs_efetiva?: number;
   ibs_efetiva?: number;
   is_aliquota?: number;
