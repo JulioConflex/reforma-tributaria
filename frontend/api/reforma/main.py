@@ -5,6 +5,7 @@ from .routes.glossario import router as glossario_router
 from .routes.recomendacao import router as recomendacao_router
 from .routes.assistente import router as assistente_router
 from .routes.pdf_estudo import router as pdf_router
+from .routes.estudo import router as estudo_router
 from .routes.simples import router as simples_router
 from .routes.ferramentas import router as ferramentas_router
 
@@ -30,6 +31,7 @@ app.include_router(glossario_router)
 app.include_router(recomendacao_router)
 app.include_router(assistente_router)
 app.include_router(pdf_router)
+app.include_router(estudo_router)
 app.include_router(simples_router)
 app.include_router(ferramentas_router)
 
