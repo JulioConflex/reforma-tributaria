@@ -160,7 +160,7 @@ def _p1_capa(empresa: str, r: SimulacaoComProjecaoOutput, today: str) -> str:
       </div>
       <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;border-top:3px solid {economia_cor}">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8BA3C2;margin-bottom:4px">Variação ({economia_lbl})</div>
-        <div style="font-size:18px;font-weight:800;color:white">{economia_sinal} {_pct(abs(r.economia_percentual))}</div>
+        <div style="font-size:18px;font-weight:800;color:white;white-space:nowrap">{economia_sinal} {_pct(abs(r.economia_percentual))}</div>
       </div>
     </div>
   </div>
@@ -270,7 +270,7 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid {"#1A6B3C" if is_economy else "#C0392B"}">'
         f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:3px">{"Economia" if is_economy else "Acréscimo"}</div>'
         f'<div style="font-size:9px;color:#C4CCE0;margin-bottom:5px">{"Redução" if is_economy else "Aumento"} em relação ao sistema atual</div>'
-        f'<div style="font-size:17px;font-weight:800;color:{"#1A6B3C" if is_economy else "#C0392B"}">{"▼" if is_economy else "▲"} {_br(economia_abs)}</div>'
+        f'<div style="font-size:17px;font-weight:800;color:{"#1A6B3C" if is_economy else "#C0392B"};white-space:nowrap">{"▼" if is_economy else "▲"} {_br(economia_abs)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(economia_pct)} da carga atual</div></div>'
         f'</div>'
     )
@@ -478,7 +478,7 @@ def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: di
             f'<td class="r">{_pct(res.sistema_atual.percentual_sobre_valor)}</td>'
             f'<td class="r" style="font-weight:600">{_n(res.sistema_novo.total)}</td>'
             f'<td class="r">{_pct(res.sistema_novo.percentual_sobre_valor)}</td>'
-            f'<td class="r" style="font-weight:700;color:{var_cor}">{"▼" if is_eco else "▲"} {_pct(abs(var_pct))}</td>'
+            f'<td class="r" style="font-weight:700;color:{var_cor};white-space:nowrap">{"▼" if is_eco else "▲"} {_pct(abs(var_pct))}</td>'
             f'</tr>'
         )
 
@@ -776,7 +776,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         f'<div style="font-size:16px;font-weight:700;color:#01D1FF">{_pct(all_pcts[best])}</div></div>'
         f'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 16px;flex:1">'
         f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">{"Economia" if is_economy else "Acréscimo"}</div>'
-        f'<div style="font-size:16px;font-weight:700;color:{"#4ADE80" if is_economy else "#F87171"}">{"▼" if is_economy else "▲"} {_pct(economia_pct)}</div></div>'
+        f'<div style="font-size:16px;font-weight:700;color:{"#4ADE80" if is_economy else "#F87171"};white-space:nowrap">{"▼" if is_economy else "▲"} {_pct(economia_pct)}</div></div>'
         f'</div></div></div>'
     )
 
