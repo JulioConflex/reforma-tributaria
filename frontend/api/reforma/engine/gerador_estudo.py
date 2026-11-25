@@ -308,7 +308,7 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
 
 def _p4_graficos(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
     # Build bar chart data: all regimes, atual vs novo
-    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
     all_results = {r.regime: r}
     all_results.update(comparativo)
 
@@ -441,7 +441,7 @@ def _p4_graficos(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
 
 
 def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
-    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
     all_results = {r.regime: r}
     all_results.update(comparativo)
 
@@ -476,7 +476,7 @@ def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: di
             f'<td style="font-weight:{"700" if is_this else "500"};color:#0A2540">{_regime_badge(rg)}</td>'
             f'<td class="r">{_n(res.sistema_atual.total)}</td>'
             f'<td class="r">{_pct(res.sistema_atual.percentual_sobre_valor)}</td>'
-            f'<td class="r;font-weight:600">{_n(res.sistema_novo.total)}</td>'
+            f'<td class="r" style="font-weight:600">{_n(res.sistema_novo.total)}</td>'
             f'<td class="r">{_pct(res.sistema_novo.percentual_sobre_valor)}</td>'
             f'<td class="r" style="font-weight:700;color:{var_cor}">{"▼" if is_eco else "▲"} {_pct(abs(var_pct))}</td>'
             f'</tr>'
@@ -665,7 +665,7 @@ def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput) -> str:
 
 
 def _p8_analise(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
-    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
     all_results = {r.regime: r}
     all_results.update(comparativo)
 
@@ -772,8 +772,8 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">Carga no sistema atual</div>'
         f'<div style="font-size:16px;font-weight:700;color:white">{_pct(r.sistema_atual.percentual_sobre_valor)}</div></div>'
         f'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 16px;flex:1">'
-        f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">Carga no sistema novo</div>'
-        f'<div style="font-size:16px;font-weight:700;color:#01D1FF">{_pct(r.sistema_novo.percentual_sobre_valor)}</div></div>'
+        f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">Carga no sistema novo ({_esc(best_lbl)})</div>'
+        f'<div style="font-size:16px;font-weight:700;color:#01D1FF">{_pct(all_pcts[best])}</div></div>'
         f'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 16px;flex:1">'
         f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">{"Economia" if is_economy else "Acréscimo"}</div>'
         f'<div style="font-size:16px;font-weight:700;color:{"#4ADE80" if is_economy else "#F87171"}">{"▼" if is_economy else "▲"} {_pct(economia_pct)}</div></div>'
@@ -817,7 +817,7 @@ def _p10_evolucao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
     all_results = {r.regime: r}
     all_results.update(comparativo)
 
-    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
     regimes_avail = [rg for rg in regimes_order if rg in all_results]
 
     # For each regime, get the projeção
@@ -880,7 +880,7 @@ def _p10_evolucao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
 def _p11_memoria(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
     all_results = {r.regime: r}
     all_results.update(comparativo)
-    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes_order = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
 
     sections = ""
     for rg in regimes_order:
@@ -891,19 +891,35 @@ def _p11_memoria(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
         lbl = REGIME_LABEL.get(rg, rg)
         is_this = rg == r.regime
 
-        rows = ""
-        for d in res.sistema_atual.detalhes:
-            rows += (
-                f'<tr><td style="color:#6B7592">{_esc(d.nome)}</td>'
-                f'<td class="r">{_pct(d.aliquota_aplicada)}</td>'
-                f'<td class="r">{_n(d.valor)}</td>'
-                f'<td class="r">{_pct(d.valor / res.valor_operacao * 100 if res.valor_operacao else 0)}</td></tr>'
+        def _det_rows(detalhes, total_val, total_pct):
+            r2 = ""
+            for d in detalhes:
+                if d.separador:
+                    continue
+                r2 += (
+                    f'<tr><td style="color:#6B7592">{_esc(d.nome)}</td>'
+                    f'<td class="r">{_pct(d.aliquota_aplicada)}</td>'
+                    f'<td class="r">{_n(d.valor)}</td>'
+                    f'<td class="r">{_pct(d.valor / res.valor_operacao * 100 if res.valor_operacao else 0)}</td></tr>'
+                )
+            r2 += (
+                f'<tr class="tot"><td>Total</td><td></td>'
+                f'<td class="r">{_n(total_val)}</td>'
+                f'<td class="r">{_pct(total_pct)}</td></tr>'
             )
-        rows += (
-            f'<tr class="tot"><td>Total — {_esc(lbl)}</td><td></td>'
-            f'<td class="r">{_n(res.sistema_atual.total)}</td>'
-            f'<td class="r">{_pct(res.sistema_atual.percentual_sobre_valor)}</td></tr>'
+            return r2
+
+        col_hdr = (
+            f'<thead><tr>'
+            f'<th style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:left;width:180px">Tributo</th>'
+            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">Alíq.</th>'
+            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">R$</th>'
+            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">% fat.</th>'
+            f'</tr></thead>'
         )
+
+        rows_atual = _det_rows(res.sistema_atual.detalhes, res.sistema_atual.total, res.sistema_atual.percentual_sobre_valor)
+        rows_novo = _det_rows(res.sistema_novo.detalhes, res.sistema_novo.total, res.sistema_novo.percentual_sobre_valor)
 
         this_note = ' <span style="font-size:8px;color:#9BA8C2">(regime simulado)</span>' if is_this else ""
         sections += (
@@ -911,14 +927,14 @@ def _p11_memoria(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
             f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-bottom:5px;display:flex;align-items:center;gap:8px">'
             f'<div style="width:3px;height:16px;background:{cor};border-radius:2px"></div>'
             f'{_esc(lbl)}{this_note}</div>'
-            f'<table style="width:100%;border-collapse:collapse">'
-            f'<thead><tr>'
-            f'<th style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:left;width:180px">Tributo</th>'
-            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">Alíq.</th>'
-            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">R$</th>'
-            f'<th class="r" style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF">% fat.</th>'
-            f'</tr></thead>'
-            f'<tbody style="font-size:10px">{rows}</tbody></table></div>'
+            f'<div style="display:flex;gap:8px">'
+            f'<div style="flex:1">'
+            f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:4px 10px;background:#FAFAFA;border:1px solid #F0F3F8;border-bottom:none">Sistema atual</div>'
+            f'<table style="width:100%;border-collapse:collapse">{col_hdr}<tbody style="font-size:10px">{rows_atual}</tbody></table></div>'
+            f'<div style="flex:1">'
+            f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#01D1FF;padding:4px 10px;background:#F5FFFE;border:1px solid #F0F3F8;border-bottom:none">Sistema novo</div>'
+            f'<table style="width:100%;border-collapse:collapse">{col_hdr}<tbody style="font-size:10px">{rows_novo}</tbody></table></div>'
+            f'</div></div>'
         )
 
     body = (
