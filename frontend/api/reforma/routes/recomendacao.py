@@ -45,6 +45,10 @@ class ComparadorInput(BaseModel):
             "estimar o IRPJ/CSLL (carga total) sobre o lucro real (receita − despesas)."
         )
     )
+    aliquota_iss: Optional[float] = Field(
+        default=None, ge=0.0, le=0.05,
+        description="Alíquota municipal do ISS (0 a 5%). Quando informada, substitui o padrão do setor.",
+    )
     config_overrides: Optional[ConfigOverrides] = None
 
 
@@ -118,10 +122,12 @@ def comparar_regimes(inp: ComparadorInput):
 
         cron_comp = get_cronograma(inp.ano, ov_cron or None)
         atual = calcular_sistema_atual(inp.valor, regime_key, setor, inp.uf, fat, folha,
+                                       aliquota_iss=inp.aliquota_iss,
                                        _icms_uf=icms_uf_resolved)
         novo = calcular_sistema_novo(
             inp.valor, regime_key, setor, inp.uf, inp.ano,
             credito, fat, folha,
+            aliquota_iss=inp.aliquota_iss,
             _cron=cron_comp,
             _icms_uf=icms_uf_resolved,
         )

@@ -24,6 +24,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
   const [uf, setUf] = useState(sharedUf || "SP");
   const [folhaPagamento, setFolhaPagamento] = useState("");
   const [despesasMensais, setDespesasMensais] = useState("");
+  const [issManual, setIssManual] = useState("");
 
   const [result, setResult] = useState<ComparadorResult | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -48,13 +49,24 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
 
   const setor = setores.find((s) => s.id === setorId);
   const mostrarFatorR = setor?.anexo_simples === "FATOR_R";
+  const mostrarISS = setor?.tipo === "servico";
+
+  // Pre-preenche ISS com o padrão do setor ao trocar de setor
+  useEffect(() => {
+    const s = setores.find((s) => s.id === setorId);
+    if (s?.tipo === "servico" && s.iss_padrao != null) {
+      setIssManual(String((s.iss_padrao * 100).toFixed(1)).replace(".", ","));
+    } else {
+      setIssManual("");
+    }
+  }, [setorId, setores]);
 
   useEffect(() => {
     if (setores.length === 0) return;
     const t = setTimeout(() => comparar(), 280);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valor, faturamento, credito, setorId, uf, ano, folhaPagamento, despesasMensais, setores.length]);
+  }, [valor, faturamento, credito, setorId, uf, ano, folhaPagamento, despesasMensais, issManual, setores.length]);
 
   const comparar = async () => {
     setCarregando(true);
@@ -73,6 +85,12 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
       }
       if (despesasMensais) {
         body.despesas_mensais = parseBRL(despesasMensais);
+      }
+      if (mostrarISS && issManual) {
+        const issVal = parseFloat(issManual.replace(",", "."));
+        if (!isNaN(issVal) && issVal >= 0 && issVal <= 5) {
+          body.aliquota_iss = issVal / 100;
+        }
       }
       const res = await fetch(`${API}/comparar-regimes`, {
         method: "POST",
@@ -106,6 +124,10 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
           ...(faturamento ? { faturamento_anual: parseBRL(faturamento) } : {}),
           ...(mostrarFatorR && folhaPagamento ? { folha_pagamento_mensal: parseBRL(folhaPagamento) } : {}),
           ...(despesasMensais ? { despesas_mensais: parseBRL(despesasMensais) } : {}),
+          ...(mostrarISS && issManual ? (() => {
+            const v = parseFloat(issManual.replace(",", "."));
+            return !isNaN(v) && v >= 0 && v <= 5 ? { aliquota_iss: v / 100 } : {};
+          })() : {}),
         },
       };
       const res = await fetch(`${API}/gerar-estudo`, {
@@ -211,6 +233,26 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
             </FieldLabel>
             <CurrencyField value={folhaPagamento} onChange={setFolhaPagamento} />
             <div className="text-[11.5px] text-amber-700 mt-1.5">⚖️ Necessário p/ Fator R</div>
+          </div>
+        )}
+
+        {mostrarISS && (
+          <div className="mb-4 anim-in">
+            <FieldLabel>Alíquota de ISS do seu município</FieldLabel>
+            <div className="relative">
+              <input
+                type="number"
+                min={2} max={5} step={0.5}
+                value={issManual}
+                onChange={(e) => setIssManual(e.target.value)}
+                placeholder="Ex: 3"
+                className="w-full rounded-lg border border-ink-200 bg-white px-3.5 py-2.5 text-[14px] text-ink-900 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 pr-8"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-ink-400 pointer-events-none">%</span>
+            </div>
+            <p className="text-[11.5px] text-ink-400 mt-1.5 leading-snug">
+              Varia por município (2% a 5%). No Simples Nacional já está no DAS.
+            </p>
           </div>
         )}
 
