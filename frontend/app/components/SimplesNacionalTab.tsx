@@ -392,7 +392,7 @@ function ComparativoCard({ r }: { r: SimplesAnaliseOutput }) {
 function ValePenaCard({ r }: { r: SimplesAnaliseOutput }) {
   const extra     = r.hibrido.custo_por_operacao - r.normal.custo_por_operacao;
   const credito   = r.hibrido.credito_comprador_b2b;
-  const b2bAtual  = r.percentual_b2b_atual * 100;
+  const b2bAtual  = r.percentual_b2b_atual;
   const minEmp    = r.break_even_b2b_pct!;
   const compensa  = b2bAtual >= minEmp;
 
@@ -561,8 +561,8 @@ function MemoriaCalculo({ r, creditoPct }: { r: SimplesAnaliseOutput; creditoPct
           { label: `Custo extra do Híbrido: R$1.000 × Híbrido − R$1.000 × Normal`, valor: brlOp(extra) },
           { label: `Crédito gerado por venda B2B no Híbrido`, valor: brlOp(credB2b) },
           { label: `Break-even = custo extra ÷ crédito B2B = ${brlOp(extra)} ÷ ${brlOp(credB2b)}`, valor: `${r.break_even_b2b_pct.toFixed(1)}% de clientes B2B`, destaque: true },
-          { label: "Seu perfil informado", valor: `${(r.percentual_b2b_atual * 100).toFixed(0)}% de clientes B2B` },
-          { label: "Resultado", valor: r.percentual_b2b_atual * 100 >= r.break_even_b2b_pct ? "Híbrido vantajoso" : "DAS Normal vantajoso", destaque: true },
+          { label: "Seu perfil informado", valor: `${r.percentual_b2b_atual.toFixed(0)}% de clientes B2B` },
+          { label: "Resultado", valor: r.percentual_b2b_atual >= r.break_even_b2b_pct ? "Híbrido vantajoso" : "DAS Normal vantajoso", destaque: true },
         ],
         nota: "Lógica baseada em CalculoSimplesPorForaService.java — Calculadora RTC Simples Nacional (Receita Federal do Brasil).",
       });
