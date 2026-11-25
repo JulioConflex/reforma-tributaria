@@ -221,10 +221,18 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
     regime_atual = REGIME_LABEL.get(r.regime, r.regime)
     regime_cor = REGIME_COLOR.get(r.regime, "#0A2540")
 
-    # Find recommended regime
-    all_regimes = {r.regime: r.sistema_novo.percentual_sobre_valor}
+    # Find recommended regime usando carga total (CBS/IBS + IRPJ/CSLL estimado)
+    # so regimes com base presumida (LP) nao parecem mais baratos por omitir IRPJ/CSLL
+    def _carga_total_novo(res: SimulacaoComProjecaoOutput) -> float:
+        total = res.sistema_novo.total
+        ii = res.irpj_csll_info
+        if ii and ii.estimavel and not ii.incluido_no_das:
+            total += (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
+        return total
+
+    all_regimes = {r.regime: _carga_total_novo(r)}
     for rg, res in comparativo.items():
-        all_regimes[rg] = res.sistema_novo.percentual_sobre_valor
+        all_regimes[rg] = _carga_total_novo(res)
     best_regime = min(all_regimes, key=all_regimes.get)
     regime_rec = REGIME_LABEL.get(best_regime, best_regime)
     regime_rec_cor = REGIME_COLOR.get(best_regime, "#0A2540")
