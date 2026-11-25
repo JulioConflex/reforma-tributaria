@@ -14,6 +14,7 @@ const interTight = Inter_Tight({
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-inter-tight",
   display: "swap",
+  preload: false,
 });
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
