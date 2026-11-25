@@ -796,9 +796,45 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             f'<div style="font-size:11px;color:#3D4559;line-height:1.5;padding-top:3px">{_esc(txt)}</div></div>'
         )
 
+    # Nota sobre vantagem adicional do Lucro Real no IRPJ/CSLL
+    irpj_note = ""
+    if best == "lucro_real" and r.regime != "lucro_real":
+        lr_res = all_results.get("lucro_real")
+        cur_ii = r.irpj_csll_info
+        lr_ii = lr_res.irpj_csll_info if lr_res else None
+        if cur_ii and lr_ii and cur_ii.estimavel and lr_ii.estimavel:
+            cur_total = (cur_ii.irpj_estimado or 0.0) + (cur_ii.csll_estimado or 0.0)
+            lr_total  = (lr_ii.irpj_estimado  or 0.0) + (lr_ii.csll_estimado  or 0.0)
+            diff = cur_total - lr_total
+            if diff > 0:
+                irpj_note = (
+                    f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
+                    f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px">Vantagem adicional: IRPJ/CSLL</div>'
+                    f'<div style="font-size:11px;color:#1E40AF;line-height:1.6">'
+                    f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL incide sobre uma <strong>margem presumida</strong> (independente do lucro efetivo), '
+                    f'resultando em {_br(cur_total)} sobre esta base. '
+                    f'No {_esc(best_lbl)}, o imposto recai sobre o <strong>lucro real</strong> (receita menos despesas), '
+                    f'estimado em {_br(lr_total)}, uma <strong>economia adicional de {_br(diff)}</strong> em IRPJ/CSLL. '
+                    f'Empresas com margem efetiva baixa tendem a se beneficiar significativamente dessa diferença.'
+                    f'</div></div>'
+                )
+        elif best == "lucro_real":
+            irpj_note = (
+                f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
+                f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px">Vantagem adicional: IRPJ/CSLL</div>'
+                f'<div style="font-size:11px;color:#1E40AF;line-height:1.6">'
+                f'O {_esc(best_lbl)} foi recomendado considerando apenas a carga de CBS/IBS. Há, porém, uma vantagem adicional: '
+                f'nesse regime, o IRPJ/CSLL incide sobre o <strong>lucro efetivo</strong> (receita menos despesas reais), '
+                f'e não sobre uma margem presumida. Para empresas com margem baixa, isso pode representar '
+                f'<strong>economia expressiva em IRPJ/CSLL</strong> além dos ganhos da reforma tributária. '
+                f'Informe o faturamento e as despesas mensais no simulador para estimar esse valor.'
+                f'</div></div>'
+            )
+
     body = (
         _sec("9", "Conclusão e Recomendação") +
         recommendation +
+        irpj_note +
         f'<div>'
         f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-bottom:10px">Próximos passos recomendados</div>'
         f'{steps_html}</div>'
