@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "./AuthProvider";
 
-export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment" | "simples_nacional" | "ncm_cst" | "nfe_credito";
+export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment" | "simples_nacional" | "ncm_cst" | "nfe_credito" | "contador";
 
 interface Props {
   aba: Aba;
@@ -17,6 +17,7 @@ const TAB_MODULO: Partial<Record<Aba, string>> = {
   markup:        "markup",
   comparador:    "comparador",
   split_payment: "split_payment",
+  contador:      "contador",
 };
 
 const FERRAMENTAS_ABAS: { id: Aba; label: string }[] = [
@@ -156,6 +157,18 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
               Simples Nacional
               {aba === "simples_nacional" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
+
+            {modulos.includes("contador") && (
+              <button
+                onClick={() => setAba("contador")}
+                className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                  aba === "contador" ? "text-white" : "text-ink-300 hover:text-white"
+                }`}
+              >
+                Contador
+                {aba === "contador" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
+              </button>
+            )}
 
             {/* Ferramentas dropdown */}
             <div className="relative" ref={ferramentasRef}>

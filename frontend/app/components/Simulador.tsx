@@ -26,10 +26,11 @@ const CREDITO_AUTO: Record<string, number> = {
 };
 
 const TAB_MODULO: Partial<Record<Aba, string>> = {
-  simulador:    "tributos",
-  markup:       "markup",
-  comparador:   "comparador",
+  simulador:     "tributos",
+  markup:        "markup",
+  comparador:    "comparador",
   split_payment: "split_payment",
+  contador:      "contador",
 };
 
 export default function Simulador() {
@@ -274,6 +275,18 @@ export default function Simulador() {
         {aba === "ncm_cst" && <NcmCstTab />}
 
         {aba === "nfe_credito" && <NfeTab />}
+
+        {aba === "contador" && (
+          <div className="mt-10 flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-5">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <h2 className="font-display text-[22px] font-bold text-ink-900 mb-2">Área do Contador</h2>
+            <p className="text-ink-500 text-[14px] max-w-sm">Este módulo está em desenvolvimento. Em breve você terá acesso a ferramentas exclusivas para contadores.</p>
+          </div>
+        )}
       </main>
 
       {onboardingAberto && (
