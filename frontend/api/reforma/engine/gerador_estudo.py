@@ -473,20 +473,23 @@ def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: di
         rows_d = ""
         for d in res.sistema_novo.detalhes:
             rows_d += (
-                f'<tr><td style="color:#6B7592;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;padding:4px 6px;border-bottom:1px solid #F0F3F8">{_esc(d.nome)}</td>'
-                f'<td style="text-align:right;font-weight:600;white-space:nowrap;font-size:9px;padding:4px 6px;border-bottom:1px solid #F0F3F8">{_pct(d.aliquota_aplicada)}</td></tr>'
+                f'<tr><td style="color:#6B7592;font-size:10px;padding:5px 10px;border-bottom:1px solid #F0F3F8">{_esc(d.nome)}</td>'
+                f'<td style="text-align:right;font-size:10px;padding:5px 10px;border-bottom:1px solid #F0F3F8">{_pct(d.aliquota_aplicada)}</td>'
+                f'<td style="text-align:right;font-weight:600;font-size:10px;padding:5px 10px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_n(d.valor)}</td></tr>'
             )
         rows_d += (
-            f'<tr style="background:#F5F7FC"><td style="font-weight:700;color:{cor};font-size:9px;padding:4px 6px">Total</td>'
-            f'<td style="text-align:right;font-weight:700;color:{cor};font-size:9px;padding:4px 6px">{_pct(res.sistema_novo.percentual_sobre_valor)}</td></tr>'
+            f'<tr style="background:#F5F7FC;font-weight:700"><td style="font-size:10px;padding:5px 10px;color:#0A2540">Total</td><td></td>'
+            f'<td style="text-align:right;font-size:10px;padding:5px 10px;color:{cor};font-variant-numeric:tabular-nums">{_n(res.sistema_novo.total)}</td></tr>'
         )
         detail_rows += (
-            f'<div style="flex:1;min-width:0;border:1px solid #DCE3EF;border-radius:8px;overflow:hidden;border-top:3px solid {cor}">'
-            f'<div style="padding:6px 10px;background:#F9FAFB;font-size:9px;font-weight:700;color:{cor}">{_esc(lbl)}</div>'
-            f'<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
-            f'<colgroup><col><col style="width:46px"></colgroup>'
-            f'<thead><tr><th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:4px 6px;border-bottom:1px solid #DCE3EF;text-align:left">Tributo</th>'
-            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:4px 6px;border-bottom:1px solid #DCE3EF;text-align:right">Alíq.</th>'
+            f'<div style="border:1px solid #DCE3EF;border-radius:8px;overflow:hidden;border-left:3px solid {cor}">'
+            f'<div style="padding:7px 12px;background:#F9FAFB;font-size:10px;font-weight:700;color:{cor}">{_esc(lbl)}'
+            f'<span style="font-weight:400;color:#9BA8C2;margin-left:8px">{_pct(res.sistema_novo.percentual_sobre_valor)} da operação</span></div>'
+            f'<table style="width:100%;border-collapse:collapse">'
+            f'<thead><tr>'
+            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:left">Tributo</th>'
+            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:right">Alíq.</th>'
+            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:right">R$</th>'
             f'</tr></thead>'
             f'<tbody>{rows_d}</tbody></table></div>'
         )
@@ -496,7 +499,7 @@ def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: di
         _sec("5", "Comparativo de Regimes", f"Base: {_br(r.valor_operacao)} · Ano: {r.ano}") +
         f'<table class="cmp"><thead>{thead}</thead><tbody>{tbody}</tbody></table>' +
         f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-top:4px;margin-bottom:8px">Composição do Sistema Novo por Regime</div>' +
-        f'<div style="display:flex;gap:8px">{detail_rows}</div>'
+        f'<div style="display:flex;flex-direction:column;gap:6px">{detail_rows}</div>'
     )
     return _wrap(body, 5, empresa)
 
