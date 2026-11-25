@@ -43,12 +43,8 @@ REGIME_COLOR = {
 # Logo em fundo escuro (capa): imagem direta — texto branco visível
 LOGO_LIGHT = f'<img src="{_LOGO_SRC}" style="height:32px;display:block">'
 
-# Logo em fundo branco (cabeçalhos): badge navy para o texto branco aparecer
-LOGO_DARK = (
-    f'<span style="background:#0A2540;border-radius:6px;padding:3px 10px;'
-    f'display:inline-flex;align-items:center;flex-shrink:0">'
-    f'<img src="{_LOGO_SRC}" style="height:20px;display:block"></span>'
-)
+# Logo em fundo branco (cabeçalhos): silhueta escura via filter
+LOGO_DARK = f'<img src="{_LOGO_SRC}" style="height:20px;display:block;filter:brightness(0)">'
 
 # Marca d'água centralizada na página
 WM = (
@@ -77,7 +73,7 @@ def _ftr(n: int) -> str:
 
 def _wrap(body: str, pg: int, empresa: str) -> str:
     return (
-        f'<div class="page" style="position:relative">{WM}'
+        f'<div class="page" style="position:relative">'
         f'{_hdr(empresa)}'
         f'<div style="flex:1;overflow:hidden;padding:24px 56px 20px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:1">{body}</div>'
         f'{_ftr(pg)}</div>'
@@ -473,21 +469,21 @@ def _p5_comparativo(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: di
         rows_d = ""
         for d in res.sistema_novo.detalhes:
             rows_d += (
-                f'<tr><td style="color:#6B7592">{_esc(d.nome)}</td>'
-                f'<td style="text-align:right">{_pct(d.aliquota_aplicada)}</td>'
-                f'<td style="text-align:right;font-weight:600">{_n(d.valor)}</td></tr>'
+                f'<tr><td style="color:#6B7592;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;padding:4px 6px;border-bottom:1px solid #F0F3F8">{_esc(d.nome)}</td>'
+                f'<td style="text-align:right;font-weight:600;white-space:nowrap;font-size:9px;padding:4px 6px;border-bottom:1px solid #F0F3F8">{_pct(d.aliquota_aplicada)}</td></tr>'
             )
         rows_d += (
-            f'<tr style="background:#F5F7FC;font-weight:700"><td>Total</td><td></td>'
-            f'<td style="text-align:right;color:{cor}">{_n(res.sistema_novo.total)}</td></tr>'
+            f'<tr style="background:#F5F7FC"><td style="font-weight:700;color:{cor};font-size:9px;padding:4px 6px">Total</td>'
+            f'<td style="text-align:right;font-weight:700;color:{cor};font-size:9px;padding:4px 6px">{_pct(res.sistema_novo.percentual_sobre_valor)}</td></tr>'
         )
         detail_rows += (
-            f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:8px;overflow:hidden;border-top:3px solid {cor}">'
-            f'<div style="padding:7px 12px;background:#F9FAFB;font-size:10px;font-weight:700;color:{cor}">{_esc(lbl)}</div>'
-            f'<table style="width:100%;border-collapse:collapse">'
-            f'<thead><tr><th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:left">Tributo</th>'
-            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:right">Alíq.</th>'
-            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:5px 10px;border-bottom:1px solid #DCE3EF;text-align:right">R$</th></tr></thead>'
+            f'<div style="flex:1;min-width:0;border:1px solid #DCE3EF;border-radius:8px;overflow:hidden;border-top:3px solid {cor}">'
+            f'<div style="padding:6px 10px;background:#F9FAFB;font-size:9px;font-weight:700;color:{cor}">{_esc(lbl)}</div>'
+            f'<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+            f'<colgroup><col><col style="width:46px"></colgroup>'
+            f'<thead><tr><th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:4px 6px;border-bottom:1px solid #DCE3EF;text-align:left">Tributo</th>'
+            f'<th style="font-size:8px;text-transform:uppercase;color:#9BA8C2;padding:4px 6px;border-bottom:1px solid #DCE3EF;text-align:right">Alíq.</th>'
+            f'</tr></thead>'
             f'<tbody>{rows_d}</tbody></table></div>'
         )
 
@@ -716,7 +712,9 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
     economia_pct = abs(r.economia_percentual)
 
     recommendation = (
-        f'<div style="background:#0A2540;border-radius:12px;padding:20px 24px;color:white;margin-bottom:12px">'
+        f'<div style="background:#0A2540;border-radius:12px;color:white;margin-bottom:12px;position:relative;overflow:hidden">'
+        f'<img src="{_LOGO_SRC}" style="position:absolute;width:300px;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-10deg);opacity:0.08;pointer-events:none;filter:grayscale(100%)">'
+        f'<div style="padding:20px 24px;position:relative">'
         f'<div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#01D1FF;margin-bottom:8px">RECOMENDAÇÃO</div>'
         f'<div style="font-size:18px;font-weight:800;margin-bottom:8px">{_esc(best_lbl)}</div>'
         f'<div style="font-size:11px;color:#8BA3C2;margin-bottom:12px">Regime com menor carga tributária no sistema novo — {_pct(all_pcts[best])} da operação</div>'
@@ -730,7 +728,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         f'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 16px;flex:1">'
         f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8BA3C2;margin-bottom:4px">{"Economia" if is_economy else "Acréscimo"}</div>'
         f'<div style="font-size:16px;font-weight:700;color:{"#4ADE80" if is_economy else "#F87171"}">{"▼" if is_economy else "▲"} {_pct(economia_pct)}</div></div>'
-        f'</div></div>'
+        f'</div></div></div>'
     )
 
     steps = [
