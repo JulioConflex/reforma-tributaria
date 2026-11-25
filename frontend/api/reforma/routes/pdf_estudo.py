@@ -70,8 +70,8 @@ def _styles() -> dict:
         "body_j":         s("BDJ",  fontName="Helvetica",         fontSize=10, textColor=INK_600, leading=15, spaceAfter=4, alignment=TA_JUSTIFY),
         "small":          s("SM",   fontName="Helvetica",         fontSize=8.5,textColor=INK_400, leading=12, spaceAfter=3),
         "small_j":        s("SMJ",  fontName="Helvetica",         fontSize=8.5,textColor=INK_400, leading=12, spaceAfter=3, alignment=TA_JUSTIFY),
-        "badge_ok":       s("BOK",  fontName="Helvetica-Bold",    fontSize=8,  textColor=EMERALD, leading=10),
-        "badge_no":       s("BNO",  fontName="Helvetica-Bold",    fontSize=8,  textColor=INK_400, leading=10),
+        "badge_ok":       s("BOK",  fontName="Helvetica",         fontSize=9,  textColor=INK_700, leading=12),
+        "badge_no":       s("BNO",  fontName="Helvetica",         fontSize=9,  textColor=INK_400, leading=12),
         "disclaimer":     s("DS",   fontName="Helvetica-Oblique", fontSize=8,  textColor=INK_400, leading=12, spaceBefore=6, spaceAfter=6, alignment=TA_JUSTIFY),
         "cell_l":         s("CL_L", fontName="Helvetica",         fontSize=9.5,textColor=INK_900, leading=13),
         "cell_r":         s("CL_R", fontName="Helvetica",         fontSize=9.5,textColor=INK_900, leading=13, alignment=TA_RIGHT),
@@ -96,7 +96,7 @@ def _styles() -> dict:
         "toc1":           s("TC1",  fontName="Helvetica",         fontSize=9,  textColor=INK_400, leading=14, leftIndent=14, spaceAfter=2),
     }
 
-def _table_style(header_color=BRAND, stripe=True) -> TableStyle:
+def _table_style(header_color=NAVY, stripe=True) -> TableStyle:
     return TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), header_color),
         ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50] if stripe else [WHITE]),
@@ -296,7 +296,7 @@ def _memoria_regime_tables(
             Paragraph(brl(total_atual), ST["mem_total"]),
         ])
         t_a = Table(detalhe_rows_a, colWidths=[4.2*cm, 1.8*cm, 8.5*cm, 2.5*cm])
-        t_a.setStyle(_mem_table_style(INK_700))
+        t_a.setStyle(_mem_table_style(NAVY))
         elements.append(Paragraph("Sistema Atual", ST["label"]))
         elements.append(Spacer(1, 2))
         elements.append(t_a)
@@ -361,7 +361,7 @@ def _memoria_regime_tables(
             Paragraph(brl(total_novo), ST["mem_total"]),
         ])
         t_n = Table(detalhe_rows_n, colWidths=[4.2*cm, 1.8*cm, 8.5*cm, 2.5*cm])
-        t_n.setStyle(_mem_table_style(colors.HexColor("#059669"), sep_rows=sep_rows_n))
+        t_n.setStyle(_mem_table_style(NAVY, sep_rows=sep_rows_n))
         elements.append(Paragraph(f"Sistema Novo ({ano})", ST["label"]))
         elements.append(Spacer(1, 2))
         elements.append(t_n)
@@ -372,7 +372,7 @@ def _memoria_regime_tables(
             diff = total_novo - (res_atual.total + irpj_csll)
             pct_diff = diff / (res_atual.total + irpj_csll) * 100 if (res_atual.total + irpj_csll) > 0 else 0.0
             prefix = "+" if diff > 0 else ""
-            diff_style = ST["cell_red_r"] if diff > 0 else ST["cell_green_r"]
+            diff_style = ST["cell_bold_r"]
             var_data = [[
                 Paragraph("Variação (novo vs atual)", ST["cell_bold"]),
                 Paragraph(f"{prefix}{brl(diff)}", diff_style),
@@ -666,7 +666,7 @@ def _dre_section(
              receita_liq_nova - cbs_ibs_anual - irpj_csll_anual, is_sub=True)
 
     cmds = [
-        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
         ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
         ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING",    (0, 0), (-1, -1), 6),
@@ -678,10 +678,10 @@ def _dre_section(
     ]
     for r in sub_rows:
         cmds.extend([
-            ("BACKGROUND", (0, r), (-1, r), BLUE_BG),
+            ("BACKGROUND", (0, r), (-1, r), INK_50),
             ("FONTNAME",   (0, r), (-1, r), "Helvetica-Bold"),
-            ("LINEABOVE",  (0, r), (-1, r), 0.6, BRAND),
-            ("LINEBELOW",  (0, r), (-1, r), 0.6, BRAND),
+            ("LINEABOVE",  (0, r), (-1, r), 0.6, INK_400),
+            ("LINEBELOW",  (0, r), (-1, r), 0.6, INK_400),
         ])
 
     t_dre = Table(dre_data, colWidths=[9.0*cm, 3.75*cm, 3.75*cm])
@@ -747,8 +747,8 @@ def _analise_regimes_section(
         is_best = r.regime == melhor_key
         diff = r.diferenca or 0
         diff_prefix = "+" if diff > 0 else ""
-        diff_sty = ST["cell_red_r"] if diff > 0 else ST["cell_green_r"]
-        val_sty = ST["cell_green_r"] if is_best else ST["cell_bold_r"]
+        diff_sty = ST["cell_bold_r"]
+        val_sty = ST["cell_bold_r"]
 
         kpi_rows = [
             [Paragraph("Sistema Atual", ST["label"]),
@@ -2629,7 +2629,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                            ST["cell_bold"] if is_best or is_current else ST["cell_l"])
         if r.disponivel:
             rows_a.append([nome_p,
-                           Paragraph(brl(r.total_atual or 0), ST["cell_green_r"] if is_best else ST["cell_r"]),
+                           Paragraph(brl(r.total_atual or 0), ST["cell_bold_r"] if is_best else ST["cell_r"]),
                            Paragraph(pct(r.percentual_atual or 0), ST["cell_r"]),
                            Paragraph("Disponível", ST["badge_ok"])])
         else:
@@ -2680,14 +2680,14 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             rank = ranking.get(r.regime, "--")
             rk_txt = f"#{rank}" + (" (Melhor)" if is_best else "")
             rows_n.append([nome_p,
-                           Paragraph(brl(r.total_novo or 0), ST["cell_green_r"] if is_best else ST["cell_r"]),
+                           Paragraph(brl(r.total_novo or 0), ST["cell_bold_r"] if is_best else ST["cell_r"]),
                            Paragraph(pct(r.percentual_novo or 0), ST["cell_r"]),
-                           Paragraph(rk_txt, ST["badge_ok"] if is_best else ST["cell_l"])])
+                           Paragraph(rk_txt, ST["cell_bold"] if is_best else ST["cell_l"])])
         else:
             rows_n.append([nome_p, Paragraph("--", ST["cell_r"]),
                            Paragraph("--", ST["cell_r"]), Paragraph("Vedado", ST["badge_no"])])
     t_n = Table(rows_n, colWidths=[7.5*cm, 4.0*cm, 4.0*cm, 3.0*cm], repeatRows=1)
-    t_n.setStyle(_table_style(EMERALD))
+    t_n.setStyle(_table_style())
     story.append(KeepTogether([
         Spacer(1, 8),
         Paragraph(f"{sec}. Novo Sistema ({comp.ano}) — Carga por Regime", ST["h1"]),
@@ -2737,19 +2737,17 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         if r.disponivel:
             diff = r.diferenca or 0
             prefix = "+" if diff > 0 else ""
-            diff_s = ST["cell_red_r"] if diff > 0 else ST["cell_green_r"]
             eco = r.economia_anual_estimada or 0
-            eco_s = ST["cell_green_r"] if eco < 0 else ST["cell_red_r"]
             rows_v.append([nome_p,
                            Paragraph(brl(r.total_atual or 0), ST["cell_r"]),
-                           Paragraph(brl(r.total_novo or 0), ST["cell_green_r"] if is_best else ST["cell_r"]),
-                           Paragraph(f"{prefix}{brl(diff)}", diff_s),
-                           Paragraph(f"{prefix}{pct(r.diferenca_percentual or 0, 1)}", diff_s),
-                           Paragraph(brl(eco), eco_s)])
+                           Paragraph(brl(r.total_novo or 0), ST["cell_bold_r"] if is_best else ST["cell_r"]),
+                           Paragraph(f"{prefix}{brl(diff)}", ST["cell_bold_r"]),
+                           Paragraph(f"{prefix}{pct(r.diferenca_percentual or 0, 1)}", ST["cell_r"]),
+                           Paragraph(brl(eco), ST["cell_bold_r"])])
         else:
             rows_v.append([nome_p] + [Paragraph("--", ST["cell_r"])] * 5)
     t_v = Table(rows_v, colWidths=[5.0*cm, 3.0*cm, 3.0*cm, 3.0*cm, 2.5*cm, 3.5*cm], repeatRows=1)
-    t_v.setStyle(_table_style(INK_600))
+    t_v.setStyle(_table_style())
     story.append(KeepTogether([
         Spacer(1, 8),
         Paragraph(f"{sec}. Variação: Sistema Atual x Novo Sistema", ST["h1"]),
@@ -2792,15 +2790,15 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         eco_anual = (eco_op / comp.valor_base * inp.faturamento_anual if comp.valor_base > 0 else 0)
         dest_rows = [
             [Paragraph("Regime recomendado", ST["cell_bold"]),
-             Paragraph(melhor_obj.nome, ST["cell_green_r"])],
+             Paragraph(melhor_obj.nome, ST["cell_bold_r"])],
             [Paragraph("Carga tributária (novo sistema)", ST["cell_bold"]),
-             Paragraph(brl(melhor_obj.total_novo or 0), ST["cell_green_r"])],
+             Paragraph(brl(melhor_obj.total_novo or 0), ST["cell_bold_r"])],
             [Paragraph("% sobre operação", ST["cell_bold"]),
              Paragraph(pct(melhor_obj.percentual_novo or 0), ST["cell_r"])],
         ]
         if eco_anual > 0:
             dest_rows.append([Paragraph(f"Economia anual estimada vs {pior.nome}", ST["cell_bold"]),
-                              Paragraph(brl(eco_anual), ST["cell_green_r"])])
+                              Paragraph(brl(eco_anual), ST["cell_bold_r"])])
         if inp.regime_atual and inp.regime_atual != melhor_key:
             atual_obj = next((r for r in disponiveis if r.regime == inp.regime_atual), None)
             if atual_obj:
@@ -2808,22 +2806,22 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 eco_vs = dif / comp.valor_base * inp.faturamento_anual if comp.valor_base > 0 else 0
                 if eco_vs > 0:
                     dest_rows.append([Paragraph(f"Economia vs regime atual ({atual_obj.nome})", ST["cell_bold"]),
-                                      Paragraph(brl(eco_vs), ST["cell_green_r"])])
+                                      Paragraph(brl(eco_vs), ST["cell_bold_r"])])
         if (melhor_obj.irpj_csll_estimado or 0) > 0:
             dest_rows.append([Paragraph("IRPJ/CSLL incluído", ST["cell_bold"]),
                               Paragraph(brl(melhor_obj.irpj_csll_estimado or 0), ST["cell_r"])])
         dest_t = Table(dest_rows, colWidths=[9.5*cm, None])
         dest_t.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), EMRLD_100),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, EMRLD_50]),
+            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, INK_50]),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("TOPPADDING", (0, 0), (-1, -1), 7),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ("LEFTPADDING", (0, 0), (-1, -1), 10),
             ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-            ("LINEBELOW", (0, 0), (-1, -2), 0.3, EMRLD_200),
-            ("BOX", (0, 0), (-1, -1), 0.8, EMERALD),
-            ("LINEBEFORE", (0, 0), (0, -1), 3, EMERALD),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.3, INK_100),
+            ("BOX", (0, 0), (-1, -1), 0.5, INK_400),
+            ("LINEBEFORE", (0, 0), (0, -1), 3, NAVY),
         ]))
         story.append(dest_t)
         if eco_anual > 0:
@@ -3018,7 +3016,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             for yr in ANOS:
                 v = year_data[r.regime].get(yr)
                 is_ref = yr == comp.ano
-                style = ST["cell_bold_r"] if is_ref else (ST["cell_green_r"] if is_best else ST["cell_r"])
+                style = ST["cell_bold_r"] if is_ref or is_best else ST["cell_r"]
                 row.append(Paragraph(brl_k(v), style))
             rows_brl.append(row)
 
@@ -3034,7 +3032,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             if vals:
                 avg = sum(vals) / len(vals)
                 prefix = "+" if avg > 0 else ""
-                style = ST["cell_red_r"] if avg > 0 else ST["cell_green_r"]
+                style = ST["cell_bold_r"]
                 var_row.append(Paragraph(f"{prefix}{avg:.1f}%", style))
             else:
                 var_row.append(Paragraph("--", ST["cell_r"]))
@@ -3043,7 +3041,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         col_w = [3.8*cm] + [1.65*cm] * 8
         t_brl = Table(rows_brl, colWidths=col_w, repeatRows=1)
         tbl_style_ano = TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+            ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
             ("ROWBACKGROUNDS",(0, 1), (-1, -2), [WHITE, INK_50]),
             ("BACKGROUND",    (0, -1), (-1, -1), INK_100),
             ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
@@ -3054,7 +3052,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
             ("LINEBELOW",     (0, 0), (-1, -2), 0.25, INK_100),
             ("LINEABOVE",     (0, -1), (-1, -1), 0.5, INK_400),
-            ("BACKGROUND",    (ref_col, 1), (ref_col, -2), EMRLD_50),
+            ("BACKGROUND",    (ref_col, 1), (ref_col, -2), INK_50),
         ])
         t_brl.setStyle(tbl_style_ano)
         story.append(KeepTogether([
@@ -3064,7 +3062,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         story.append(t_brl)
         story.append(Spacer(1, 3))
         story.append(Paragraph(
-            f"Coluna destacada em verde = ano de referencia ({comp.ano}). Valores sem R$ para melhor leitura. Inclui IRPJ/CSLL estimado.",
+            f"Coluna em negrito = ano de referencia ({comp.ano}). Valores sem centavos. Inclui IRPJ/CSLL estimado.",
             ST["small"]))
 
         story.append(Spacer(1, 6))
@@ -3086,7 +3084,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 if v is not None and comp.valor_base > 0:
                     p = v / comp.valor_base * 100
                     is_ref = yr == comp.ano
-                    style = ST["cell_bold_r"] if is_ref else (ST["cell_green_r"] if is_best else ST["cell_r"])
+                    style = ST["cell_bold_r"] if is_ref or is_best else ST["cell_r"]
                     pct_row.append(Paragraph(f"{p:.1f}%", style))
                 else:
                     pct_row.append(Paragraph("--", ST["cell_r"]))
@@ -3094,7 +3092,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
         t_pct = Table(rows_pct, colWidths=col_w, repeatRows=1)
         tbl_style_pct = TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, 0), INK_600),
+            ("BACKGROUND",    (0, 0), (-1, 0), NAVY),
             ("ROWBACKGROUNDS",(0, 1), (-1, -1), [WHITE, INK_50]),
             ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
             ("TOPPADDING",    (0, 0), (-1, -1), 5),
@@ -3103,7 +3101,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
             ("RIGHTPADDING",  (0, 0), (-1, -1), 4),
             ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
             ("LINEBELOW",     (0, 0), (-1, -2), 0.25, INK_100),
-            ("BACKGROUND",    (ref_col, 1), (ref_col, -1), EMRLD_50),
+            ("BACKGROUND",    (ref_col, 1), (ref_col, -1), INK_50),
         ])
         t_pct.setStyle(tbl_style_pct)
         story.append(KeepTogether([
