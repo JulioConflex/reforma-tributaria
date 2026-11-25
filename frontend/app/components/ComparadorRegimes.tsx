@@ -93,30 +93,37 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
     setPdfCarregando(true);
     setPdfErro(null);
     try {
+      const regime = pdfForm.regime_atual || "lucro_presumido";
       const payload = {
-        ...pdfForm,
-        faturamento_anual: parseBRL(faturamento),
-        despesas_mensais: despesasMensais ? parseBRL(despesasMensais) : null,
-        setor_id: setorId,
-        credito_entrada: credito / 100,
-        folha_pagamento_mensal: mostrarFatorR && folhaPagamento ? parseBRL(folhaPagamento) : null,
-        comparador: result,
+        empresa_nome: pdfForm.razao_social || "Empresa",
+        input_data: {
+          valor: parseBRL(valor),
+          regime,
+          setor_id: setorId,
+          uf,
+          ano,
+          percentual_credito_entrada: credito / 100,
+          ...(faturamento ? { faturamento_anual: parseBRL(faturamento) } : {}),
+          ...(mostrarFatorR && folhaPagamento ? { folha_pagamento_mensal: parseBRL(folhaPagamento) } : {}),
+          ...(despesasMensais ? { despesas_mensais: parseBRL(despesasMensais) } : {}),
+        },
       };
-      const res = await fetch(`${API}/gerar-estudo-tributario`, {
+      const res = await fetch(`${API}/gerar-estudo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || "Erro ao gerar PDF");
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.detail || "Erro ao gerar estudo");
       }
-      const blob = await res.blob();
+      const html = await res.text();
+      const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const nome = pdfForm.razao_social.replace(/\s+/g, "_").substring(0, 40) || "Empresa";
       a.href = url;
-      a.download = `Estudo_Tributario_${nome}_${result.ano}.pdf`;
+      a.download = `Estudo_Tributario_${nome}_${ano}.html`;
       a.click();
       URL.revokeObjectURL(url);
       setPdfGerado(true);
@@ -415,7 +422,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
               <div className="flex items-center justify-between px-6 py-4 border-b border-ink-100">
                 <div>
                   <div className="font-display font-bold text-[17px] text-ink-900">Estudo Tributário Completo</div>
-                  <div className="text-[12px] text-ink-500 mt-0.5">Preencha os dados da empresa para gerar o PDF</div>
+                  <div className="text-[12px] text-ink-500 mt-0.5">Preencha os dados e baixe o estudo em HTML — abra no navegador e use Ctrl+P para salvar como PDF</div>
                 </div>
                 <button
                   onClick={() => setPdfModalOpen(false)}
@@ -434,7 +441,7 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    PDF gerado e baixado com sucesso.
+                    Estudo gerado! Abra o arquivo HTML no navegador e use Ctrl+P → Salvar como PDF.
                   </div>
                 )}
                 {pdfErro && (
