@@ -686,7 +686,7 @@ def _p8_analise(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) 
                 f'<tr><td style="color:#6B7592;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8">{_esc(d.nome)}</td>'
                 f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.aliquota_aplicada)}</td>'
                 f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_n(d.valor)}</td>'
-                f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.aliquota_aplicada)}</td></tr>'
+                f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.valor / res.valor_operacao * 100 if res.valor_operacao else 0)}</td></tr>'
             )
         rows_atual += (
             f'<tr style="font-weight:700;background:#F5F7FC">'
@@ -702,7 +702,7 @@ def _p8_analise(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) 
                 f'<tr><td style="color:#6B7592;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8">{_esc(d.nome)}</td>'
                 f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.aliquota_aplicada)}</td>'
                 f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_n(d.valor)}</td>'
-                f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.aliquota_aplicada)}</td></tr>'
+                f'<td style="text-align:right;font-size:10px;padding:5px 8px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{_pct(d.valor / res.valor_operacao * 100 if res.valor_operacao else 0)}</td></tr>'
             )
         rows_novo += (
             f'<tr style="font-weight:700;background:#F5F7FC">'
@@ -744,7 +744,14 @@ def _p8_analise(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) 
 def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
     all_results = {r.regime: r}
     all_results.update(comparativo)
-    all_pcts = {rg: res.sistema_novo.percentual_sobre_valor for rg, res in all_results.items()}
+    def _carga_total_pct(res: SimulacaoComProjecaoOutput) -> float:
+        total = res.sistema_novo.total
+        ii = res.irpj_csll_info
+        if ii and ii.estimavel and not ii.incluido_no_das:
+            total += (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
+        return total / res.valor_operacao * 100 if res.valor_operacao else 0.0
+
+    all_pcts = {rg: _carga_total_pct(res) for rg, res in all_results.items()}
     best = min(all_pcts, key=all_pcts.get)
     best_lbl = REGIME_LABEL.get(best, best)
     best_cor = REGIME_COLOR.get(best, "#1A6B3C")
