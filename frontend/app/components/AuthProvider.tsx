@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
-export type Papel = "basico" | "completo" | "master";
+export type Papel = "basico" | "completo" | "contador" | "master";
 
 const TODOS_MODULOS = ["tributos", "markup", "comparador", "split_payment"];
 

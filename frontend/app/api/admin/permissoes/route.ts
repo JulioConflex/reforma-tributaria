@@ -3,7 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const PAPEIS_VALIDOS = ["basico", "completo"];
+const PAPEIS_VALIDOS = ["basico", "completo", "contador"];
 const MODULOS_VALIDOS = ["tributos", "markup", "comparador", "split_payment"];
 
 async function exigirMaster(): Promise<

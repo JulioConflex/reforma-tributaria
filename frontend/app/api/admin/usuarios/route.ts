@@ -69,7 +69,7 @@ export async function POST(req: Request) {
   }
 
   const admin = createAdminClient();
-  const novoPapel = ["master", "completo", "basico"].includes(papel) ? papel : "basico";
+  const novoPapel = ["master", "completo", "contador", "basico"].includes(papel) ? papel : "basico";
   const emailLimpo = String(email).trim();
 
   const { data: criado, error } = await admin.auth.admin.createUser({
@@ -102,7 +102,7 @@ export async function PATCH(req: Request) {
 
   const { id, papel } = await req.json();
 
-  if (!id || !["basico", "completo", "master"].includes(papel)) {
+  if (!id || !["basico", "completo", "contador", "master"].includes(papel)) {
     return NextResponse.json({ erro: "Dados inválidos." }, { status: 400 });
   }
   // Evita que um master se rebaixe e perca o acesso de gestão.

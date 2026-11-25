@@ -5,7 +5,7 @@ import { API } from "./types";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
-type PapelUsuario = "basico" | "completo" | "master";
+type PapelUsuario = "basico" | "completo" | "contador" | "master";
 type AbaMain      = "usuarios" | "aliquotas";
 type AbaAliq      = "cronograma" | "setores" | "estados";
 
@@ -14,7 +14,7 @@ interface Usuario {
   papel: PapelUsuario; criado_em: string;
 }
 
-interface Permissao { papel: "basico" | "completo"; modulo: string; permitido: boolean; }
+interface Permissao { papel: "basico" | "completo" | "contador"; modulo: string; permitido: boolean; }
 
 // campos numéricos por categoria
 type CronFields = {
@@ -34,9 +34,9 @@ const MODULOS = [
   { id: "split_payment", label: "Split Payment" },
 ] as const;
 
-const PAPEL_LABEL: Record<PapelUsuario, string> = { basico: "Básico", completo: "Completo", master: "Master" };
+const PAPEL_LABEL: Record<PapelUsuario, string> = { basico: "Básico", completo: "Completo", contador: "Contador", master: "Master" };
 const PAPEL_BADGE: Record<PapelUsuario, string> = {
-  basico: "bg-ink-100 text-ink-500", completo: "bg-blue-50 text-blue-700", master: "bg-brand-100 text-brand-700",
+  basico: "bg-ink-100 text-ink-500", completo: "bg-blue-50 text-blue-700", contador: "bg-emerald-50 text-emerald-700", master: "bg-brand-100 text-brand-700",
 };
 
 const CRON_ANOS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
@@ -204,11 +204,11 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
   }, [mainTab, carregarAliq]);
 
   // ── helpers de permissão ────────────────────────────────────────────────
-  function getPermitido(p: "basico" | "completo", m: string) {
+  function getPermitido(p: "basico" | "completo" | "contador", m: string) {
     return permissoes.find((x) => x.papel === p && x.modulo === m)?.permitido ?? false;
   }
 
-  async function togglePermissao(p: "basico" | "completo", m: string) {
+  async function togglePermissao(p: "basico" | "completo" | "contador", m: string) {
     const atual = getPermitido(p, m); const chave = `${p}:${m}`;
     setSalvandoPerm(chave);
     try {
@@ -440,6 +440,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
                       className="w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition bg-white">
                       <option value="basico">Básico: somente Tributos</option>
                       <option value="completo">Completo: todos os módulos</option>
+                      <option value="contador">Contador: acesso completo + aba exclusiva</option>
                       <option value="master">Master: gerencia usuários e alíquotas</option>
                     </select>
                   </div>
@@ -490,6 +491,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
                                     className="text-[12px] font-medium text-ink-700 border border-ink-200 rounded-lg px-2 py-1 bg-white outline-none focus:border-brand-400 transition">
                                     <option value="basico">Básico</option>
                                     <option value="completo">Completo</option>
+                                    <option value="contador">Contador</option>
                                     <option value="master">Master</option>
                                   </select>
                                 )}
@@ -522,7 +524,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
                     <thead>
                       <tr className="border-b border-ink-100">
                         <th className="px-6 py-3 text-left text-[11px] uppercase tracking-wide text-ink-400 font-semibold w-48">Módulo</th>
-                        {(["basico", "completo"] as const).map((p) => (
+                        {(["basico", "completo", "contador"] as const).map((p) => (
                           <th key={p} className="px-6 py-3 text-center text-[11px] uppercase tracking-wide text-ink-400 font-semibold">{PAPEL_LABEL[p]}</th>
                         ))}
                         <th className="px-6 py-3 text-center text-[11px] uppercase tracking-wide text-ink-400 font-semibold">Master</th>
@@ -532,7 +534,7 @@ export default function AdminPanel({ meId, meEmail }: { meId: string; meEmail: s
                       {MODULOS.map((m) => (
                         <tr key={m.id} className="hover:bg-ink-50/50 transition">
                           <td className="px-6 py-3.5 font-medium text-ink-800">{m.label}</td>
-                          {(["basico", "completo"] as const).map((p) => {
+                          {(["basico", "completo", "contador"] as const).map((p) => {
                             const chave = `${p}:${m.id}`; const permitido = getPermitido(p, m.id); const salvando = salvandoPerm === chave;
                             return (
                               <td key={p} className="px-6 py-3.5 text-center">
