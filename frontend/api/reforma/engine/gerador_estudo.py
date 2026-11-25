@@ -920,10 +920,83 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             f'</div>'
         )
 
+    # Narrativa gerada dinamicamente
+    setor_nome = r.setor_nome or "da empresa"
+    tipo_atividade = "serviço" if any(
+        "ISS" in d.nome or "CBS" in d.nome
+        for d in r.sistema_atual.detalhes
+    ) else "produto"
+    is_servico = tipo_atividade == "serviço"
+    lbl_regime_atual = REGIME_LABEL.get(r.regime, r.regime)
+    economia_abs   = abs(r.economia_ou_acrescimo)
+    economia_p_str = _pct(abs(r.economia_percentual))
+
+    # Parágrafo 1: impacto na operação e formação de preço
+    if is_economy:
+        p1 = (
+            f'Com base nas simulações realizadas, a Reforma Tributária representa, para a atividade de '
+            f'<strong>{_esc(setor_nome)}</strong>, uma <strong>redução de {economia_p_str}</strong> na carga sobre a operação '
+            f'no regime {_esc(best_lbl)} ({_pct(all_pcts[best])} da base). '
+            f'Ainda assim, a transição exige atenção: a CBS e o IBS serão cobrados "por fora" '
+            f'(calculados sobre o valor da operação sem inclusão no preço), '
+            f'o que altera a estrutura de formação de preço de venda e pode impactar contratos de longo prazo.'
+        )
+    else:
+        p1 = (
+            f'Com base nas simulações realizadas, a Reforma Tributária representa, para a atividade de '
+            f'<strong>{_esc(setor_nome)}</strong>, um <strong>acréscimo de {economia_p_str}</strong> na carga sobre a operação '
+            f'mesmo no regime mais vantajoso, o {_esc(best_lbl)} ({_pct(all_pcts[best])} da base). '
+            f'O principal efeito se manifesta na formação do preço de venda: a CBS e o IBS são cobrados '
+            f'"por fora" (sobre o valor da operação), diferente do ISS atual, '
+            f'o que exige revisão do markup e dos contratos com clientes para preservar a rentabilidade.'
+        )
+
+    # Parágrafo 2: tratamento contábil
+    p2 = (
+        f'Sob o aspecto contábil, a CBS e o IBS serão destacados separadamente nas notas fiscais '
+        f'e registrados como obrigações perante o Fisco, '
+        f'em consonância com a Lei Complementar nº 214/2025 e com os princípios do CPC 47 '
+        f'(reconhecimento de receita). Como regra geral, esses tributos '
+        f'<strong>não comporão a receita reconhecida na DRE</strong>, '
+        f'mas transitarão por contas de passivo fiscal antes do recolhimento.'
+    )
+
+    # Parágrafo 3: conclusão sobre o regime
+    mesmo_regime = best == r.regime
+    if mesmo_regime:
+        p3 = (
+            f'As simulações indicam que o <strong>{_esc(lbl_regime_atual)}, regime atual da empresa, '
+            f'permanece como a opção mais vantajosa</strong> no sistema novo. '
+            f'Todavia, essa conclusão decorre do conjunto dos impactos da Reforma e deverá ser reavaliada '
+            f'sempre que houver alterações relevantes na operação ou na regulamentação '
+            f'(alíquotas definitivas esperadas para 2026).'
+        )
+    else:
+        p3 = (
+            f'Com base nas premissas adotadas neste estudo, conclui-se que a migração para o '
+            f'<strong>{_esc(best_lbl)}</strong> deve ser avaliada com prioridade. '
+            f'A vantagem decorre do conjunto dos impactos da Reforma — carga efetiva de CBS/IBS, '
+            f'estrutura de créditos e tributação sobre o lucro — e deverá ser confirmada com o '
+            f'contador responsável após a publicação das alíquotas definitivas (esperadas para 2026).'
+        )
+
+    def _p(txt: str) -> str:
+        return (
+            f'<p style="font-size:11px;color:#3D4559;line-height:1.75;margin:0 0 10px 0">{txt}</p>'
+        )
+
+    narrativa = (
+        f'<div style="background:#F5F7FC;border:1px solid #DCE3EF;border-radius:10px;padding:16px 18px;margin-bottom:14px">'
+        f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#334E6E;margin-bottom:10px">Conclusão</div>'
+        + _p(p1) + _p(p2) + _p(p3.rstrip()) +
+        f'</div>'
+    )
+
     body = (
         _sec("9", "Conclusão e Recomendação") +
         recommendation +
         irpj_note +
+        narrativa +
         f'<div>'
         f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-bottom:10px">Próximos passos recomendados</div>'
         f'{steps_html}</div>'
