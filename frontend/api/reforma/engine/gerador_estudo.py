@@ -12,6 +12,10 @@ _B64_FILE = Path(__file__).parent.parent / "assets" / "conflex-logo-b64.txt"
 _LOGO_B64 = _B64_FILE.read_text(encoding="ascii").strip()
 _LOGO_SRC = f"data:image/webp;base64,{_LOGO_B64}"
 
+_C_B64_FILE = Path(__file__).parent.parent / "assets" / "conflex-c-b64.txt"
+_C_B64 = _C_B64_FILE.read_text(encoding="ascii").strip()
+_C_SRC = f"data:image/png;base64,{_C_B64}"
+
 # ─── Formatters ────────────────────────────────────────────────────────────
 
 def _br(x: float) -> str:
@@ -713,7 +717,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
 
     recommendation = (
         f'<div style="background:#0A2540;border-radius:12px;color:white;margin-bottom:12px;position:relative;overflow:hidden">'
-        f'<img src="{_LOGO_SRC}" style="position:absolute;width:300px;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-10deg);opacity:0.08;pointer-events:none;filter:grayscale(100%)">'
+        f'<img src="{_C_SRC}" style="position:absolute;right:24px;top:50%;transform:translateY(-50%);height:240px;width:auto;opacity:0.13;pointer-events:none">'
         f'<div style="padding:20px 24px;position:relative">'
         f'<div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#01D1FF;margin-bottom:8px">RECOMENDAÇÃO</div>'
         f'<div style="font-size:18px;font-weight:800;margin-bottom:8px">{_esc(best_lbl)}</div>'
