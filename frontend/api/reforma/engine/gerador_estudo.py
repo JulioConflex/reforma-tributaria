@@ -825,37 +825,100 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
     # Nota sobre vantagem adicional do Lucro Real no IRPJ/CSLL
     irpj_note = ""
     if best == "lucro_real" and r.regime != "lucro_real":
-        lr_res = all_results.get("lucro_real")
-        cur_ii = r.irpj_csll_info
-        lr_ii = lr_res.irpj_csll_info if lr_res else None
-        if cur_ii and lr_ii and cur_ii.estimavel and lr_ii.estimavel:
+        lr_res   = all_results.get("lucro_real")
+        cur_ii   = r.irpj_csll_info
+        lr_ii    = lr_res.irpj_csll_info if lr_res else None
+        mc       = r.memoria_calculo
+        val_op   = r.valor_operacao
+
+        # Tributos sobre receita do sistema atual (sem IRPJ/CSLL)
+        trib_atual_base = sum(
+            d.valor for d in r.sistema_atual.detalhes
+            if "IRPJ" not in d.nome and "CSLL" not in d.nome and "adicional" not in d.nome.lower()
+        )
+
+        # Margem efetiva (precisa de despesas)
+        desp = mc.despesas_mensais if mc and mc.despesas_mensais else None
+        lajir_val = (val_op - trib_atual_base - desp) if desp is not None else None
+        margem_efetiva_pct = (lajir_val / val_op * 100) if (lajir_val is not None and val_op) else None
+
+        # IRPJ/CSLL no regime atual
+        cur_total = 0.0
+        margem_presumida_pct = None
+        if cur_ii and cur_ii.estimavel and not cur_ii.incluido_no_das:
             cur_total = (cur_ii.irpj_estimado or 0.0) + (cur_ii.csll_estimado or 0.0)
-            lr_total  = (lr_ii.irpj_estimado  or 0.0) + (lr_ii.csll_estimado  or 0.0)
+            # Deriva margem presumida: base = csll_estimado / 0.09
+            if (cur_ii.csll_estimado or 0.0) > 0:
+                base_pres = cur_ii.csll_estimado / 0.09
+                margem_presumida_pct = base_pres / val_op * 100 if val_op else None
+
+        # IRPJ/CSLL no Lucro Real
+        lr_total = None
+        if lr_ii and lr_ii.estimavel and not lr_ii.incluido_no_das:
+            lr_total = (lr_ii.irpj_estimado or 0.0) + (lr_ii.csll_estimado or 0.0)
+        elif lajir_val is not None and lajir_val > 0:
+            # Estimativa simples: 24% sobre LAJIR (IRPJ 15% + CSLL 9%, sem adicional)
+            lr_total = lajir_val * 0.24
+
+        def _card(titulo: str, valor_br: str, detalhe: str, destaque: bool = False) -> str:
+            bg   = "#EFF6FF" if destaque else "#F5F7FC"
+            bord = "#BFDBFE" if destaque else "#DCE3EF"
+            cor  = "#1D4ED8" if destaque else "#334E6E"
+            return (
+                f'<div style="background:{bg};border:1px solid {bord};border-radius:8px;padding:10px 12px;flex:1">'
+                f'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:{cor};font-weight:600;margin-bottom:4px">{_esc(titulo)}</div>'
+                f'<div style="font-size:14px;font-weight:700;color:{"#1D4ED8" if destaque else "#0A2540"};font-variant-numeric:tabular-nums">{valor_br}</div>'
+                f'<div style="font-size:9.5px;color:#6B7592;margin-top:3px">{_esc(detalhe)}</div>'
+                f'</div>'
+            )
+
+        cards = ""
+        if cur_total > 0:
+            det_cur = f"Margem presumida: {_pct(margem_presumida_pct)}" if margem_presumida_pct else "Base presumida (LC 9.249/95)"
+            cards += _card(f"IRPJ/CSLL — {REGIME_LABEL.get(r.regime, r.regime)}", _br(cur_total), det_cur)
+
+        if lr_total is not None:
+            det_lr = f"Margem efetiva: {_pct(margem_efetiva_pct)}" if margem_efetiva_pct is not None else "Sobre lucro real (receita − despesas)"
+            sufixo = " (estimativa)" if not (lr_ii and lr_ii.estimavel) else ""
+            cards += _card(f"IRPJ/CSLL — Lucro Real{sufixo}", _br(lr_total), det_lr, destaque=True)
+
+        if cur_total > 0 and lr_total is not None:
             diff = cur_total - lr_total
             if diff > 0:
-                irpj_note = (
-                    f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
-                    f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px">Vantagem adicional: IRPJ/CSLL</div>'
-                    f'<div style="font-size:11px;color:#1E40AF;line-height:1.6">'
-                    f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL incide sobre uma <strong>margem presumida</strong> (independente do lucro efetivo), '
-                    f'resultando em {_br(cur_total)} sobre esta base. '
-                    f'No {_esc(best_lbl)}, o imposto recai sobre o <strong>lucro real</strong> (receita menos despesas), '
-                    f'estimado em {_br(lr_total)}, uma <strong>economia adicional de {_br(diff)}</strong> em IRPJ/CSLL. '
-                    f'Empresas com margem efetiva baixa tendem a se beneficiar significativamente dessa diferença.'
-                    f'</div></div>'
-                )
-        elif best == "lucro_real":
-            irpj_note = (
-                f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
-                f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px">Vantagem adicional: IRPJ/CSLL</div>'
-                f'<div style="font-size:11px;color:#1E40AF;line-height:1.6">'
-                f'O {_esc(best_lbl)} foi recomendado considerando apenas a carga de CBS/IBS. Há, porém, uma vantagem adicional: '
-                f'nesse regime, o IRPJ/CSLL incide sobre o <strong>lucro efetivo</strong> (receita menos despesas reais), '
-                f'e não sobre uma margem presumida. Para empresas com margem baixa, isso pode representar '
-                f'<strong>economia expressiva em IRPJ/CSLL</strong> além dos ganhos da reforma tributária. '
-                f'Informe o faturamento e as despesas mensais no simulador para estimar esse valor.'
-                f'</div></div>'
+                cards += _card("Economia em IRPJ/CSLL", _br(diff), "por período simulado", destaque=False)
+
+        cards_html = f'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">{cards}</div>' if cards else ""
+
+        # Texto explicativo
+        if margem_presumida_pct and margem_efetiva_pct is not None:
+            texto = (
+                f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL incide sobre uma '
+                f'<strong>margem presumida de {_pct(margem_presumida_pct)}</strong> (definida em lei, independente do resultado real). '
+                f'O lucro efetivo desta empresa é de <strong>{_pct(margem_efetiva_pct)}</strong> — '
+                f'{"muito inferior" if margem_efetiva_pct < margem_presumida_pct * 0.7 else "inferior"} à margem presumida, '
+                f'o que torna o Lucro Real vantajoso também no IRPJ/CSLL.'
             )
+        elif cur_total > 0 and lr_total is not None:
+            texto = (
+                f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL é calculado sobre uma '
+                f'<strong>margem presumida</strong> (fixada em lei). '
+                f'No Lucro Real, o imposto incide sobre o <strong>lucro efetivo</strong> (receita menos despesas reais) — '
+                f'gerando economia adicional quando a margem real é inferior à presumida.'
+            )
+        else:
+            texto = (
+                f'O {_esc(best_lbl)} foi recomendado pela carga CBS/IBS. Há vantagem adicional: '
+                f'nesse regime o IRPJ/CSLL incide sobre o <strong>lucro efetivo</strong>, não sobre margem presumida. '
+                f'Informe as despesas mensais no simulador para ver a economia estimada.'
+            )
+
+        irpj_note = (
+            f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
+            f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px">Vantagem adicional: IRPJ/CSLL</div>'
+            f'<div style="font-size:11px;color:#1E40AF;line-height:1.6">{texto}</div>'
+            f'{cards_html}'
+            f'</div>'
+        )
 
     body = (
         _sec("9", "Conclusão e Recomendação") +
