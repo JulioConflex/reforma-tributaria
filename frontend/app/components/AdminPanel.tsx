@@ -32,6 +32,7 @@ const MODULOS = [
   { id: "markup",        label: "Markup" },
   { id: "comparador",   label: "Comparador" },
   { id: "split_payment", label: "Split Payment" },
+  { id: "ferramentas",   label: "Ferramentas" },
 ] as const;
 
 const PAPEL_LABEL: Record<PapelUsuario, string> = { basico: "Básico", completo: "Completo", contador: "Contador", master: "Master" };

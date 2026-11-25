@@ -58,13 +58,13 @@ update public.profiles set papel = 'basico' where papel = 'normal';
 -- 3) Adiciona a nova constraint (todos os dados já têm valor válido)
 alter table public.profiles
   add constraint profiles_papel_check
-  check (papel in ('basico', 'completo', 'master'));
+  check (papel in ('basico', 'completo', 'contador', 'master'));
 alter table public.profiles alter column papel set default 'basico';
 
--- 3) Tabela de permissões por perfil (só basico/completo; master = sempre tudo)
+-- 3) Tabela de permissões por perfil (basico/completo/contador; master = sempre tudo)
 create table if not exists public.profile_permissions (
-  papel     text    not null check (papel in ('basico', 'completo')),
-  modulo    text    not null check (modulo in ('tributos', 'markup', 'comparador', 'split_payment')),
+  papel     text    not null check (papel in ('basico', 'completo', 'contador')),
+  modulo    text    not null check (modulo in ('tributos', 'markup', 'comparador', 'split_payment', 'ferramentas')),
   permitido boolean not null default true,
   primary key (papel, modulo)
 );
@@ -76,16 +76,23 @@ create policy "permissoes_select"
   on public.profile_permissions for select
   using (auth.role() = 'authenticated');
 
--- 5) Defaults: básico = só tributos; completo = tudo
+-- 5) Defaults: básico = só tributos; completo/contador = tudo
 insert into public.profile_permissions (papel, modulo, permitido) values
   ('basico',   'tributos',      true),
   ('basico',   'markup',        false),
   ('basico',   'comparador',    false),
   ('basico',   'split_payment', false),
+  ('basico',   'ferramentas',   false),
   ('completo', 'tributos',      true),
   ('completo', 'markup',        true),
   ('completo', 'comparador',    true),
-  ('completo', 'split_payment', true)
+  ('completo', 'split_payment', true),
+  ('completo', 'ferramentas',   true),
+  ('contador', 'tributos',      true),
+  ('contador', 'markup',        true),
+  ('contador', 'comparador',    true),
+  ('contador', 'split_payment', true),
+  ('contador', 'ferramentas',   true)
 on conflict (papel, modulo) do nothing;
 
 -- ============================================================================
