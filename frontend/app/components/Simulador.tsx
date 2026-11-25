@@ -15,6 +15,8 @@ import Onboarding from "./Onboarding";
 import ChatAssistente from "./ChatAssistente";
 import { useConfigOverrides } from "./ConfigOverridesContext";
 import SimplesNacionalTab from "./SimplesNacionalTab";
+import NcmCstTab from "./NcmCstTab";
+import NfeTab from "./NfeTab";
 
 const CREDITO_AUTO: Record<string, number> = {
   simples_nacional: 0,
@@ -250,6 +252,10 @@ export default function Simulador() {
         {aba === "simples_nacional" && (
           <SimplesNacionalTab setores={setores} />
         )}
+
+        {aba === "ncm_cst" && <NcmCstTab />}
+
+        {aba === "nfe_credito" && <NfeTab />}
       </main>
 
       {onboardingAberto && (

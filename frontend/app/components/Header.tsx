@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
-export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment" | "simples_nacional";
+export type Aba = "simulador" | "markup" | "comparador" | "base_legal" | "calculadora_dl" | "split_payment" | "simples_nacional" | "ncm_cst" | "nfe_credito";
 
 interface Props {
   aba: Aba;
@@ -75,7 +75,7 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
     }
   }
 
-  const isSimuladorArea = aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && aba !== "simples_nacional";
+  const isSimuladorArea = aba !== "base_legal" && aba !== "calculadora_dl" && aba !== "split_payment" && aba !== "simples_nacional" && aba !== "ncm_cst" && aba !== "nfe_credito";
 
   return (
     <header className="mesh-navy">
@@ -134,6 +134,26 @@ export default function Header({ aba, setAba, onAbrirOnboarding }: Props) {
             >
               Simples Nacional
               {aba === "simples_nacional" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
+            </button>
+
+            <button
+              onClick={() => setAba("ncm_cst")}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                aba === "ncm_cst" ? "text-white" : "text-ink-300 hover:text-white"
+              }`}
+            >
+              NCM / CST
+              {aba === "ncm_cst" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
+            </button>
+
+            <button
+              onClick={() => setAba("nfe_credito")}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition ${
+                aba === "nfe_credito" ? "text-white" : "text-ink-300 hover:text-white"
+              }`}
+            >
+              NF-e / Crédito
+              {aba === "nfe_credito" && <span className="block h-0.5 mt-1 mx-3 rounded-full bg-brand-400" />}
             </button>
 
             {/* Split Payment — bloqueado: aguardando regulamentação da Receita Federal */}
