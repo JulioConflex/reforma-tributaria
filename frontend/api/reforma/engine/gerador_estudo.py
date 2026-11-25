@@ -47,8 +47,13 @@ REGIME_COLOR = {
 # Logo em fundo escuro (capa): imagem direta — texto branco visível
 LOGO_LIGHT = f'<img src="{_LOGO_SRC}" style="height:32px;display:block">'
 
-# Logo em fundo branco (cabeçalhos): drop-shadow escuro torna texto branco visível
-LOGO_DARK = f'<img src="{_LOGO_SRC}" style="height:20px;display:block;filter:drop-shadow(1px 0 0 #111) drop-shadow(-1px 0 0 #111) drop-shadow(0 1px 0 #111) drop-shadow(0 -1px 0 #111)">'
+# Logo em fundo branco (cabeçalhos): C ciano + texto navy separados, sem filtro
+LOGO_DARK = (
+    f'<span style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0">'
+    f'<img src="{_C_SRC}" style="height:20px;width:auto;display:block">'
+    f'<span style="font-size:12px;font-weight:700;color:#0A2540;letter-spacing:-0.01em">conflex</span>'
+    f'</span>'
+)
 
 # Marca d'água centralizada na página
 WM = (
