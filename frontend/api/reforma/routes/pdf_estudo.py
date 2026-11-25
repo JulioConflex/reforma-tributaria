@@ -3209,7 +3209,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
 
 
 # ─── Route ───────────────────────────────────────────────────────────────────
-@router.post("/gerar-estudo-tributário")
+@router.post("/gerar-estudo-tributario")
 def gerar_estudo_tributario(inp: EstudoInput):
     pdf_bytes = _build_pdf(inp)
     nome = inp.razao_social.replace(" ", "_")[:40]
