@@ -21,10 +21,18 @@ def gerar_estudo(req: GerarEstudoRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    _LIMITE_SIMPLES = 4_800_000.0
+    _LIMITE_MEI     = 81_000.0
+    fat = req.input_data.faturamento_anual or 0.0
+
     comparativo: dict = {}
-    regimes = ["lucro_real", "lucro_presumido", "simples_nacional"]
+    regimes = ["lucro_real", "lucro_presumido", "simples_nacional", "mei"]
     for r in regimes:
         if r == req.input_data.regime:
+            continue
+        if r == "simples_nacional" and fat > _LIMITE_SIMPLES:
+            continue
+        if r == "mei" and fat > _LIMITE_MEI:
             continue
         try:
             alt_data = req.input_data.model_copy(update={"regime": RegimeTributario(r)})
