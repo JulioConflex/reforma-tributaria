@@ -2345,6 +2345,55 @@ def _build_pdf(inp: EstudoInput) -> bytes:
         except Exception:
             setor_obj = None
 
+    # Recalcular valores de cada regime diretamente no backend para garantir
+    # consistência entre capa, gráficos e memória de cálculo.
+    # Os valores vindos do frontend (comp.comparativo) podem estar desatualizados
+    # se o usuário alterou parâmetros após abrir o modal do PDF.
+    if setor_obj is not None and cron_obj is not None and comp.valor_base > 0:
+        fat_arg_base = inp.faturamento_anual
+        for r in comp.comparativo:
+            if not r.disponivel:
+                continue
+            try:
+                fat_arg = fat_arg_base if r.regime in ("mei", "simples_nacional") else None
+                res_a = calcular_sistema_atual(
+                    comp.valor_base, r.regime, setor_obj, comp.uf,
+                    fat_arg, inp.folha_pagamento_mensal, inp.credito_entrada,
+                    _icms_uf=icms_uf,
+                )
+                res_n = calcular_sistema_novo(
+                    comp.valor_base, r.regime, setor_obj, comp.uf, comp.ano,
+                    inp.credito_entrada, inp.faturamento_anual, inp.folha_pagamento_mensal,
+                    _icms_uf=icms_uf,
+                )
+                irpj = _irpj_csll_por_operacao(
+                    r.regime, setor_obj, comp.valor_base,
+                    inp.faturamento_anual, inp.despesas_mensais,
+                )
+                r.total_atual = round(res_a.total + irpj, 2)
+                r.total_novo  = round(res_n.total + irpj, 2)
+                r.irpj_csll_estimado = round(irpj, 2)
+                if comp.valor_base > 0:
+                    r.percentual_atual = round(r.total_atual / comp.valor_base * 100, 2)
+                    r.percentual_novo  = round(r.total_novo  / comp.valor_base * 100, 2)
+                r.diferenca = round(r.total_novo - r.total_atual, 2)
+                if r.total_atual and r.total_atual != 0:
+                    r.diferenca_percentual = round(r.diferenca / r.total_atual * 100, 2)
+                if fat_arg_base and comp.valor_base > 0:
+                    scaling = fat_arg_base / comp.valor_base
+                    r.economia_anual_estimada = round(
+                        -r.diferenca * scaling, 2
+                    )
+            except Exception:
+                pass
+        # Atualizar melhor_key com base nos valores recalculados
+        _disp_recalc = [r for r in comp.comparativo if r.disponivel and r.total_novo is not None]
+        if _disp_recalc:
+            melhor_key = min(_disp_recalc, key=lambda x: x.total_novo or float("inf")).regime
+            comp.regime_mais_vantajoso = melhor_key
+
+    disponiveis = [r for r in comp.comparativo if r.disponivel]
+
     def on_page(canvas, doc):
         canvas.saveState()
         # Header — apenas nas páginas internas (não na capa)
