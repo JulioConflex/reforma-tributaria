@@ -204,7 +204,25 @@ export default function Simulador() {
                 </div>
               )}
               {resultado && (
-                <ResultadoSimulacao resultado={resultado} ano={ano} setAno={setAno} />
+                <ResultadoSimulacao
+                  resultado={resultado}
+                  ano={ano}
+                  setAno={setAno}
+                  inputData={{
+                    valor,
+                    regime,
+                    setor_id: setorId,
+                    uf,
+                    ano,
+                    percentual_credito_entrada: credito,
+                    pis_cofins_regime: pisCofinsRegime,
+                    faturamento_anual: faturamento || undefined,
+                    folha_pagamento_mensal: folhaPagamento || undefined,
+                    faturamento_mensal: faturamentoMensal || undefined,
+                    despesas_mensais: despesasMensais || undefined,
+                    aliquota_iss: issManual || undefined,
+                  }}
+                />
               )}
               {!resultado && !erro && (
                 <div className="rounded-2xl bg-white hairline px-7 py-16 text-center text-ink-400">

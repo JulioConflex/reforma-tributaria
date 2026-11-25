@@ -6,13 +6,29 @@ import { brl, NumberTicker, Sparkline, ValueBar, Chip, ConflexMark } from "./ui"
 import TooltipGlossario from "./TooltipGlossario";
 import TransitionTimeline, { CRONOGRAMA } from "./Timeline";
 
+interface InputData {
+  valor: string;
+  regime: string;
+  setor_id: string;
+  uf: string;
+  ano: number;
+  percentual_credito_entrada: number;
+  pis_cofins_regime: string;
+  faturamento_anual?: string;
+  folha_pagamento_mensal?: string;
+  faturamento_mensal?: string;
+  despesas_mensais?: string;
+  aliquota_iss?: string;
+}
+
 interface Props {
   resultado: SimulacaoResult;
   ano: number;
   setAno: (n: number) => void;
+  inputData?: InputData;
 }
 
-export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
+export default function ResultadoSimulacao({ resultado, ano, setAno, inputData }: Props) {
   return (
     <div className="space-y-6">
       <TransitionTimeline ano={ano} setAno={setAno} />
@@ -87,6 +103,101 @@ export default function ResultadoSimulacao({ resultado, ano, setAno }: Props) {
       <ProjectionDetail r={resultado} ano={ano} setAno={setAno} />
 
       <BaseLegal />
+
+      {inputData && <GerarEstudoSection inputData={inputData} ano={ano} />}
+    </div>
+  );
+}
+
+/* ─────────────────────── GERAR ESTUDO ─── */
+function GerarEstudoSection({ inputData, ano }: { inputData: InputData; ano: number }) {
+  const [empresaNome, setEmpresaNome] = useState("");
+  const [gerando, setGerando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function handleGerar() {
+    if (!empresaNome.trim()) {
+      setErro("Informe o nome da empresa.");
+      return;
+    }
+    setGerando(true);
+    setErro(null);
+    try {
+      const parseBRL = (s: string) => parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0;
+      const body = {
+        empresa_nome: empresaNome.trim(),
+        input_data: {
+          valor: parseBRL(inputData.valor),
+          regime: inputData.regime,
+          setor_id: inputData.setor_id,
+          uf: inputData.uf,
+          ano,
+          percentual_credito_entrada: inputData.percentual_credito_entrada / 100,
+          pis_cofins_regime: inputData.pis_cofins_regime,
+          ...(inputData.faturamento_anual ? { faturamento_anual: parseBRL(inputData.faturamento_anual) } : {}),
+          ...(inputData.folha_pagamento_mensal ? { folha_pagamento_mensal: parseBRL(inputData.folha_pagamento_mensal) } : {}),
+          ...(inputData.faturamento_mensal ? { faturamento_mensal: parseBRL(inputData.faturamento_mensal) } : {}),
+          ...(inputData.despesas_mensais ? { despesas_mensais: parseBRL(inputData.despesas_mensais) } : {}),
+          ...(inputData.aliquota_iss ? { aliquota_iss: parseFloat(inputData.aliquota_iss) / 100 } : {}),
+        },
+      };
+      const res = await fetch(`/api/py/gerar-estudo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.detail || "Erro ao gerar estudo");
+      }
+      const html = await res.text();
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `estudo-tributario-${empresaNome.replace(/\s+/g, "-")}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : "Erro ao gerar estudo");
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-ink-200 bg-white px-6 py-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-[#0A2540] flex items-center justify-center shrink-0">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9H3V2Z" stroke="#01D1FF" strokeWidth="1.3" strokeLinejoin="round"/><path d="M10 2v3h3" stroke="#01D1FF" strokeWidth="1.3" strokeLinejoin="round"/><path d="M5 7h6M5 9.5h6M5 12h4" stroke="#01D1FF" strokeWidth="1.1" strokeLinecap="round"/></svg>
+        </div>
+        <div>
+          <div className="text-[13.5px] font-bold text-[#0A2540]">Gerar Estudo Tributário</div>
+          <div className="text-[11.5px] text-ink-400">Documento completo de 14 páginas — importável como PDF</div>
+        </div>
+      </div>
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="block text-[11px] font-semibold text-ink-500 mb-1">Nome da empresa</label>
+          <input
+            type="text"
+            value={empresaNome}
+            onChange={e => setEmpresaNome(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleGerar()}
+            placeholder="Ex.: Empresa XPTO Ltda"
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-[13px] text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-[#01D1FF]/30 focus:border-[#01D1FF]"
+          />
+        </div>
+        <button
+          onClick={handleGerar}
+          disabled={gerando}
+          className="shrink-0 px-5 py-2 rounded-lg bg-[#0A2540] text-white text-[13px] font-semibold hover:bg-[#122F52] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {gerando ? "Gerando…" : "Gerar PDF"}
+        </button>
+      </div>
+      {erro && <p className="mt-2 text-[11.5px] text-red-600">{erro}</p>}
+      <p className="mt-2 text-[10.5px] text-ink-400">O arquivo HTML será aberto no navegador. Use Ctrl+P → Salvar como PDF para gerar o PDF final.</p>
     </div>
   );
 }
