@@ -302,7 +302,50 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
             f'</div></div>'
         )
 
-    body = _sec("3", "Resumo Executivo", f"Regime: {regime_atual} · Setor: {r.setor_nome} · Ano de referência: {r.ano}") + intro + kpi_row + regime_cards + mc_note
+    # Performance financeira estimada
+    perf_html = ""
+    if mc and mc.faturamento_mensal:
+        fat_pf   = mc.faturamento_mensal
+        desp_pf  = mc.despesas_mensais
+        ii_pf    = r.irpj_csll_info
+        irpj_mes = 0.0
+        if ii_pf and ii_pf.estimavel and not ii_pf.incluido_no_das:
+            irpj_mes = (ii_pf.irpj_estimado or 0.0) + (ii_pf.csll_estimado or 0.0)
+        imp_pf = r.sistema_atual.total + irpj_mes
+
+        def _tr(lbl: str, val: str, bold: bool = False, vermelho: bool = False, border_top: bool = False) -> str:
+            cor = "#C0392B" if vermelho else ("#0A2540" if bold else "#3D4559")
+            fw  = "700" if bold else "400"
+            bt  = "border-top:2px solid #0A2540;" if border_top else ""
+            return (
+                f'<tr>'
+                f'<td style="padding:5px 10px;font-size:10px;color:{cor};font-weight:{fw};{bt}border-bottom:1px solid #F0F3F8">{lbl}</td>'
+                f'<td style="padding:5px 10px;font-size:10px;color:{cor};font-weight:{fw};text-align:right;{bt}border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums">{val}</td>'
+                f'</tr>'
+            )
+
+        rows_pf  = _tr("Receita Operacional (mensal)", _br(fat_pf))
+        if desp_pf:
+            rows_pf += _tr("(-) Despesas estimadas", f"({_br(desp_pf)})", vermelho=True)
+        rows_pf += _tr("(-) Tributos atuais (ISS + PIS/COFINS + IRPJ/CSLL)", f"({_br(imp_pf)})", vermelho=True)
+        if desp_pf:
+            resultado_pf = fat_pf - desp_pf - imp_pf
+            margem_pf    = resultado_pf / fat_pf * 100 if fat_pf else 0.0
+            vermelho_res = resultado_pf < 0
+            rows_pf += _tr("Resultado líquido estimado", _br(resultado_pf), bold=True, vermelho=vermelho_res, border_top=True)
+            rows_pf += _tr("Margem líquida estimada", _pct(margem_pf), bold=True, vermelho=vermelho_res)
+
+        perf_html = (
+            f'<div style="margin-top:12px;border:1px solid #DCE3EF;border-radius:10px;overflow:hidden">'
+            f'<div style="background:#0A2540;padding:8px 10px">'
+            f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8BA3C2">Performance Financeira Estimada</div>'
+            f'<div style="font-size:9px;color:#4A6080;margin-top:1px">Base mensal · premissas informadas no simulador · valores estimados</div>'
+            f'</div>'
+            f'<table style="width:100%;border-collapse:collapse"><tbody>{rows_pf}</tbody></table>'
+            f'</div>'
+        )
+
+    body = _sec("3", "Resumo Executivo", f"Regime: {regime_atual} · Setor: {r.setor_nome} · Ano de referência: {r.ano}") + intro + kpi_row + regime_cards + mc_note + perf_html
     return _wrap(body, 3, empresa)
 
 
@@ -806,13 +849,33 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         f'</div></div></div>'
     )
 
-    steps = [
-        ("1", "Avalie a migração de regime antes de 2027 (entrada da CBS)."),
-        ("2", "Adapte os sistemas de NF-e para destaque de CBS e IBS."),
-        ("3", "Implemente controles de crédito CBS/IBS por fornecedor."),
-        ("4", "Revise contratos com clientes para repasse da nova carga."),
-        ("5", "Consulte o setor contábil para confirmação de alíquotas definitivas (esperadas 2026)."),
-    ]
+    # Próximos passos dinâmicos baseados no regime recomendado
+    steps_list: list[str] = []
+    if best != r.regime:
+        steps_list.append(f"Avalie a migração para o {best_lbl} antes de 2027, quando entra a CBS.")
+    else:
+        steps_list.append(f"Mantenha o {best_lbl} como regime atual — nenhuma mudança de regime necessária por ora.")
+    if best == "lucro_real":
+        steps_list.append(
+            "Certifique-se de que todos os pagamentos são comprovados por NF-e: "
+            "as deduções de PIS/COFINS (e futuramente CBS) exigem documentação fiscal completa. "
+            "Pagamentos sem nota fiscal são acrescidos à base de cálculo do IRPJ/CSLL."
+        )
+    if best == "lucro_real" and best != r.regime:
+        steps_list.append(
+            "Analise o histórico trimestral de resultado antes de protocolar a mudança: "
+            "o Lucro Real compensa principalmente quando há prejuízo contábil consistente em pelo menos "
+            "três trimestres — o retorno ao lucro pode tornar a mudança desvantajosa."
+        )
+    steps_list.append("Adapte os sistemas de NF-e para o destaque separado de CBS e IBS (obrigatório a partir de 2026).")
+    steps_list.append("Implemente controle de fornecedores para aproveitamento de créditos CBS/IBS sobre compras de insumos.")
+    if not is_economy:
+        steps_list.append(
+            "Revise contratos com clientes: a CBS e o IBS são cobrados 'por fora' "
+            "(calculados sobre o valor da operação), diferente do ISS atual — o markup precisará ser ajustado."
+        )
+    steps_list.append("Consulte o setor contábil para confirmação das alíquotas definitivas (esperadas 2026) e validação do planejamento.")
+    steps = [(str(i + 1), txt) for i, txt in enumerate(steps_list)]
     steps_html = ""
     for n, txt in steps:
         steps_html += (
@@ -920,6 +983,53 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             f'</div>'
         )
 
+    # Nota margem vs presunção quando LP/SN é recomendado
+    lp_irpj_note = ""
+    if best in ("lucro_presumido", "simples_nacional") and not irpj_note:
+        cur_ii_lp = r.irpj_csll_info
+        mc_lp     = r.memoria_calculo
+        val_lp    = r.valor_operacao
+        if cur_ii_lp and cur_ii_lp.estimavel and not cur_ii_lp.incluido_no_das and (cur_ii_lp.csll_estimado or 0) > 0:
+            base_pres_lp   = cur_ii_lp.csll_estimado / 0.09
+            margem_pres_lp = base_pres_lp / val_lp * 100 if val_lp else None
+            trib_b_lp      = sum(d.valor for d in r.sistema_atual.detalhes
+                                 if "IRPJ" not in d.nome and "CSLL" not in d.nome and "adicional" not in d.nome.lower())
+            desp_lp        = mc_lp.despesas_mensais if mc_lp and mc_lp.despesas_mensais else None
+            lajir_lp       = (val_lp - trib_b_lp - desp_lp) if desp_lp is not None else None
+            margem_ef_lp   = (lajir_lp / val_lp * 100) if (lajir_lp is not None and val_lp) else None
+
+            if margem_pres_lp:
+                if margem_ef_lp is not None and margem_ef_lp > margem_pres_lp:
+                    txt_lp = (
+                        f'A margem efetiva estimada desta empresa (<strong>{_pct(margem_ef_lp)}</strong>) '
+                        f'é superior à margem presumida de <strong>{_pct(margem_pres_lp)}</strong> (fixada em lei). '
+                        f'No {_esc(best_lbl)}, o IRPJ/CSLL incide apenas sobre a presunção legal — '
+                        f'<strong>mais vantajoso do que o Lucro Real</strong>, onde o imposto incidiria sobre o lucro efetivo, maior. '
+                        f'A migração para Lucro Real somente se justifica quando a empresa apresentar '
+                        f'prejuízo contábil consistente em pelo menos três trimestres.'
+                    )
+                elif margem_ef_lp is not None:
+                    txt_lp = (
+                        f'A margem efetiva estimada (<strong>{_pct(margem_ef_lp)}</strong>) '
+                        f'está próxima à margem presumida de <strong>{_pct(margem_pres_lp)}</strong>. '
+                        f'O {_esc(best_lbl)} mantém o IRPJ/CSLL sobre a base presumida. '
+                        f'Confirme com o contador se a migração para Lucro Real traria ganhos relevantes.'
+                    )
+                else:
+                    txt_lp = (
+                        f'No {_esc(best_lbl)}, o IRPJ/CSLL incide sobre uma '
+                        f'<strong>margem presumida de {_pct(margem_pres_lp)}</strong> (fixada em lei). '
+                        f'Informe as despesas mensais no simulador para verificar se a margem efetiva '
+                        f'é superior ou inferior à presunção — esse comparativo define quando o Lucro Real compensa.'
+                    )
+
+                lp_irpj_note = (
+                    f'<div style="background:#FFFBF0;border:1px solid #FDE68A;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
+                    f'<div style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#92400E;margin-bottom:6px">IRPJ/CSLL: Margem vs Presunção Legal</div>'
+                    f'<div style="font-size:11px;color:#78350F;line-height:1.6">{txt_lp}</div>'
+                    f'</div>'
+                )
+
     # Narrativa gerada dinamicamente
     setor_nome = r.setor_nome or "da empresa"
     tipo_atividade = "serviço" if any(
@@ -996,6 +1106,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         _sec("9", "Conclusão e Recomendação") +
         recommendation +
         irpj_note +
+        lp_irpj_note +
         narrativa +
         f'<div>'
         f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-bottom:10px">Próximos passos recomendados</div>'
