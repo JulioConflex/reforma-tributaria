@@ -28,11 +28,12 @@ type EstadoRow   = { uf: string; default_value: number; override_value?: number 
 // ─── constantes ─────────────────────────────────────────────────────────────
 
 const MODULOS = [
-  { id: "tributos",      label: "Tributos" },
-  { id: "markup",        label: "Markup" },
-  { id: "comparador",   label: "Comparador" },
-  { id: "split_payment", label: "Split Payment" },
-  { id: "ferramentas",   label: "Ferramentas" },
+  { id: "tributos",         label: "Tributos" },
+  { id: "markup",           label: "Markup" },
+  { id: "comparador",       label: "Comparador" },
+  { id: "split_payment",    label: "Split Payment" },
+  { id: "simples_nacional", label: "Simples Nacional" },
+  { id: "ferramentas",      label: "Ferramentas" },
 ] as const;
 
 const PAPEL_LABEL: Record<PapelUsuario, string> = { basico: "Básico", completo: "Completo", contador: "Contador", master: "Master" };

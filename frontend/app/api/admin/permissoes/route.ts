@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const PAPEIS_VALIDOS = ["basico", "completo", "contador"];
-const MODULOS_VALIDOS = ["tributos", "markup", "comparador", "split_payment", "ferramentas"];
+const MODULOS_VALIDOS = ["tributos", "markup", "comparador", "split_payment", "simples_nacional", "ferramentas"];
 
 async function exigirMaster(): Promise<
   { erro: NextResponse; user: null } | { erro: null; user: User }
