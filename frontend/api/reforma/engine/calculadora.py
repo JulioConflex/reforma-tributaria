@@ -17,6 +17,22 @@ from ..models.schemas import (
 )
 
 
+# LC 224/2025 (original 10%) / LC 239/2026 (alterou para 20%)
+# Acrescimo multiplicativo nos percentuais de presuncao do Lucro Presumido
+# sobre a PARCELA do faturamento anual que EXCEDE o limiar.
+_LP_ACRESCIMO_FATOR  = 0.20          # alterar aqui quando houver nova lei
+_LP_ACRESCIMO_LIMIAR = 5_000_000.0   # R$ 5 milhoes/ano (art. 4o, par. 5o, LC 224/2025)
+
+
+def _lp_presuncao_efetiva(pres: float, faturamento_anual: float | None) -> float:
+    """Retorna a presuncao efetiva do Lucro Presumido com o acrescimo da LC 224/2025
+    ponderado pela parcela do faturamento que excede R$ 5 M/ano."""
+    if not faturamento_anual or faturamento_anual <= _LP_ACRESCIMO_LIMIAR:
+        return pres
+    excess_ratio = (faturamento_anual - _LP_ACRESCIMO_LIMIAR) / faturamento_anual
+    return pres * (1.0 + _LP_ACRESCIMO_FATOR * excess_ratio)
+
+
 def _br(x: float) -> str:
     """Formata número no padrão brasileiro: 1.234,56."""
     s = f"{x:,.2f}"
@@ -767,14 +783,16 @@ def _calcular_irpj_csll_info(
         )
 
     # Lucro Presumido: presunção legal por tipo/setor (Lei 9.249/1995, Art. 15 e RIR/2018)
+    # Acréscimo LC 224/2025 / LC 239/2026 sobre parcela que excede R$ 5M/ano
     tipo = setor.get("tipo", "servico")
     _def_irpj  = 0.08 if tipo == "produto" else 0.32
     _def_csll  = 0.12 if tipo == "produto" else 0.32
-    pres_irpj  = setor.get("presuncao_irpj", _def_irpj)
-    pres_csll  = setor.get("presuncao_csll", _def_csll)
-    if pres_irpj <= 0.08:
+    pres_irpj  = _lp_presuncao_efetiva(setor.get("presuncao_irpj", _def_irpj), faturamento_anual)
+    pres_csll  = _lp_presuncao_efetiva(setor.get("presuncao_csll", _def_csll), faturamento_anual)
+    pres_irpj_base = setor.get("presuncao_irpj", _def_irpj)  # para label
+    if pres_irpj_base <= 0.08:
         tipo_label = "comércio/indústria/serv. hospitalares/transp. cargas"
-    elif pres_irpj <= 0.16:
+    elif pres_irpj_base <= 0.16:
         tipo_label = "transporte de passageiros"
     else:
         tipo_label = "serviços em geral"
@@ -794,6 +812,14 @@ def _calcular_irpj_csll_info(
         "R$ 20.000/mês (R$ 240.000/ano)." if adicional else ""
     )
 
+    # Nota sobre acréscimo LC 224/2025 / LC 239/2026
+    acrescimo_txt = ""
+    if faturamento_anual and faturamento_anual > _LP_ACRESCIMO_LIMIAR:
+        acrescimo_txt = (
+            f" Acréscimo de {int(_LP_ACRESCIMO_FATOR*100)}% sobre a parcela do faturamento "
+            f"acima de R$ 5.000.000/ano aplicado (LC 239/2026)."
+        )
+
     return IrpjCsllInfo(
         estimavel=True,
         irpj_estimado=irpj_val,
@@ -804,8 +830,8 @@ def _calcular_irpj_csll_info(
         mensagem_leigo=(
             f"Estimativa para Lucro Presumido ({tipo_label}): IRPJ ≈ {irpj_pct*100:.2f}% "
             f"+ CSLL ≈ {csll_pct*100:.2f}% = ≈ {total_pct:.2f}% sobre a receita da operação. "
-            f"Base: presunção de {int(pres_irpj*100)}% (IRPJ) e {int(pres_csll*100)}% (CSLL) "
-            f"conforme RIR/1999 e IN RFB 1.700/2017.{adic_txt}"
+            f"Presunção efetiva: {pres_irpj*100:.2f}% (IRPJ) e {pres_csll*100:.2f}% (CSLL) "
+            f"(base Lei 9.249/1995, Art. 15).{acrescimo_txt}{adic_txt}"
         ),
     )
 
@@ -834,8 +860,12 @@ def _irpj_csll_por_operacao(
 
     tipo = setor.get("tipo", "servico")
     if regime == "lucro_presumido":
-        pres_irpj = setor.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
-        pres_csll  = setor.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32)
+        pres_irpj = _lp_presuncao_efetiva(
+            setor.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32), faturamento_anual
+        )
+        pres_csll  = _lp_presuncao_efetiva(
+            setor.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32), faturamento_anual
+        )
         lucro_irpj = faturamento_anual * pres_irpj
         lucro_csll = faturamento_anual * pres_csll
         irpj_anual = lucro_irpj * 0.15 + max(0.0, lucro_irpj - 240_000.0) * 0.10
