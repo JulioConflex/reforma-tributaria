@@ -150,7 +150,7 @@ def _p1_capa(empresa: str, r: SimulacaoComProjecaoOutput, today: str) -> str:
         <div style="font-size:18px;font-weight:800;color:white">{_pct(r.sistema_atual.percentual_sobre_valor)}</div>
       </div>
       <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;border-top:3px solid #01D1FF">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8BA3C2;margin-bottom:4px">Sistema Novo (2029)</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8BA3C2;margin-bottom:4px">Sistema Novo ({r.ano})</div>
         <div style="font-size:18px;font-weight:800;color:white">{_pct(r.sistema_novo.percentual_sobre_valor)}</div>
       </div>
       <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;border-top:3px solid {economia_cor}">
@@ -238,7 +238,7 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
         f'<div style="font-size:17px;font-weight:800;color:#0A2540">{_br(r.sistema_atual.total)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(r.sistema_atual.percentual_sobre_valor)} do faturamento</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid #01D1FF">'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Sistema Novo (2029)</div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9BA8C2;margin-bottom:5px">Sistema Novo ({r.ano})</div>'
         f'<div style="font-size:17px;font-weight:800;color:#0A2540">{_br(r.sistema_novo.total)}</div>'
         f'<div style="font-size:10px;color:#9BA8C2;margin-top:2px">{_pct(r.sistema_novo.percentual_sobre_valor)} do faturamento</div></div>'
         f'<div style="flex:1;border:1px solid #DCE3EF;border-radius:10px;padding:12px 14px;border-top:3px solid {"#1A6B3C" if is_economy else "#C0392B"}">'
@@ -365,7 +365,7 @@ def _p4_graficos(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
 
         # Find 2029 highlight
         anos = [p.ano for p in proj]
-        highlight_x = sx(anos.index(2029)) if 2029 in anos else None
+        highlight_x = sx(anos.index(r.ano)) if r.ano in anos else None
         highlight_band = ""
         if highlight_x is not None:
             bx = highlight_x - 15
@@ -396,7 +396,7 @@ def _p4_graficos(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
     legend = (
         f'<div style="display:flex;gap:12px;margin-top:4px">'
         f'<div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:12px;background:#334E6E;border-radius:2px;opacity:.85"></div><span style="font-size:9px;color:#9BA8C2">Sistema atual</span></div>'
-        f'<div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:12px;background:#01D1FF;border-radius:2px;opacity:.9"></div><span style="font-size:9px;color:#9BA8C2">Sistema novo (2029)</span></div>'
+        f'<div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:12px;background:#01D1FF;border-radius:2px;opacity:.9"></div><span style="font-size:9px;color:#9BA8C2">Sistema novo ({r.ano})</span></div>'
         f'</div>'
     )
 
@@ -786,7 +786,7 @@ def _p10_evolucao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
 
     # Header row
     ano_headers = "".join(
-        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:{"#1A4F9C" if a == 2029 else "#9BA8C2"};padding:7px 8px;border-bottom:2px solid #DCE3EF;text-align:center;{"background:#EDF5FF;" if a == 2029 else ""}">{a}</th>'
+        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:{"#1A4F9C" if a == r.ano else "#9BA8C2"};padding:7px 8px;border-bottom:2px solid #DCE3EF;text-align:center;{"background:#EDF5FF;" if a == r.ano else ""}">{a}</th>'
         for a in anos
     )
     thead = f'<tr><th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#9BA8C2;padding:7px 10px;border-bottom:2px solid #DCE3EF;text-align:left;width:150px">Regime</th>{ano_headers}</tr>'
@@ -801,7 +801,7 @@ def _p10_evolucao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             continue
         proj_map = {p.ano: p.percentual_sobre_valor for p in proj_data}
         cells = "".join(
-            f'<td style="text-align:center;font-size:10px;padding:8px;font-variant-numeric:tabular-nums;{"background:#EDF5FF;font-weight:700;color:#0A2540;" if a == 2029 else ""}">{_pct(proj_map.get(a, 0))}</td>'
+            f'<td style="text-align:center;font-size:10px;padding:8px;font-variant-numeric:tabular-nums;{"background:#EDF5FF;font-weight:700;color:#0A2540;" if a == r.ano else ""}">{_pct(proj_map.get(a, 0))}</td>'
             for a in anos
         )
         is_this = " (simulado)" if rg == r.regime else ""
