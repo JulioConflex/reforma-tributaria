@@ -85,6 +85,16 @@ export default function Simulador() {
     setPisCofinsRegime(regime === "lucro_real" ? "nao_cumulativo" : "cumulativo");
   }, [regime]);
 
+  // ISS: pré-preenche com o padrão do setor quando ele muda (editável pelo usuário)
+  useEffect(() => {
+    const s = setores.find((s) => s.id === setorId);
+    if (s?.tipo === "servico" && s.iss_padrao != null) {
+      setIssManual(String((s.iss_padrao * 100).toFixed(1)).replace(".", ","));
+    } else {
+      setIssManual("");
+    }
+  }, [setorId, setores]);
+
   // Redireciona para a primeira aba permitida se a atual não estiver acessível
   useEffect(() => {
     if (modulos.length === 0) return;
@@ -532,10 +542,7 @@ function FormPanel(p: FormPanelProps) {
 
       {p.mostrarISS && (
         <div className="mb-5 anim-in">
-          <FieldLabel>
-            Alíquota de ISS municipal{" "}
-            <span className="normal-case font-normal text-ink-400">(opcional, 2%–5%)</span>
-          </FieldLabel>
+          <FieldLabel>Alíquota de ISS do seu município</FieldLabel>
           <div className="relative">
             <input
               type="number"
@@ -548,7 +555,7 @@ function FormPanel(p: FormPanelProps) {
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-ink-400 pointer-events-none">%</span>
           </div>
           <p className="text-[11.5px] text-ink-400 mt-1.5 leading-snug">
-            ISS varia por município (2% a 5%). Sem preenchimento, usa o padrão do setor. No Simples Nacional já está no DAS.
+            ISS varia por município (2% a 5%). Verifique a alíquota na legislação do seu município. No Simples Nacional já está no DAS.
           </p>
         </div>
       )}
