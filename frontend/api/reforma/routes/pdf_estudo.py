@@ -48,7 +48,7 @@ CONTENT_W = 16.4 * cm   # A4 - 2x margem util padrao
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 def brl(value: float) -> str:
     abs_v = abs(value)
-    s = f"R$ {abs_v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    s = f"R$ {abs_v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"-{s}" if value < 0 else s
 
 def pct(value: float, decimals: int = 2) -> str:

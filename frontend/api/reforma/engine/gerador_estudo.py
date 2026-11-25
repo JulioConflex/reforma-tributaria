@@ -20,7 +20,7 @@ _C_SRC = f"data:image/png;base64,{_C_B64}"
 
 def _br(x: float) -> str:
     s = f"{x:,.2f}".replace(",", "§").replace(".", ",").replace("§", ".")
-    return f"R$ {s}"
+    return f"R$ {s}"
 
 def _n(x: float, dec: int = 2) -> str:
     return f"{x:,.{dec}f}".replace(",", "§").replace(".", ",").replace("§", ".")
