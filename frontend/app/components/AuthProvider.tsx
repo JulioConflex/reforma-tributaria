@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export type Papel = "basico" | "completo" | "contador" | "master";
 
-const TODOS_MODULOS = ["tributos", "markup", "comparador", "split_payment"];
+const TODOS_MODULOS = ["tributos", "markup", "comparador", "split_payment", "simples_nacional", "contador", "ferramentas"];
 
 interface AuthCtx {
   user: User | null;
