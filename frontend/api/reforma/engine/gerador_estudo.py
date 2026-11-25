@@ -1064,21 +1064,22 @@ def gerar_html_estudo(
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
 <style>
-*{{box-sizing:border-box;margin:0;padding:0}}
+*{{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 body{{font-family:'Inter',sans-serif;background:#E8ECF5;padding:20px 0}}
 .page{{width:794px;min-height:1122px;margin:0 auto 20px;background:white;display:flex;flex-direction:column;overflow:hidden}}
 @media print{{
   body{{background:white;padding:0}}
   .page{{margin:0;page-break-before:always;page-break-after:always;min-height:0;height:1122px}}
   .page:first-child{{page-break-before:avoid}}
+  .no-print{{display:none!important}}
 }}
 @page{{size:A4 portrait;margin:0}}
 </style>
 </head>
 <body>
 {pages}
-<div style="text-align:center;padding:20px;font-size:11px;color:#9BA8C2;font-family:Inter,sans-serif">
-  Pressione Ctrl+P (ou Cmd+P) para salvar como PDF &nbsp;·&nbsp; conflex.com.br
+<div class="no-print" style="text-align:center;padding:16px 24px;font-size:12px;color:#334E6E;font-family:Inter,sans-serif;background:#EEF5FF;border-radius:10px;width:794px;margin:0 auto 24px;border:1px solid #B6D0EE">
+  <strong>Para salvar como PDF com todas as cores:</strong> pressione <kbd style="background:#0A2540;color:white;padding:2px 7px;border-radius:4px;font-size:11px">Ctrl+P</kbd> → em <em>Impressora</em> selecione <em>"Salvar como PDF"</em> → clique em <strong>Mais configurações</strong> → marque <strong>Gráficos de fundo</strong> &nbsp;·&nbsp; conflex.com.br
 </div>
 </body>
 </html>"""
