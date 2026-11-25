@@ -114,6 +114,8 @@ export default function ComparadorRegimes({ setores, ano, setAno, sharedSetorId,
       const regime = pdfForm.regime_atual || "lucro_presumido";
       const payload = {
         empresa_nome: pdfForm.razao_social || "Empresa",
+        contador_nome: pdfForm.contador_nome || undefined,
+        contador_crc: pdfForm.contador_crc || undefined,
         input_data: {
           valor: parseBRL(valor),
           regime,

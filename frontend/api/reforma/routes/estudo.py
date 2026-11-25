@@ -11,6 +11,8 @@ router = APIRouter(prefix="/api/py", tags=["estudo"])
 
 class GerarEstudoRequest(BaseModel):
     empresa_nome: str
+    contador_nome: Optional[str] = None
+    contador_crc: Optional[str] = None
     input_data: SimulacaoInput
 
 
@@ -40,7 +42,9 @@ def gerar_estudo(req: GerarEstudoRequest):
         except Exception:
             pass
 
-    html = gerar_html_estudo(req.empresa_nome, resultado, comparativo)
+    html = gerar_html_estudo(req.empresa_nome, resultado, comparativo,
+                              contador_nome=req.contador_nome,
+                              contador_crc=req.contador_crc)
 
     safe = req.empresa_nome.replace(" ", "_").replace("/", "-").replace("\\", "-")[:40]
     return Response(

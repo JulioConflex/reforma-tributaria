@@ -285,7 +285,7 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
         f'<div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2E7D52;margin-bottom:3px">Regime Recomendado</div>'
         f'<div style="font-size:9px;color:#6BAF8A;margin-bottom:5px">Regime com menor carga tributária estimada no sistema novo</div>'
         f'<div style="font-size:14px;font-weight:700;color:#0A2540">{_esc(regime_rec)}</div>'
-        f'<div style="font-size:10px;color:#2E7D52;margin-top:4px">{"Mesmo regime atual — nenhuma mudança necessária." if best_regime == r.regime else "Recomenda-se avaliar migração de regime antes de 2027."}</div></div>'
+        f'<div style="font-size:10px;color:#2E7D52;margin-top:4px">{"Mesmo regime atual: nenhuma mudança necessária." if best_regime == r.regime else "Recomenda-se avaliar migração de regime antes de 2027."}</div></div>'
         f'</div>'
     )
 
@@ -296,7 +296,7 @@ def _p3_metricas(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict)
             f'<div style="background:#FFFBF0;border-left:3px solid #E8A838;border-radius:0 8px 8px 0;padding:10px 14px">'
             f'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9A6B00;margin-bottom:3px">Premissas utilizadas no cálculo</div>'
             f'<div style="font-size:10px;color:#6B5700;line-height:1.7">'
-            f'<strong>Crédito de entrada:</strong> {_pct(mc.percentual_credito_entrada * 100)} — percentual de CBS/IBS aproveitado sobre compras de insumos · '
+            f'<strong>Crédito de entrada:</strong> {_pct(mc.percentual_credito_entrada * 100)} (percentual de CBS/IBS aproveitado sobre compras de insumos) · '
             f'<strong>CBS:</strong> {_pct(mc.cbs_percentual * 100)} · <strong>IBS:</strong> {_pct(mc.ibs_percentual * 100)} (alíquotas provisórias) · '
             f'<strong>Redução setorial:</strong> {_pct(mc.reducao_setor * 100)} · <strong>UF:</strong> {_esc(r.uf)} · <strong>Setor:</strong> {_esc(r.setor_nome)}'
             f'</div></div>'
@@ -650,17 +650,25 @@ def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> s
         )
         ii = res.irpj_csll_info
         if ii and ii.estimavel and not ii.incluido_no_das:
-            irpjcsll = (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
+            irpjcsll_atual = (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
         else:
-            irpjcsll = max(0.0, res.sistema_atual.total - trib_atual)
+            irpjcsll_atual = max(0.0, res.sistema_atual.total - trib_atual)
 
         trib_novo = res.sistema_novo.total
         rl_atual = val - trib_atual
         rl_novo  = val - trib_novo
         lajir_atual = rl_atual - despesas
         lajir_novo  = rl_novo  - despesas
-        res_atual = lajir_atual - irpjcsll
-        res_novo  = lajir_novo  - irpjcsll
+
+        # Para Lucro Real, o IRPJ/CSLL varia com o LAJIR de cada cenario
+        if res.regime == "lucro_real":
+            irpjcsll_atual = max(0.0, lajir_atual * 0.34)
+            irpjcsll_novo  = max(0.0, lajir_novo  * 0.34)
+        else:
+            irpjcsll_novo = irpjcsll_atual
+
+        res_atual = lajir_atual - irpjcsll_atual
+        res_novo  = lajir_novo  - irpjcsll_novo
 
         def _drow(label: str, v1: float, v2: float, style: str = "", bold: bool = False) -> str:
             wt = "font-weight:700;" if bold else ""
@@ -683,7 +691,7 @@ def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> s
             _drow("(=) Receita Líquida", rl_atual, rl_novo, bold=True) +
             _drow("(−) Despesas Operacionais", -despesas, -despesas) +
             _drow("(=) LAJIR", lajir_atual, lajir_novo, bold=True) +
-            _drow("(−) IRPJ / CSLL", -irpjcsll, -irpjcsll) +
+            _drow("(−) IRPJ / CSLL", -irpjcsll_atual, -irpjcsll_novo) +
             _drow("(=) Resultado Líquido", res_atual, res_novo, style="border-bottom:2px solid #0A2540", bold=True)
         )
         return (
@@ -854,7 +862,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
     if best != r.regime:
         steps_list.append(f"Avalie a migração para o {best_lbl} antes de 2027, quando entra a CBS.")
     else:
-        steps_list.append(f"Mantenha o {best_lbl} como regime atual — nenhuma mudança de regime necessária por ora.")
+        steps_list.append(f"Mantenha o {best_lbl} como regime atual: nenhuma mudança de regime necessária por ora.")
     if best == "lucro_real":
         steps_list.append(
             "Certifique-se de que todos os pagamentos são comprovados por NF-e: "
@@ -865,14 +873,14 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         steps_list.append(
             "Analise o histórico trimestral de resultado antes de protocolar a mudança: "
             "o Lucro Real compensa principalmente quando há prejuízo contábil consistente em pelo menos "
-            "três trimestres — o retorno ao lucro pode tornar a mudança desvantajosa."
+            "três trimestres, pois o retorno ao lucro pode tornar a mudança desvantajosa."
         )
     steps_list.append("Adapte os sistemas de NF-e para o destaque separado de CBS e IBS (obrigatório a partir de 2026).")
     steps_list.append("Implemente controle de fornecedores para aproveitamento de créditos CBS/IBS sobre compras de insumos.")
     if not is_economy:
         steps_list.append(
             "Revise contratos com clientes: a CBS e o IBS são cobrados 'por fora' "
-            "(calculados sobre o valor da operação), diferente do ISS atual — o markup precisará ser ajustado."
+            "(calculados sobre o valor da operação), diferente do ISS atual: o markup precisará ser ajustado."
         )
     steps_list.append("Consulte o setor contábil para confirmação das alíquotas definitivas (esperadas 2026) e validação do planejamento.")
     steps = [(str(i + 1), txt) for i, txt in enumerate(steps_list)]
@@ -957,7 +965,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             texto = (
                 f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL incide sobre uma '
                 f'<strong>margem presumida de {_pct(margem_presumida_pct)}</strong> (definida em lei, independente do resultado real). '
-                f'O lucro efetivo desta empresa é de <strong>{_pct(margem_efetiva_pct)}</strong> — '
+                f'O lucro efetivo desta empresa é de <strong>{_pct(margem_efetiva_pct)}</strong>, '
                 f'{"muito inferior" if margem_efetiva_pct < margem_presumida_pct * 0.7 else "inferior"} à margem presumida, '
                 f'o que torna o Lucro Real vantajoso também no IRPJ/CSLL.'
             )
@@ -965,7 +973,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
             texto = (
                 f'No {_esc(REGIME_LABEL.get(r.regime, r.regime))}, o IRPJ/CSLL é calculado sobre uma '
                 f'<strong>margem presumida</strong> (fixada em lei). '
-                f'No Lucro Real, o imposto incide sobre o <strong>lucro efetivo</strong> (receita menos despesas reais) — '
+                f'No Lucro Real, o imposto incide sobre o <strong>lucro efetivo</strong> (receita menos despesas reais), '
                 f'gerando economia adicional quando a margem real é inferior à presumida.'
             )
         else:
@@ -1003,8 +1011,8 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
                     txt_lp = (
                         f'A margem efetiva estimada desta empresa (<strong>{_pct(margem_ef_lp)}</strong>) '
                         f'é superior à margem presumida de <strong>{_pct(margem_pres_lp)}</strong> (fixada em lei). '
-                        f'No {_esc(best_lbl)}, o IRPJ/CSLL incide apenas sobre a presunção legal — '
-                        f'<strong>mais vantajoso do que o Lucro Real</strong>, onde o imposto incidiria sobre o lucro efetivo, maior. '
+                        f'No {_esc(best_lbl)}, o IRPJ/CSLL incide apenas sobre a presunção legal, '
+                        f'o que é <strong>mais vantajoso do que o Lucro Real</strong>, onde o imposto incidiria sobre o lucro efetivo, maior. '
                         f'A migração para Lucro Real somente se justifica quando a empresa apresentar '
                         f'prejuízo contábil consistente em pelo menos três trimestres.'
                     )
@@ -1020,7 +1028,7 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
                         f'No {_esc(best_lbl)}, o IRPJ/CSLL incide sobre uma '
                         f'<strong>margem presumida de {_pct(margem_pres_lp)}</strong> (fixada em lei). '
                         f'Informe as despesas mensais no simulador para verificar se a margem efetiva '
-                        f'é superior ou inferior à presunção — esse comparativo define quando o Lucro Real compensa.'
+                        f'é superior ou inferior à presunção. Esse comparativo define quando o Lucro Real compensa.'
                     )
 
                 lp_irpj_note = (
@@ -1085,8 +1093,8 @@ def _p9_conclusao(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict
         p3 = (
             f'Com base nas premissas adotadas neste estudo, conclui-se que a migração para o '
             f'<strong>{_esc(best_lbl)}</strong> deve ser avaliada com prioridade. '
-            f'A vantagem decorre do conjunto dos impactos da Reforma — carga efetiva de CBS/IBS, '
-            f'estrutura de créditos e tributação sobre o lucro — e deverá ser confirmada com o '
+            f'A vantagem decorre do conjunto dos impactos da Reforma: carga efetiva de CBS/IBS, '
+            f'estrutura de créditos e tributação sobre o lucro. A conclusão deverá ser confirmada com o '
             f'contador responsável após a publicação das alíquotas definitivas (esperadas para 2026).'
         )
 
@@ -1346,7 +1354,7 @@ def _p13_reforma(empresa: str) -> str:
     return _wrap(body, 13, empresa)
 
 
-def _p14_credito(empresa: str, today: str) -> str:
+def _p14_credito(empresa: str, today: str, contador_nome: Optional[str] = None, contador_crc: Optional[str] = None) -> str:
     body = (
         _sec("14", "Direito a Crédito de CBS e IBS", "O que gera e o que não gera crédito — conforme LC 214/2025") +
         f'''<div style="display:flex;gap:12px">
@@ -1387,6 +1395,8 @@ def _p14_credito(empresa: str, today: str) -> str:
   <div style="text-align:right;border-top:1px solid #DCE3EF;padding-top:14px;min-width:260px">
     <div style="font-size:9px;color:#9BA8C2;margin-bottom:2px">Curitiba, {_esc(today)}</div>
     <div style="font-size:11px;font-weight:600;color:#0A2540;margin-top:12px">Departamento de Planejamento Tributário</div>
+    {f'<div style="font-size:11px;color:#3D4559;margin-top:4px">{_esc(contador_nome)}</div>' if contador_nome else ''}
+    {f'<div style="font-size:9px;color:#9BA8C2;margin-top:2px">CRC: {_esc(contador_crc)}</div>' if contador_crc else ''}
     <div style="margin-top:4px">{LOGO_DARK}</div>
     <div style="font-size:9px;color:#9BA8C2;margin-top:2px">conflex.com.br · (41) 3277-1313</div>
   </div>
@@ -1401,6 +1411,8 @@ def gerar_html_estudo(
     empresa_nome: str,
     resultado: SimulacaoComProjecaoOutput,
     comparativo: dict,
+    contador_nome: Optional[str] = None,
+    contador_crc: Optional[str] = None,
 ) -> str:
     today = date.today().strftime("%d de %B de %Y").replace(
         "January", "janeiro").replace("February", "fevereiro").replace("March", "março"
@@ -1422,7 +1434,7 @@ def gerar_html_estudo(
         _p11_memoria(empresa_nome, resultado, comparativo),
         _p12_cronograma(empresa_nome),
         _p13_reforma(empresa_nome),
-        _p14_credito(empresa_nome, today),
+        _p14_credito(empresa_nome, today, contador_nome, contador_crc),
     ])
 
     return f"""<!doctype html>
