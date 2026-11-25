@@ -583,84 +583,110 @@ def _p6_base_legal(empresa: str, r: SimulacaoComProjecaoOutput) -> str:
     return _wrap(body, 6, empresa)
 
 
-def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput) -> str:
+def _p7_dre(empresa: str, r: SimulacaoComProjecaoOutput, comparativo: dict) -> str:
     val = r.valor_operacao
     mc = r.memoria_calculo
     desp = mc.despesas_mensais if mc and mc.despesas_mensais else val * 0.6
+    desp_nota = "informado" if mc and mc.despesas_mensais else "estimativa 60% da receita"
 
-    # Current DRE: soma apenas tributos sobre receita (exclui IRPJ/CSLL)
-    tributos_sobre_receita_atual = sum(
-        d.valor for d in r.sistema_atual.detalhes
-        if d.nome not in ("IRPJ", "CSLL", "IRPJ adicional", "IRPJ (base lucro)", "CSLL (base lucro)")
-        and "IRPJ" not in d.nome and "CSLL" not in d.nome and "adicional" not in d.nome.lower()
-    )
+    # Determina regime recomendado (mesmo critério do p9)
+    all_results = {r.regime: r}
+    all_results.update(comparativo)
+    def _carga_total(res: SimulacaoComProjecaoOutput) -> float:
+        total = res.sistema_novo.total
+        ii = res.irpj_csll_info
+        if ii and ii.estimavel and not ii.incluido_no_das:
+            total += (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
+        return total / res.valor_operacao if res.valor_operacao else 0.0
+    best = min(all_results, key=lambda k: _carga_total(all_results[k]))
 
-    # IRPJ/CSLL e reform-neutral: mesmo valor em ambas as colunas.
-    # Lucro Presumido: usa irpj_csll_info (estimavel=True).
-    # Outros (Simples/MEI ja incluem no DAS; Lucro Real sem despesas nao e estimavel): fallback para 0.
-    if r.irpj_csll_info and r.irpj_csll_info.estimavel and not r.irpj_csll_info.incluido_no_das:
-        irpjcsll = (r.irpj_csll_info.irpj_estimado or 0.0) + (r.irpj_csll_info.csll_estimado or 0.0)
-    else:
-        irpjcsll = max(0.0, r.sistema_atual.total - tributos_sobre_receita_atual)
-    irpjcsll_atual = irpjcsll
-    irpjcsll_novo = irpjcsll  # reforma nao altera IRPJ/CSLL
+    def _build_dre_table(res: SimulacaoComProjecaoOutput, despesas: float) -> str:
+        trib_atual = sum(
+            d.valor for d in res.sistema_atual.detalhes
+            if "IRPJ" not in d.nome and "CSLL" not in d.nome and "adicional" not in d.nome.lower()
+        )
+        ii = res.irpj_csll_info
+        if ii and ii.estimavel and not ii.incluido_no_das:
+            irpjcsll = (ii.irpj_estimado or 0.0) + (ii.csll_estimado or 0.0)
+        else:
+            irpjcsll = max(0.0, res.sistema_atual.total - trib_atual)
 
-    receita_liq_atual = val - tributos_sobre_receita_atual
-    lajir_atual = receita_liq_atual - desp
-    resultado_atual = lajir_atual - irpjcsll_atual
+        trib_novo = res.sistema_novo.total
+        rl_atual = val - trib_atual
+        rl_novo  = val - trib_novo
+        lajir_atual = rl_atual - despesas
+        lajir_novo  = rl_novo  - despesas
+        res_atual = lajir_atual - irpjcsll
+        res_novo  = lajir_novo  - irpjcsll
 
-    # Sistema novo: CBS+IBS+residual = r.sistema_novo.total (ja liquido de creditos, sem IRPJ/CSLL)
-    tributos_sobre_receita_novo = r.sistema_novo.total
-    receita_liq_novo = val - tributos_sobre_receita_novo
-    lajir_novo = receita_liq_novo - desp
-    resultado_novo = lajir_novo - irpjcsll_novo
+        def _drow(label: str, v1: float, v2: float, style: str = "", bold: bool = False) -> str:
+            wt = "font-weight:700;" if bold else ""
+            sign1 = "−" if v1 < 0 else ""
+            sign2 = "−" if v2 < 0 else ""
+            diff = v2 - v1
+            diff_cor = "#1A6B3C" if diff > 0 else "#C0392B" if diff < 0 else "#9BA8C2"
+            return (
+                f'<tr style="border-bottom:1px solid #F0F3F8;{style}">'
+                f'<td style="font-size:10px;padding:7px 0;color:#3D4559;{wt}">{_esc(label)}</td>'
+                f'<td style="font-size:10px;padding:7px 10px;text-align:right;{wt};font-variant-numeric:tabular-nums">{sign1}{_n(abs(v1))}</td>'
+                f'<td style="font-size:10px;padding:7px 10px;text-align:right;{wt};font-variant-numeric:tabular-nums">{sign2}{_n(abs(v2))}</td>'
+                f'<td style="font-size:10px;padding:7px 0;text-align:right;font-weight:600;color:{diff_cor};font-variant-numeric:tabular-nums">{"+" if diff > 0 else ""}{_n(diff)}</td>'
+                f'</tr>'
+            )
 
-    def _drow(label: str, v1: float, v2: float, style: str = "", bold: bool = False) -> str:
-        wt = "font-weight:700;" if bold else ""
-        sign1 = "−" if v1 < 0 else ""
-        sign2 = "−" if v2 < 0 else ""
-        diff = v2 - v1
-        diff_cor = "#1A6B3C" if diff > 0 else "#C0392B" if diff < 0 else "#9BA8C2"
+        rows = (
+            _drow("Receita Bruta", val, val) +
+            _drow("(−) Tributos sobre Receita", -trib_atual, -trib_novo) +
+            _drow("(=) Receita Líquida", rl_atual, rl_novo, bold=True) +
+            _drow("(−) Despesas Operacionais", -despesas, -despesas) +
+            _drow("(=) LAJIR", lajir_atual, lajir_novo, bold=True) +
+            _drow("(−) IRPJ / CSLL", -irpjcsll, -irpjcsll) +
+            _drow("(=) Resultado Líquido", res_atual, res_novo, style="border-bottom:2px solid #0A2540", bold=True)
+        )
         return (
-            f'<tr style="border-bottom:1px solid #F0F3F8;{style}">'
-            f'<td style="font-size:10px;padding:7px 0;color:#3D4559;{wt}">{_esc(label)}</td>'
-            f'<td style="font-size:10px;padding:7px 10px;text-align:right;{wt};font-variant-numeric:tabular-nums">{sign1}{_n(abs(v1))}</td>'
-            f'<td style="font-size:10px;padding:7px 10px;text-align:right;{wt};font-variant-numeric:tabular-nums">{sign2}{_n(abs(v2))}</td>'
-            f'<td style="font-size:10px;padding:7px 0;text-align:right;font-weight:600;color:{diff_cor};font-variant-numeric:tabular-nums">{"+" if diff > 0 else ""}{_n(diff)}</td>'
-            f'</tr>'
+            f'<table style="width:100%;border-collapse:collapse">'
+            f'<thead><tr>'
+            f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 0;border-bottom:2px solid #DCE3EF;text-align:left">Item</th>'
+            f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 10px;border-bottom:2px solid #DCE3EF;text-align:right;width:140px">Sistema Atual (R$)</th>'
+            f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 10px;border-bottom:2px solid #DCE3EF;text-align:right;width:140px">Sistema Novo (R$)</th>'
+            f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 0;border-bottom:2px solid #DCE3EF;text-align:right;width:100px">Variação</th>'
+            f'</tr></thead>'
+            f'<tbody>{rows}</tbody></table>'
         )
 
-    rows = (
-        _drow("Receita Bruta", val, val) +
-        _drow("(−) Tributos sobre Receita", -tributos_sobre_receita_atual, -tributos_sobre_receita_novo) +
-        _drow("(=) Receita Líquida", receita_liq_atual, receita_liq_novo, bold=True) +
-        _drow("(−) Despesas Operacionais", -desp, -desp) +
-        _drow("(=) LAJIR", lajir_atual, lajir_novo, bold=True) +
-        _drow("(−) IRPJ / CSLL", -irpjcsll_atual, -irpjcsll_novo) +
-        _drow("(=) Resultado Líquido", resultado_atual, resultado_novo, style="border-bottom:2px solid #0A2540", bold=True)
+    # DRE do regime simulado
+    lbl_atual = REGIME_LABEL.get(r.regime, r.regime)
+    table_atual = (
+        f'<div style="font-size:10px;font-weight:700;color:#0A2540;margin-bottom:6px">{_esc(lbl_atual)}</div>'
+        + _build_dre_table(r, desp)
     )
 
-    table = (
-        f'<table style="width:100%;border-collapse:collapse">'
-        f'<thead><tr>'
-        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 0;border-bottom:2px solid #DCE3EF;text-align:left">Item</th>'
-        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 10px;border-bottom:2px solid #DCE3EF;text-align:right;width:140px">Sistema Atual (R$)</th>'
-        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 10px;border-bottom:2px solid #DCE3EF;text-align:right;width:140px">Sistema Novo (R$)</th>'
-        f'<th style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#9BA8C2;padding:7px 0;border-bottom:2px solid #DCE3EF;text-align:right;width:100px">Variação</th>'
-        f'</tr></thead>'
-        f'<tbody>{rows}</tbody></table>'
-    )
+    # DRE do regime recomendado (se diferente)
+    table_best = ""
+    if best != r.regime and best in comparativo:
+        best_res = comparativo[best]
+        lbl_best = REGIME_LABEL.get(best, best)
+        cor_best = REGIME_COLOR.get(best, "#0A2540")
+        table_best = (
+            f'<div style="margin-top:18px">'
+            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+            f'<span style="font-size:10px;font-weight:700;color:{cor_best}">{_esc(lbl_best)}</span>'
+            f'<span style="font-size:9px;background:{cor_best};color:white;border-radius:4px;padding:1px 6px;font-weight:600">RECOMENDADO</span>'
+            f'</div>'
+            + _build_dre_table(best_res, desp)
+            + f'</div>'
+        )
 
     note = (
-        f'<div style="background:#F5F7FC;border-radius:8px;padding:10px 14px;border:1px solid #DCE3EF">'
+        f'<div style="background:#F5F7FC;border-radius:8px;padding:10px 14px;border:1px solid #DCE3EF;margin-top:12px">'
         f'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#334E6E;margin-bottom:3px">Nota metodológica</div>'
         f'<div style="font-size:9px;color:#6B7592;line-height:1.6">'
-        f'Despesas operacionais estimadas em {_br(desp)} {"(informado)" if mc and mc.despesas_mensais else "(estimativa 60% da receita)"}. '
+        f'Despesas operacionais estimadas em {_br(desp)} ({_esc(desp_nota)}). '
         f'IRPJ/CSLL calculados sobre o lucro efetivo (Lucro Real) ou sobre base presumida. '
         f'Resultado para fins de planejamento tributário; não substitui demonstração contábil oficial.</div></div>'
     )
 
-    body = _sec("7", "DRE — Impacto da Reforma Tributária", f"Regime: {REGIME_LABEL.get(r.regime, r.regime)} · Base: {_br(r.valor_operacao)}") + table + note
+    body = _sec("7", "DRE — Impacto da Reforma Tributária", f"Base: {_br(r.valor_operacao)}") + table_atual + table_best + note
     return _wrap(body, 7, empresa)
 
 
@@ -1142,7 +1168,7 @@ def gerar_html_estudo(
         _p4_graficos(empresa_nome, resultado, comparativo),
         _p5_comparativo(empresa_nome, resultado, comparativo),
         _p6_base_legal(empresa_nome, resultado),
-        _p7_dre(empresa_nome, resultado),
+        _p7_dre(empresa_nome, resultado, comparativo),
         _p8_analise(empresa_nome, resultado, comparativo),
         _p9_conclusao(empresa_nome, resultado, comparativo),
         _p10_evolucao(empresa_nome, resultado, comparativo),
