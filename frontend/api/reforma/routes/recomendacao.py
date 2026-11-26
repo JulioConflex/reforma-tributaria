@@ -133,7 +133,7 @@ def comparar_regimes(inp: ComparadorInput):
         )
         # Carga TOTAL: soma o IRPJ/CSLL atribuível à operação (Simples/MEI já no DAS → 0).
         ic_op = _irpj_csll_por_operacao(
-            regime_key, setor, inp.valor, inp.faturamento_anual, inp.despesas_mensais
+            regime_key, setor, inp.valor, inp.faturamento_anual, inp.despesas_mensais, inp.ano
         )
         total_atual = round(atual.total + ic_op, 2)
         total_novo = round(novo.total + ic_op, 2)

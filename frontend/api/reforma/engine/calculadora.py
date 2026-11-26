@@ -689,6 +689,32 @@ def gerar_recomendacoes(
     return recs[:4]
 
 
+# Limiar anual para o acréscimo nos percentuais de presunção do LP
+# Lei 9.249/95 (base) + LC 224/2025 (+10%) + LCP 239/2026 (+20% a partir de 2027)
+_LIMITE_FAIXA_LP = 5_000_000.0
+
+
+def _presuncao_lp_ponderada(
+    faturamento_anual: float | None,
+    pres_base: float,
+    ano: int,
+) -> float:
+    """
+    Percentual de presunção do Lucro Presumido ponderado pelo limiar de R$ 5M.
+    - Até R$ 5M: pres_base sem acréscimo (Lei 9.249/95, Art. 15 e 20)
+    - Parcela acima de R$ 5M:
+        * 2026 e antes: +10%  (LC 224/2025)
+        * 2027 e após:  +20%  (LCP 239/2026 — IRPJ 01/01/2027, CSLL 01/03/2027)
+    Retorna a média ponderada entre as duas parcelas.
+    """
+    if not faturamento_anual or faturamento_anual <= _LIMITE_FAIXA_LP:
+        return pres_base
+    acrescimo = 0.20 if ano >= 2027 else 0.10
+    pres_excedente = pres_base * (1.0 + acrescimo)
+    peso_base = _LIMITE_FAIXA_LP / faturamento_anual
+    return pres_base * peso_base + pres_excedente * (1.0 - peso_base)
+
+
 def _calcular_irpj_csll_info(
     regime: str,
     setor: dict,
@@ -696,6 +722,7 @@ def _calcular_irpj_csll_info(
     faturamento_anual: float | None,
     faturamento_mensal: float | None = None,
     despesas_mensais: float | None = None,
+    ano: int = 2026,
 ) -> IrpjCsllInfo:
     """
     Gera informação sobre IRPJ/CSLL para exibição ao usuário.
@@ -766,12 +793,13 @@ def _calcular_irpj_csll_info(
             ),
         )
 
-    # Lucro Presumido: presunção legal por tipo/setor (Lei 9.249/1995, Art. 15 e RIR/2018)
+    # Lucro Presumido: presunção legal por tipo/setor (Lei 9.249/1995, Art. 15 e 20)
+    # Acréscimo para faturamento > R$ 5M: +10% até 2026, +20% a partir de 2027 (LCP 239/2026)
     tipo = setor.get("tipo", "servico")
     _def_irpj  = 0.08 if tipo == "produto" else 0.32
     _def_csll  = 0.12 if tipo == "produto" else 0.32
-    pres_irpj  = setor.get("presuncao_irpj", _def_irpj)
-    pres_csll  = setor.get("presuncao_csll", _def_csll)
+    pres_irpj  = _presuncao_lp_ponderada(faturamento_anual, setor.get("presuncao_irpj", _def_irpj), ano)
+    pres_csll  = _presuncao_lp_ponderada(faturamento_anual, setor.get("presuncao_csll", _def_csll), ano)
     if pres_irpj <= 0.08:
         tipo_label = "comércio/indústria/serv. hospitalares/transp. cargas"
     elif pres_irpj <= 0.16:
@@ -816,6 +844,7 @@ def _irpj_csll_por_operacao(
     valor: float,
     faturamento_anual: float | None,
     despesas_mensais: float | None,
+    ano: int = 2026,
 ) -> float:
     """
     IRPJ + CSLL atribuível a uma operação de 'valor', para comparar a CARGA TOTAL
@@ -834,8 +863,8 @@ def _irpj_csll_por_operacao(
 
     tipo = setor.get("tipo", "servico")
     if regime == "lucro_presumido":
-        pres_irpj = setor.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32)
-        pres_csll  = setor.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32)
+        pres_irpj = _presuncao_lp_ponderada(faturamento_anual, setor.get("presuncao_irpj", 0.08 if tipo == "produto" else 0.32), ano)
+        pres_csll  = _presuncao_lp_ponderada(faturamento_anual, setor.get("presuncao_csll", 0.12 if tipo == "produto" else 0.32), ano)
         lucro_irpj = faturamento_anual * pres_irpj
         lucro_csll = faturamento_anual * pres_csll
         irpj_anual = lucro_irpj * 0.15 + max(0.0, lucro_irpj - 240_000.0) * 0.10
@@ -1124,7 +1153,7 @@ def simular(inp: SimulacaoInput) -> SimulacaoComProjecaoOutput:
 
     irpj_csll_info = _calcular_irpj_csll_info(
         inp.regime, setor, inp.valor, inp.faturamento_anual,
-        inp.faturamento_mensal, inp.despesas_mensais,
+        inp.faturamento_mensal, inp.despesas_mensais, inp.ano,
     )
 
     # ── Memória de cálculo (premissas + passos de IRPJ/CSLL) ──────────────────

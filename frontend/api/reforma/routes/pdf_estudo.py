@@ -2368,7 +2368,7 @@ def _build_pdf(inp: EstudoInput) -> bytes:
                 )
                 irpj = _irpj_csll_por_operacao(
                     r.regime, setor_obj, comp.valor_base,
-                    inp.faturamento_anual, inp.despesas_mensais,
+                    inp.faturamento_anual, inp.despesas_mensais, comp.ano,
                 )
                 r.total_atual = round(res_a.total + irpj, 2)
                 r.total_novo  = round(res_n.total + irpj, 2)
