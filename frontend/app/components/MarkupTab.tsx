@@ -497,8 +497,10 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
   const cargaPorDentro = carga - cbsIbsPct;
   const divisor = 100 - margem - despesas - cargaPorDentro;
 
-  // Tributos por dentro (excluindo CBS/IBS que são por fora)
-  const totalTributosPorDentro = result.detalhes_novo.reduce((s, d) => s + d.valor, 0) - cbsIbsPorFora;
+  // Tributos por dentro: exclui CBS/IBS (por fora) e entradas informacionais (aliquota=0 como "Base de cálculo")
+  const totalTributosPorDentro = result.detalhes_novo
+    .filter(d => !d.nome.startsWith("CBS") && !d.nome.startsWith("IBS") && d.aliquota_aplicada > 0)
+    .reduce((s, d) => s + d.valor, 0);
   const valorDespesas = pv * (despesas / 100);
   const valorMargem = pv * (margem / 100);
   // soma deve fechar exatamente com pv (CBS/IBS por fora são separados)
@@ -561,7 +563,7 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
                     <td className="py-2 text-right tab-num font-semibold text-ink-800">{brl(result.custo)}</td>
                   </tr>
                   {result.detalhes_novo
-                    .filter((d) => !d.nome.startsWith("CBS") && !d.nome.startsWith("IBS"))
+                    .filter((d) => !d.nome.startsWith("CBS") && !d.nome.startsWith("IBS") && d.aliquota_aplicada > 0)
                     .map((d) => (
                       <tr key={d.nome}>
                         <td className="py-2 pr-4 text-ink-600 text-[12.5px]">{d.nome}</td>
