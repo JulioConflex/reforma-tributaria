@@ -134,7 +134,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
           </div>
         </div>
         <p className="text-[11px] text-ink-400 mb-3 leading-snug">
-          Despesas que incidem por venda: taxa da maquininha, comissão de vendedor, etc. Aluguel e salários <strong>não entram aqui</strong> — já estão cobertos pela margem acumulada das vendas.
+          Despesas que incidem por venda: taxa da maquininha, comissão de vendedor, etc. Aluguel e salários <strong>não entram aqui</strong> (já estão cobertos pela margem acumulada das vendas).
         </p>
         {somaMargemDespesas >= 100 && (
           <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12px] text-red-700 leading-snug">
@@ -333,126 +333,96 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
               </div>
             )}
 
-            {/* Hero — três preços */}
+            {/* Hero — comparativo de preços */}
             <div className="rounded-2xl bg-white hairline overflow-hidden">
-              {/* Badge row */}
-              <div className="px-6 lg:px-7 pt-5 pb-4 flex items-center gap-2 flex-wrap border-b border-ink-100">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold
-                  ${Math.abs(aumentoPct) < 1 ? "bg-amber-50 text-amber-700 border-amber-100" :
-                    aumento ? "bg-red-50 text-red-700 border-red-100" :
-                              "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full
-                    ${Math.abs(aumentoPct) < 1 ? "bg-amber-400" : aumento ? "bg-red-500" : "bg-emerald-500"}`}/>
-                  {Math.abs(aumentoPct) < 1 ? "Preço quase igual" : aumento ? "Preço sobe" : "Preço cai"}
-                </span>
-                <span className="text-[11.5px] text-ink-400 font-medium">em {ano} · margem alvo {margem}%</span>
+
+              {/* Contexto */}
+              <div className="px-6 lg:px-7 pt-5 pb-4 border-b border-ink-100">
+                <p className="text-[13px] text-ink-600 leading-snug">
+                  Para manter <strong className="text-ink-900">{margem}% de margem</strong> em {ano}, seu preço precisa ser:
+                </p>
               </div>
 
-              {/* Três colunas de preço */}
-              <div className="grid grid-cols-1 lg:grid-cols-3">
-                {/* 1. Sem impostos */}
-                <div className="p-6 lg:p-7 border-b lg:border-b-0 lg:border-r border-ink-100">
-                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-3">
-                    Sem impostos
+              {/* Preço principal */}
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-0">
+                {/* Novo preço — destaque */}
+                <div className="p-6 lg:p-8 lg:border-r border-ink-100">
+                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-1">
+                    Novo preço recomendado · {ano}
                   </div>
-                  <div className="font-display text-[30px] leading-none font-bold text-ink-600 tab-num">
-                    <NumberTicker value={result.preco_sem_tributo ?? 0} />
-                  </div>
-                  <div className="text-[12px] text-ink-400 mt-2">
-                    Markup <strong className="tab-num text-ink-600">{(result.markup_sem_tributo ?? 0).toFixed(2)}×</strong>{" "}
-                    sobre o custo
-                  </div>
-                  <p className="mt-3 text-[11px] text-ink-400 leading-snug">
-                    Preço-base sem nenhum imposto — cobre custo, despesas e margem.
-                  </p>
-                </div>
-
-                {/* 2. Sistema atual */}
-                <div className="p-6 lg:p-7 border-b lg:border-b-0 lg:border-r border-ink-100">
-                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-3">
-                    Sistema atual
-                  </div>
-                  <div className="font-display text-[30px] leading-none font-bold text-ink-700 tab-num">
-                    <NumberTicker value={result.preco_venda_sistema_atual} />
-                  </div>
-                  <div className="text-[12px] text-ink-400 mt-2">
-                    Markup <strong className="tab-num text-ink-700">{result.markup_atual.toFixed(2)}×</strong>
-                    {" · "}carga <span className="tab-num">{result.carga_tributaria_atual_percentual.toFixed(2)}%</span>
-                  </div>
-                  <div className="mt-3">
-                    <span className="inline-flex items-center gap-1 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1 font-medium">
-                      +{brl((result.preco_venda_sistema_atual - (result.preco_sem_tributo ?? 0)))} em impostos
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3. Com reforma */}
-                <div className="p-6 lg:p-7 bg-brand-50/40">
-                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-brand-600 font-semibold mb-3">
-                    Com reforma · {ano}
-                  </div>
-                  {/* Preço de venda (o que você recebe) */}
-                  <div className="text-[11px] text-brand-500 font-semibold uppercase tracking-wide mb-0.5">Você recebe</div>
-                  <div className="font-display text-[40px] leading-none font-bold text-brand-800 tab-num">
+                  <div className="font-display text-[48px] leading-none font-bold text-brand-800 tab-num">
                     <NumberTicker value={result.preco_venda_sistema_novo} />
                   </div>
-                  <div className="text-[12px] text-ink-500 mt-1.5">
+                  <div className="text-[12px] text-ink-400 mt-2">
                     Markup <strong className="tab-num text-ink-700">{result.markup_novo.toFixed(2)}×</strong>
-                    {" · "}carga <span className="tab-num">{result.carga_tributaria_nova_percentual.toFixed(2)}%</span>
+                    {" · "}carga tributária <span className="tab-num">{result.carga_tributaria_nova_percentual.toFixed(2)}%</span>
                   </div>
 
-                  {/* Total ao comprador (quando há CBS/IBS por fora) */}
-                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 ? (
-                    <div className="mt-3 rounded-lg bg-brand-100/60 border border-brand-200/60 px-3 py-2 space-y-1">
-                      <div className="flex justify-between items-center text-[12px]">
-                        <span className="text-ink-600">+ CBS/IBS por fora</span>
-                        <span className="tab-num font-semibold text-brand-700">{brl(result.cbs_ibs_sobre_preco_novo!)}</span>
+                  {/* Split payment breakdown — integrado */}
+                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
+                    <div className="mt-4 rounded-xl bg-brand-50 border border-brand-100 divide-y divide-brand-100 text-[12.5px]">
+                      <div className="flex justify-between items-center px-3.5 py-2.5">
+                        <span className="text-ink-600">Você recebe</span>
+                        <span className="tab-num font-semibold text-ink-800">{brl(result.preco_venda_sistema_novo)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[13px] border-t border-brand-200/60 pt-1">
-                        <span className="font-bold text-ink-800">Total ao comprador</span>
+                      <div className="flex justify-between items-center px-3.5 py-2.5">
+                        <span className="text-ink-500">+ CBS/IBS retido pelo banco <span className="text-[11px] font-normal">(Split Payment)</span></span>
+                        <span className="tab-num text-brand-700 font-semibold">{brl(result.cbs_ibs_sobre_preco_novo!)}</span>
+                      </div>
+                      <div className="flex justify-between items-center px-3.5 py-2.5 bg-brand-100/40 rounded-b-xl">
+                        <span className="font-bold text-ink-900">= Total pago pelo comprador</span>
                         <span className="tab-num font-bold text-brand-800">{brl(result.preco_venda_sistema_novo + result.cbs_ibs_sobre_preco_novo!)}</span>
                       </div>
-                      <div className="text-[10.5px] text-brand-600 leading-snug">
-                        O banco separa CBS/IBS automaticamente via Split Payment.
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-3">
-                      <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
-                        ${Math.abs(aumentoPct) < 1
-                          ? "text-amber-700 bg-amber-50"
-                          : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
-                        {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
-                      </span>
                     </div>
                   )}
-                  {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
-                    <div className="mt-2">
-                      <span className={`inline-flex items-center gap-1 text-[11.5px] rounded-lg px-2.5 py-1 font-medium
-                        ${Math.abs(aumentoPct) < 1
-                          ? "text-amber-700 bg-amber-50"
-                          : aumento ? "text-red-600 bg-red-50" : "text-emerald-700 bg-emerald-50"}`}>
-                        {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))} vs hoje
-                      </span>
+                </div>
+
+                {/* Comparação com hoje */}
+                <div className="p-6 lg:p-8 flex flex-col justify-between gap-5 min-w-[200px]">
+                  <div>
+                    <div className="text-[10.5px] uppercase tracking-[0.08em] text-ink-400 font-semibold mb-1">Hoje você cobra</div>
+                    <div className="font-display text-[28px] leading-none font-semibold text-ink-600 tab-num">
+                      <NumberTicker value={result.preco_venda_sistema_atual} />
                     </div>
-                  )}
+                    <div className="text-[11.5px] text-ink-400 mt-1.5">
+                      carga <span className="tab-num">{result.carga_tributaria_atual_percentual.toFixed(2)}%</span>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-xl px-3.5 py-3 border text-center
+                    ${Math.abs(aumentoPct) < 1
+                      ? "bg-amber-50 border-amber-100"
+                      : aumento ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100"}`}>
+                    <div className={`text-[11px] font-semibold uppercase tracking-[0.07em] mb-1
+                      ${Math.abs(aumentoPct) < 1 ? "text-amber-600" : aumento ? "text-red-600" : "text-emerald-600"}`}>
+                      {Math.abs(aumentoPct) < 1 ? "Sem variação" : aumento ? "Preço sobe" : "Preço cai"}
+                    </div>
+                    <div className={`font-display text-[22px] font-bold tab-num
+                      ${Math.abs(aumentoPct) < 1 ? "text-amber-700" : aumento ? "text-red-700" : "text-emerald-700"}`}>
+                      {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "" : "−"}{brl(Math.abs(result.diferenca_preco))}
+                    </div>
+                    <div className={`text-[12px] tab-num mt-0.5
+                      ${Math.abs(aumentoPct) < 1 ? "text-amber-500" : aumento ? "text-red-500" : "text-emerald-500"}`}>
+                      {aumento ? "+" : Math.abs(aumentoPct) < 1 ? "±" : "−"}{Math.abs(aumentoPct).toFixed(1)}% vs hoje
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Carga tributária bars */}
               <div className="border-t border-ink-100/70 px-6 lg:px-7 py-5 mesh-bone">
                 <div className="text-[11px] uppercase tracking-[0.08em] text-ink-500 font-semibold mb-3">
-                  Carga tributária — atual vs com reforma
+                  Carga tributária: hoje vs com reforma
                 </div>
                 <div className="space-y-3">
-                  <CargaBar label="Sistema atual" pct={result.carga_tributaria_atual_percentual} color="#5F6E84"
+                  <CargaBar label="Hoje" pct={result.carga_tributaria_atual_percentual} color="#5F6E84"
                     max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} />
                   <CargaBar label={`Em ${ano}`} pct={result.carga_tributaria_nova_percentual} color="#01D1FF"
                     max={Math.max(result.carga_tributaria_atual_percentual, result.carga_tributaria_nova_percentual) + 5} highlight />
                 </div>
                 <div className="mt-4 text-[11.5px] text-ink-500 leading-relaxed">
                   PV = Custo ÷ (1 − Margem − Despesas − Tributos residuais).
-                  CBS e IBS incidem por fora (Art. 9.º) e são cobrados do comprador via Split Payment.
+                  CBS e IBS incidem por fora (Art. 9º) e são recolhidos pelo banco via Split Payment.
                 </div>
               </div>
             </div>
