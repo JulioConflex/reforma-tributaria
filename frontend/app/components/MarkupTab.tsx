@@ -139,12 +139,12 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
         {somaMargemDespesas >= 100 && (
           <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12px] text-red-700 leading-snug">
             <strong>Soma inválida:</strong> Margem ({margemNum}%) + Despesas ({despesasNum}%) = {somaMargemDespesas}%
-            — já esgota 100% do preço sem incluir nenhum imposto. Reduza um dos valores.
+            , o que já esgota 100% do preço sem incluir nenhum imposto. Reduza um dos valores.
           </div>
         )}
         {somaMargemDespesas > 0 && somaMargemDespesas < 100 && somaMargemDespesas >= 90 && (
           <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-700 leading-snug">
-            <strong>Atenção:</strong> Margem + Despesas = {somaMargemDespesas}% — sobram apenas {(100 - somaMargemDespesas).toFixed(1)}% para os impostos.
+            <strong>Atenção:</strong> Margem + Despesas = {somaMargemDespesas}%: sobram apenas {(100 - somaMargemDespesas).toFixed(1)}% para os impostos.
           </div>
         )}
         {somaMargemDespesas > 0 && somaMargemDespesas < 90 && <div className="mb-1" />}
@@ -164,7 +164,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             {regime === "lucro_presumido" ? (
               <div className="text-[12px] text-ink-600 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-ink-400 inline-block" />
-                Cumulativo <span className="font-normal text-ink-400 ml-1">(obrigatório — 0,65% + 3%)</span>
+                Cumulativo <span className="font-normal text-ink-400 ml-1">(obrigatório: 0,65% + 3%)</span>
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">
@@ -180,7 +180,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                       <span className="text-[11px] text-ink-400 block leading-snug">
                         {opt === "nao_cumulativo"
                           ? "1,65% + 7,6% com crédito (regra geral Lucro Real)"
-                          : "0,65% + 3% sem crédito — entidades financeiras e equiparadas (Lei 9.718/98, Art. 14)"}
+                          : "0,65% + 3% sem crédito (entidades financeiras e equiparadas, Lei 9.718/98, Art. 14)"}
                       </span>
                     </div>
                   </label>
@@ -195,7 +195,7 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
             <FieldLabel>Faturamento anual</FieldLabel>
             <CurrencyField value={faturamento} onChange={setFaturamento} />
             <p className="text-[11.5px] text-ink-400 mt-1.5 leading-snug">
-              Define a faixa da alíquota efetiva do Simples — quanto maior o faturamento, maior a taxa.
+              Define a faixa da alíquota efetiva do Simples: quanto maior o faturamento, maior a taxa.
             </p>
           </div>
         )}
@@ -296,14 +296,14 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               <div>
-                <div className="text-[14px] font-bold text-red-700 mb-1">Preço inviável — parâmetros incompatíveis</div>
+                <div className="text-[14px] font-bold text-red-700 mb-1">Preço inviável: parâmetros incompatíveis</div>
                 <p className="text-[13px] text-red-600 leading-snug">
                   Margem ({margem}%) + Despesas ({despesas}%) = <strong>{somaMargemDespesas.toFixed(1)}%</strong>,
                   e os impostos acrescentam mais <strong>{result.carga_tributaria_atual_percentual.toFixed(2)}%</strong>.
-                  A soma ultrapassa 100% do preço de venda — matematicamente impossível.
+                  A soma ultrapassa 100% do preço de venda, matematicamente impossível.
                 </p>
                 <p className="text-[12.5px] text-red-500 mt-2">
-                  Reduza a margem ou as despesas variáveis. Lembre: aluguel e salários <strong>não entram</strong> neste campo — use apenas taxas e comissões por venda.
+                  Reduza a margem ou as despesas variáveis. Lembre: aluguel e salários <strong>não entram</strong> neste campo, use apenas taxas e comissões por venda.
                 </p>
               </div>
             </div>
@@ -319,13 +319,13 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                 <span className="text-amber-500 text-xl shrink-0 mt-0.5">⚠️</span>
                 <div>
                   <p className="font-semibold text-amber-900 text-[13.5px] mb-1">
-                    Preços baseados em projeções — sujeitos a alteração
+                    Preços baseados em projeções, sujeitos a alteração
                   </p>
                   <p className="text-[12.5px] text-amber-800 leading-relaxed">
                     As alíquotas de referência do IBS (~18,7%) e CBS (~9,3%) ainda não foram confirmadas pelo Senado Federal.
                     {showSimples && ano >= 2027 && (
                       <> Para o <strong>Simples Nacional</strong>, o modelo exato de integração do IBS/CBS ao DAS ainda não foi
-                      regulamentado pelo Comitê Gestor do IBS — a estimativa usada pode ser significativamente diferente do resultado real.</>
+                      regulamentado pelo Comitê Gestor do IBS: a estimativa usada pode ser significativamente diferente do resultado real.</>
                     )}
                     {" "}Os preços calculados poderão mudar quando os valores definitivos forem publicados.
                   </p>
@@ -447,12 +447,12 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
                     no total. O banco separa automaticamente{" "}
                     <strong className="text-brand-300 tab-num">{brl(result.cbs_ibs_sobre_preco_novo ?? 0)}</strong>{" "}
                     de CBS/IBS para o governo. Você recebe{" "}
-                    <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo)}</strong>{" "}
-                    — provisione seu <TooltipGlossario termo="capital_de_giro">capital de giro</TooltipGlossario>.
+                    <strong className="text-white tab-num">{brl(result.preco_venda_sistema_novo)}</strong>{": "}
+                    provisione seu <TooltipGlossario termo="capital_de_giro">capital de giro</TooltipGlossario>.
                   </p>
                 </div>
                 <div className="relative w-[160px] h-[160px] shrink-0 mx-auto">
-                  <SplitDonut imposto={result.aliquota_efetiva_nova} />
+                  <SplitDonut imposto={result.cbs_ibs_sobre_preco_novo != null && result.preco_venda_sistema_novo > 0 ? (result.cbs_ibs_sobre_preco_novo / result.preco_venda_sistema_novo) * 100 : result.aliquota_efetiva_nova} />
                 </div>
               </div>
             </div>
@@ -464,8 +464,8 @@ export default function MarkupTab({ setores, ano, setAno, sharedSetorId, sharedU
               <ol className="space-y-3">
                 {[
                   { n: "01", titulo: "Reajuste a tabela de preços", desc: `Ajuste em ${aumento ? "+" : "−"}${Math.abs(aumentoPct).toFixed(1)}% para preservar a margem de ${margem}% até ${ano}.` },
-                  { n: "02", titulo: "Negocie com fornecedores", desc: "Cada nota de compra vira crédito de IBS/CBS — mais entradas formais = menor imposto líquido." },
-                  { n: "03", titulo: "Provisione o split payment", desc: `Reserve cerca de ${result.aliquota_efetiva_nova.toFixed(1)}% do faturamento para o pagamento automático ao governo.` },
+                  { n: "02", titulo: "Negocie com fornecedores", desc: "Cada nota de compra vira crédito de IBS/CBS: mais entradas formais = menor imposto líquido." },
+                  { n: "03", titulo: "Provisione o split payment", desc: `Reserve cerca de ${result.cbs_ibs_sobre_preco_novo != null && result.preco_venda_sistema_novo > 0 ? ((result.cbs_ibs_sobre_preco_novo / result.preco_venda_sistema_novo) * 100).toFixed(1) : result.aliquota_efetiva_nova.toFixed(1)}% do faturamento para o pagamento automático ao governo.` },
                 ].map((s) => (
                   <li key={s.n} className="flex gap-4 rounded-xl bg-ink-50/60 hairline p-4">
                     <div className="font-mono text-[11.5px] font-semibold text-brand-500 tab-num">{s.n}</div>
@@ -537,7 +537,7 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
             </div>
             {(result.cbs_ibs_sobre_preco_novo ?? 0) > 0 && (
               <div className="text-[11.5px] text-brand-700 mt-2 leading-snug">
-                + CBS/IBS por fora (Art. 9.º): {brl(result.cbs_ibs_sobre_preco_novo!)} — pago pelo comprador, repassado via Split Payment
+                + CBS/IBS por fora (Art. 9.º): {brl(result.cbs_ibs_sobre_preco_novo!)} (pago pelo comprador, repassado via Split Payment)
               </div>
             )}
           </div>
@@ -545,7 +545,7 @@ function MemoriaMarkup({ result }: { result: import("./types").MarkupResult }) {
           {/* Decomposição do PV */}
           <div className="mt-5">
             <div className="text-[11px] uppercase tracking-[0.07em] text-ink-400 font-semibold mb-3">
-              Decomposição do preço de venda — o que você recebe ({brl(pv)})
+              Decomposição do preço de venda: o que você recebe ({brl(pv)})
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
