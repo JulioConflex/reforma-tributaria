@@ -44,6 +44,7 @@ interface SimResult {
 const REGIMES_COMPRADOR = [
   { value: "lucro_presumido", label: "Lucro Presumido" },
   { value: "lucro_real", label: "Lucro Real" },
+  { value: "simples_hibrido", label: "Simples Híbrido" },
   { value: "simples_nacional", label: "Simples Nacional" },
   { value: "mei", label: "MEI" },
 ];
@@ -198,7 +199,12 @@ export default function NfeTab() {
           </div>
           {(regime === "simples_nacional" || regime === "mei") && (
             <div className="mt-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-800">
-              <span className="font-semibold">Simples Nacional / MEI:</span> o crédito B2B é zero — optantes não são contribuintes de CBS/IBS no regime regular.
+              <span className="font-semibold">Simples Nacional / MEI:</span> o crédito B2B é zero. Optantes pelo regime padrão não são contribuintes de CBS/IBS e não aproveitam créditos de entrada.
+            </div>
+          )}
+          {regime === "simples_hibrido" && (
+            <div className="mt-2.5 rounded-lg bg-blue-50 border border-blue-200 px-3.5 py-2.5 text-[12px] text-blue-800">
+              <span className="font-semibold">Simples Nacional Híbrido (LC 214/2025, Art. 16):</span> empresa optante pelo regime diferenciado de CBS/IBS — recolhe CBS/IBS separadamente do DAS e aproveita créditos de entrada normalmente.
             </div>
           )}
         </div>
